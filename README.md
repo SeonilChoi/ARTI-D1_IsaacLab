@@ -56,10 +56,10 @@ python scripts/skrl/train.py --task Template-Arti-D1-Amp-Direct-v0 --algorithm A
 - Progress summary: `PY=<isaac lab python> bash scripts/tuning/check.sh`.
 
 Setup:
-- Reference motions `assets/motions/arti_d1`: 1000 motion_generator clips (2.4 s cycle, 0.8 s single support, 3 cm
-  swing, CoM 0.255 m; one distinct command each) plus a standing clip (`1000.json`, weight 176).
+- Reference motions `assets/motions/arti_d1`: 1000 motion_generator clips (1.25 s cycle, 0.5 s single support, 1.5 cm
+  swing, CoM 0.255 m, ZMP 3 cm inside the sole; one distinct command each) plus a standing clip (`1000.json`, weight 176).
 - Command (0, 0, 0) means stand still and balance: the gait clock stops at a double-support rest phase
-  (`gait_rest_phases` 0.4233 / 0.9233).
+  (`gait_rest_phases` 0.46 / 0.96).
 - Residual policy on an ILC nominal gait table (`assets/motions/arti_d1_nominal_gait_command.npy`).
 
 ## Play / evaluate / export
@@ -74,23 +74,25 @@ python -u scripts/tuning/check_onnx_in_env.py --onnx agent.onnx --headless
 python -u scripts/tuning/check_controller_obs.py --headless          # humanoid_controller ArtiD1 observation
 ```
 
-humanoid_controller `config/robot/ARTI-D1/robot.yaml` policy settings for this setup: `gait_phase_rate: 0.41667`,
-`initial_gait_phase: 0.9233`, `gait_rest_phases: [0.4233, 0.9233]`, `command_max: [0.0364, 0.0121, 0.0596]`.
+humanoid_controller `config/robot/ARTI-D1/robot.yaml` policy settings for this setup: `gait_phase_rate: 0.8`,
+`initial_gait_phase: 0.96`, `gait_rest_phases: [0.46, 0.96]`, `command_max: [0.0812, 0.0271, 0.1349]`.
 
 ## Regenerate reference motions
 
 ```bash
 python scripts/tuning/gen_motions.py arti_d1 1000 20          # env_placo python, MOTION_GENERATOR=<motion_generator path>
-python scripts/tuning/reference_stats.py                       # default pose, action ranges, swing phases, commands
+WINDOW_S=1.25 python scripts/tuning/reference_stats.py        # default pose, action ranges, swing phases, commands
 M=source/arti_d1/arti_d1/assets/motions
-python scripts/tuning/make_stand_clip.py $M/arti_d1/0.json $M/arti_d1/1000.json --phase 0.9233 --weight 176
+python scripts/tuning/make_stand_clip.py $M/arti_d1/0.json $M/arti_d1/1000.json --phase 0.96 --weight 176
 python -u scripts/tuning/ilc_nominal.py --headless --iters 8   # writes $M/arti_d1_nominal_gait_command.npy
 ```
 
 ## Known gaps (sim-to-real)
 
 - Joint speed is capped at the 12 V no-load speed (3.14 rad/s legs) and the back-EMF is modelled only as damping. The
-  slow reference (2.4 s cycle) stays below it except brief knee peaks at touchdown.
+  reference gait is the fastest that stays below it (leg joints <= 3.1 rad/s): the 0.72 s gait needs 8 rad/s, and
+  gaits slower than ~1.3 s need more CoM sway than the hip_roll range (-18 / +12 deg) allows (with the ZMP inside
+  the sole, hip_roll reaches +-0.5 rad at 2.4 s).
 - Servo gains, delay, friction and the IMU mount are datasheet / assumed values: run a sysid and measure the IMU mount
   before trusting a policy on the robot.
 

@@ -12,7 +12,7 @@ LEG_JOINTS = ("hip_yaw", "hip_roll", "hip_pitch", "knee", "ankle")
 ARM_JOINTS = ("arm_m8", "arm_m8crank_plate")
 JOINT_NAMES = tuple(f"{side}_{j}" for side in ("left", "right") for j in LEG_JOINTS + ARM_JOINTS)
 
-# Standing pose = first frame of every reference clip (motion_generator arti_d1, slow gait: CoM 0.255 m, feet 0.175 m
+# Standing pose = first frame of every reference clip (motion_generator arti_d1, 1.25 s gait: CoM 0.255 m, feet 0.175 m
 # apart). The legs are mirrored in the URDF (no pi rotation like ARTI-H1), so the hip_roll signs are opposite
 # left / right. The arm plate sits at its -13 deg rest angle (= the URDF lower limit).
 JOINT_INIT_POS = {
@@ -63,8 +63,9 @@ def dynamixel_kd(joint_name: str) -> float:
 JOINT_STIFFNESS = {name: round(dynamixel_kp(name), 3) for name in JOINT_NAMES}
 JOINT_DAMPING = {name: round(dynamixel_kd(name), 3) for name in JOINT_NAMES}
 JOINT_EFFORT_LIMIT = {name: joint_motor(name)["stall_torque"] for name in JOINT_NAMES}
-# Capped at the 12 V no-load speed. The slow reference gait (2.4 s cycle) stays below it except brief knee peaks of
-# ~3.4 rad/s at touchdown (p99 3.1); the old 0.72 s gait needed up to 8.6 rad/s.
+# Capped at the 12 V no-load speed. The reference gait (1.25 s cycle, 15 mm swing, steps <= 5.5 cm) was chosen as the
+# fastest that stays below it (leg joints <= 3.1 rad/s); the old 0.72 s gait needed up to 8.6 rad/s. Slower gaits
+# cannot shift the CoM over the stance foot within the hip_roll range (-18 / +12 deg).
 JOINT_VELOCITY_LIMIT = {name: joint_motor(name)["no_load_speed"] for name in JOINT_NAMES}
 
 

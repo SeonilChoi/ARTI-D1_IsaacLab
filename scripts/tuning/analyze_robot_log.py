@@ -29,7 +29,7 @@ NJ = len(POLICY)
 # sole centre in each foot link (arti_d1_env_cfg.py ARTI_D1_*_FOOT_OFFSET_FROM_FOOT_LINK)
 FOOT_OFFSET = {"left": np.array([0.0135599213, -0.024, -0.0593316689]),
                "right": np.array([0.0135599213, 0.024, -0.0593316765])}
-GAIT_PHASE_RATE = 0.41667
+GAIT_PHASE_RATE = 0.8
 CONTROL_DT = 1.0 / 60.0
 JROT, JVEL, TOES = 9, 9 + 6 * NJ, 9 + 7 * NJ
 ACTS, PHASE, CMD = TOES + 6, TOES + 6 + NJ, TOES + 8 + NJ
