@@ -3,5 +3,5 @@ mode: restart
 resume:
   checkpoint: latest
   curriculum_step_offset: auto
-args: ["--num_envs", "1024"]
+args: ["--num_envs", "512"]
 publish: []
