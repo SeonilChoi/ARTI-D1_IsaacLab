@@ -1,12 +1,7 @@
-# control/run.yaml  (코드 저장소에 커밋)
-# 이 파일이 바뀌어 push될 때만 서버 학습 상태가 바뀝니다. 코드만 push하면 학습은 그대로 유지됩니다.
-rev: 1                  # 같은 설정으로 다시 적용하고 싶으면 숫자만 올려서 push
-
-mode: stop              # restart | resume | continue | stop
+rev: 2                 # 지금 값보다 1 올리기
+mode: restart
 resume:
-  checkpoint: latest    # latest | <run폴더>/checkpoints/agent_N.pt
-  curriculum_step_offset: auto   # auto = (해당 run의 offset + N) | 숫자 직접 지정
-
-args: []                # train.py 추가 인자. 예: ["--num_envs", "4096", "env.some_param=1.0"]
-
-publish: []             # 주기 외에 추가로 올릴 체크포인트. 예: ["2026-10-27_10-00-00_amp_torch/checkpoints/agent_45000.pt"]
+  checkpoint: latest
+  curriculum_step_offset: auto
+args: ["--num_envs", "1024"]
+publish: []
