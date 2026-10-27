@@ -1,8 +1,8 @@
-rev: 3                 # 지금 값보다 1 올리기
-mode: restart
+rev: 4                 # 지금 값보다 1 올리기
+mode: resume
 resume:
   checkpoint: latest
   curriculum_step_offset: auto
-# 512 env도 4096 env(h1)와 같은 13 it/s였음 → cfg 기본값 4096 (미니배치 32k). 체크포인트 20000 step마다.
-args: ["--num_envs", "4096", "agent.agent.experiment.checkpoint_interval=20000"]
+# exp1: 06-45-28 run 이어서, task/style .5/.5 -> .3/.7 (600k 평가: 보폭 2 cm, 직진 추종 27 %, style .26, disc acc .998)
+args: ["--num_envs", "4096", "agent.agent.experiment.checkpoint_interval=20000", "agent.agent.task_reward_scale=0.3", "agent.agent.style_reward_scale=0.7"]
 publish: []
