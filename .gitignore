@@ -13,6 +13,8 @@
 **/*.usda
 **/*.usdc
 **/*.usdz
+# ...except the robot model the training spawns
+!source/arti_d1/arti_d1/assets/models/**/*.usd
 
 # Python
 .DS_Store
@@ -73,3 +75,6 @@ tests/
 # TacSL sensor
 **/tactile_record/*
 **/gelsight_r15_data/*
+
+# Local checkpoint copies
+ckpt_keep/

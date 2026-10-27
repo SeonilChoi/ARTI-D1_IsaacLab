@@ -12,13 +12,25 @@ from . import agents
 ##
 
 
+_ARTI_D1_AMP_KWARGS = {
+    "env_cfg_entry_point": f"{__name__}.arti_d1_env_cfg:ArtiD1AmpEnvCfg",
+    "skrl_amp_cfg_entry_point": f"{agents.__name__}:skrl_amp_cfg.yaml",
+}
+
+
+gym.register(
+    id="Template-Arti-D1-Amp-Direct-v0",
+    entry_point=f"{__name__}.arti_d1_env:ArtiD1AmpEnv",
+    disable_env_checker=True,
+    kwargs=_ARTI_D1_AMP_KWARGS,
+)
+
 gym.register(
     id="Template-Arti-D1-Direct-v0",
-    entry_point=f"{__name__}.arti_d1_env:ArtiD1Env",
+    entry_point=f"{__name__}.arti_d1_env:ArtiD1AmpEnv",
     disable_env_checker=True,
     kwargs={
-        "env_cfg_entry_point": f"{__name__}.arti_d1_env_cfg:ArtiD1EnvCfg",
-        "skrl_amp_cfg_entry_point": f"{agents.__name__}:skrl_amp_cfg.yaml",
+        **_ARTI_D1_AMP_KWARGS,
         "skrl_cfg_entry_point": f"{agents.__name__}:skrl_ppo_cfg.yaml",
     },
 )

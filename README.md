@@ -1,135 +1,102 @@
-# Template for Isaac Lab Projects
+# arti_d1
 
-## Overview
+AMP walking policy for the ARTI-D1 biped (Isaac Lab + skrl), set up like
+[arti_h1](https://github.com/SeonilChoi/arti_h1): reference motions from motion_generator, residual policy on a
+clock-driven nominal gait, sim-to-real randomisation. The cfg defaults are the training setup, so training needs no
+extra arguments. Trained policies are exported to ONNX and deployed with
+[humanoid_controller](https://github.com/SeonilChoi/humanoid_controller) (`ARTI-D1` executable,
+`config/robot/ARTI-D1/agent.onnx`).
 
-This project/repository serves as a template for building projects or extensions based on Isaac Lab.
-It allows you to develop in an isolated environment, outside of the core Isaac Lab repository.
+## Robot
 
-**Key Features:**
+- BDX-like layout, 14 joints: per leg hip yaw / roll / pitch, knee, ankle (Dynamixel XH540-W270), per arm `arm_m8` and
+  `arm_m8crank_plate` (Dynamixel XM430-W350). ~5.6 kg, trunk 0.24 m.
+- Policy / action / observation joint order = Isaac Lab articulation order = Dynamixel IDs 1-14:
 
-- `Isolation` Work outside the core Isaac Lab repository, ensuring that your development efforts remain self-contained.
-- `Flexibility` This template is set up to allow your code to be run as an extension in Omniverse.
+  | ID | joint | ID | joint |
+  |---:|---|---:|---|
+  | 1 | left_arm_m8 | 8 | right_hip_roll |
+  | 2 | left_hip_yaw | 9 | left_hip_pitch |
+  | 3 | right_arm_m8 | 10 | right_hip_pitch |
+  | 4 | right_hip_yaw | 11 | left_knee |
+  | 5 | left_arm_m8crank_plate | 12 | right_knee |
+  | 6 | left_hip_roll | 13 | left_ankle |
+  | 7 | right_arm_m8crank_plate | 14 | right_ankle |
 
-**Keywords:** extension, template, isaaclab
+- Actuators (`robots/arti_d1.py`): Dynamixel position mode as a joint PD, from the datasheet and the factory Position
+  P Gain 800: kp = P/128 * 4096/2pi / 885 * stall torque (legs 48.8, arms 18.9 Nm/rad), kd = stall torque / no-load
+  speed (back-EMF; legs 3.38, arms 0.85 Nm s/rad), effort limit = 12 V stall torque (10.6 / 4.1 Nm). Not identified on
+  the robot yet: gains are randomised +-30 % and the actuator model (delay / armature / Coulomb) uses generic values.
+- Joint limits: URDF (`assets/models/arti_d1/arti_d1.urdf`, hip_roll -18 / +12 deg mirrored).
+- IMU: Xsens MTi model, assumed at the trunk frame (`ARTI_D1_IMU_OFFSET_FROM_TRUNK`); update it with the real mount.
 
-## Installation
+## Requirements
 
-- Install Isaac Lab by following the [installation guide](https://isaac-sim.github.io/IsaacLab/main/source/setup/installation/index.html).
-  We recommend using the conda or uv installation as it simplifies calling Python scripts from the terminal.
+Isaac Sim 5.1.0, Isaac Lab 0.54.3, skrl 2.0.0, PyTorch 2.7.0 (cu128); onnxruntime / onnx for export.
 
-- Clone or copy this project/repository separately from the Isaac Lab installation (i.e. outside the `IsaacLab` directory):
+## Install
 
-- Using a python interpreter that has Isaac Lab installed, install the library in editable mode using:
-
-    ```bash
-    # use 'PATH_TO_isaaclab.sh|bat -p' instead of 'python' if Isaac Lab is not installed in Python venv or conda
-    python -m pip install -e source/arti_d1
-
-- Verify that the extension is correctly installed by:
-
-    - Listing the available tasks:
-
-        Note: It the task name changes, it may be necessary to update the search pattern `"Template-"`
-        (in the `scripts/list_envs.py` file) so that it can be listed.
-
-        ```bash
-        # use 'FULL_PATH_TO_isaaclab.sh|bat -p' instead of 'python' if Isaac Lab is not installed in Python venv or conda
-        python scripts/list_envs.py
-        ```
-
-    - Running a task:
-
-        ```bash
-        # use 'FULL_PATH_TO_isaaclab.sh|bat -p' instead of 'python' if Isaac Lab is not installed in Python venv or conda
-        python scripts/<RL_LIBRARY>/train.py --task=<TASK_NAME>
-        ```
-
-    - Running a task with dummy agents:
-
-        These include dummy agents that output zero or random agents. They are useful to ensure that the environments are configured correctly.
-
-        - Zero-action agent
-
-            ```bash
-            # use 'FULL_PATH_TO_isaaclab.sh|bat -p' instead of 'python' if Isaac Lab is not installed in Python venv or conda
-            python scripts/zero_agent.py --task=<TASK_NAME>
-            ```
-        - Random-action agent
-
-            ```bash
-            # use 'FULL_PATH_TO_isaaclab.sh|bat -p' instead of 'python' if Isaac Lab is not installed in Python venv or conda
-            python scripts/random_agent.py --task=<TASK_NAME>
-            ```
-
-### Set up IDE (Optional)
-
-To setup the IDE, please follow these instructions:
-
-- Run VSCode Tasks, by pressing `Ctrl+Shift+P`, selecting `Tasks: Run Task` and running the `setup_python_env` in the drop down menu.
-  When running this task, you will be prompted to add the absolute path to your Isaac Sim installation.
-
-If everything executes correctly, it should create a file .python.env in the `.vscode` directory.
-The file contains the python paths to all the extensions provided by Isaac Sim and Omniverse.
-This helps in indexing all the python modules for intelligent suggestions while writing code.
-
-### Setup as Omniverse Extension (Optional)
-
-We provide an example UI extension that will load upon enabling your extension defined in `source/arti_d1/arti_d1/ui_extension_example.py`.
-
-To enable your extension, follow these steps:
-
-1. **Add the search path of this project/repository** to the extension manager:
-    - Navigate to the extension manager using `Window` -> `Extensions`.
-    - Click on the **Hamburger Icon**, then go to `Settings`.
-    - In the `Extension Search Paths`, enter the absolute path to the `source` directory of this project/repository.
-    - If not already present, in the `Extension Search Paths`, enter the path that leads to Isaac Lab's extension directory directory (`IsaacLab/source`)
-    - Click on the **Hamburger Icon**, then click `Refresh`.
-
-2. **Search and enable your extension**:
-    - Find your extension under the `Third Party` category.
-    - Toggle it to enable your extension.
-
-## Code formatting
-
-We have a pre-commit template to automatically format your code.
-To install pre-commit:
+The robot USD files are stored with Git LFS, so install it first.
 
 ```bash
-pip install pre-commit
+git lfs install
+git clone https://github.com/SeonilChoi/ARTI-D1_IsaacLab.git arti_d1 && cd arti_d1
+python -m pip install -e source/arti_d1      # python with Isaac Lab installed
+python -m pip install onnxruntime onnx        # only for ONNX export
 ```
 
-Then you can run pre-commit with:
+## Train
 
 ```bash
-pre-commit run --all-files
+python scripts/skrl/train.py --task Template-Arti-D1-Amp-Direct-v0 --algorithm AMP --headless
 ```
 
-## Troubleshooting
+- Output: `logs/skrl/arti_d1_amp_walk/<date>_amp_torch/` (checkpoints, `params/env.yaml`, `params/agent.yaml`).
+- Resume: add `--checkpoint <agent_N.pt> env.curriculum_step_offset=N`.
+- Progress summary: `PY=<isaac lab python> bash scripts/tuning/check.sh`.
 
-### Pylance Missing Indexing of Extensions
+Setup:
+- Reference motions `assets/motions/arti_d1`: 996 motion_generator clips (0.72 s cycle, 0.3 s single support, 3 cm
+  swing; 584 unique, exact duplicates are merged into sampling weights) plus a standing clip (`996.json`, weight 176).
+- Command (0, 0, 0) means stand still and balance: the gait clock stops at a double-support rest phase
+  (`gait_rest_phases` 0.4708 / 0.9708).
+- Residual policy on an ILC nominal gait table (`assets/motions/arti_d1_nominal_gait_command.npy`).
 
-In some VsCode versions, the indexing of part of the extensions is missing.
-In this case, add the path to your extension in `.vscode/settings.json` under the key `"python.analysis.extraPaths"`.
+## Play / evaluate / export
 
-```json
-{
-    "python.analysis.extraPaths": [
-        "<path-to-ext-repo>/source/arti_d1"
-    ]
-}
+```bash
+python scripts/skrl/play.py --task Template-Arti-D1-Amp-Direct-v0 --algorithm AMP --num_envs 4 --checkpoint <pt>
+PY=<isaac lab python> bash scripts/tuning/record_video.sh <pt> <name>    # 40 s video with pushes
+python -u scripts/tuning/eval_gait.py --mode sequence --checkpoint <pt> --headless --num_envs 32
+python scripts/pt_to_onnx.py --checkpoint <pt> --output agent.onnx
+python -u scripts/tuning/verify_onnx.py <pt> agent.onnx
+python -u scripts/tuning/check_onnx_in_env.py --onnx agent.onnx --headless
+python -u scripts/tuning/check_controller_obs.py --headless          # humanoid_controller ArtiD1 observation
 ```
 
-### Pylance Crash
+humanoid_controller `config/robot/ARTI-D1/robot.yaml` policy settings for this setup: `gait_phase_rate: 1.38889`,
+`initial_gait_phase: 0.9708`, `gait_rest_phases: [0.4708, 0.9708]`, `command_max: [0.133, 0.054, 0.247]`.
 
-If you encounter a crash in `pylance`, it is probable that too many files are indexed and you run out of memory.
-A possible solution is to exclude some of omniverse packages that are not used in your project.
-To do so, modify `.vscode/settings.json` and comment out packages under the key `"python.analysis.extraPaths"`
-Some examples of packages that can likely be excluded are:
+## Regenerate reference motions
 
-```json
-"<path-to-isaac-sim>/extscache/omni.anim.*"         // Animation packages
-"<path-to-isaac-sim>/extscache/omni.kit.*"          // Kit UI tools
-"<path-to-isaac-sim>/extscache/omni.graph.*"        // Graph UI tools
-"<path-to-isaac-sim>/extscache/omni.services.*"     // Services tools
-...
+```bash
+python scripts/tuning/gen_motions.py arti_d1 1000 10          # env_placo python, MOTION_GENERATOR=<motion_generator path>
+python scripts/tuning/reference_stats.py                       # default pose, action ranges, swing phases, commands
+M=source/arti_d1/arti_d1/assets/motions
+python scripts/tuning/make_stand_clip.py $M/arti_d1/0.json $M/arti_d1/996.json --phase 0.9708 --weight 176
+python -u scripts/tuning/ilc_nominal.py --headless --iters 8   # writes $M/arti_d1_nominal_gait_command.npy
 ```
+
+## Known gaps (sim-to-real)
+
+- The reference gait is fast for the servos: knee speed up to 8.6 rad/s (rms 3.1) against a 12 V no-load speed of
+  3.14 rad/s (XH540-W270). The sim caps joint speed at 10 rad/s and models the back-EMF only as damping; a slower
+  reference (longer `single_support_duration` in motion_generator `config/arti_d1/gait.json`) is closer to what the
+  real servos can follow.
+- Servo gains, delay, friction and the IMU mount are datasheet / assumed values: run a sysid and measure the IMU mount
+  before trusting a policy on the robot.
+
+## Real robot logs
+
+`python scripts/tuning/analyze_robot_log.py <log.csv> --onnx <agent.onnx>` checks a humanoid_controller ARTI-D1 runtime
+log against the training environment.
