@@ -40,8 +40,8 @@ POLICY = ["left_arm_m8", "left_hip_yaw", "right_arm_m8", "right_hip_yaw", "left_
           "left_ankle", "right_ankle"]
 NJ = len(POLICY)
 # robot.yaml foots offset (sole centre in the foot link)
-FOOT_OFFSET = {"left": np.array([0.0135624237, -0.024, -0.0393326454]),
-               "right": np.array([0.0135624237, 0.024, -0.039332653])}
+FOOT_OFFSET = {"left": np.array([0.0135599213, -0.024, -0.0593316689]),
+               "right": np.array([0.0135599213, 0.024, -0.0593316765])}
 
 
 def rpy(r, p, y):

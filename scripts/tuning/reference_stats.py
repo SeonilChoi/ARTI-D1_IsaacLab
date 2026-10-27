@@ -3,7 +3,7 @@
     python scripts/tuning/reference_stats.py [motion_dir]
 
 Prints: default pose (first frame), per-joint action range around it, root/toe heights, swing timing
-in gait-clock phase, 0.9 s averaged command ranges and reference joint speeds.
+in gait-clock phase, averaged command ranges (window WINDOW_S, default 1 gait period) and reference joint speeds.
 """
 import glob
 import json
@@ -32,7 +32,7 @@ joint_vel_sq = []
 foot_y = [[], []]
 foot_x = [[], []]
 gait = None
-window_s = float(os.environ.get("WINDOW_S", "1.44"))  # env cfg average_velocity_window_s
+window_s = float(os.environ.get("WINDOW_S", "2.4"))  # env cfg average_velocity_window_s
 
 for path in files:
     m = json.load(open(path))
@@ -108,5 +108,5 @@ for k, side in ((0, "left"), (1, "right")):
         f" | local x mean {np.concatenate(foot_x[k]).mean()*1000:+.1f} mm y mean {np.concatenate(foot_y[k]).mean()*1000:+.1f} mm"
     )
 cmd = np.asarray(commands)
-print(f"\n0.9 s averaged commands  min {cmd.min(0).round(5).tolist()}  max {cmd.max(0).round(5).tolist()}")
+print(f"\n{window_s} s averaged commands  min {cmd.min(0).round(5).tolist()}  max {cmd.max(0).round(5).tolist()}")
 print(f"                         |mean| {np.abs(cmd).mean(0).round(5).tolist()}")

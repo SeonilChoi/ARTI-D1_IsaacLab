@@ -25,49 +25,50 @@ ARTI_D1_POLICY_OBSERVATION_SPACE = 6 + 3 + ARTI_D1_NUM_JOINTS * 6 + ARTI_D1_NUM_
 # + averaged planar velocity and yaw rate used by the reward (3) + command tracking error (3).
 ARTI_D1_CRITIC_PRIVILEGED_SPACE = 1 + 3 + 3 + 3 + 3
 ARTI_D1_ACTION_SCALE_MARGIN = 1.2
-# The reference only uses +-0.06 rad of hip yaw; a PD target that small cannot overcome the stance-foot twist.
+# The reference only uses +-0.08 rad of hip yaw; a PD target that small cannot overcome the stance-foot twist.
 ARTI_D1_HIP_YAW_ACTION_SCALE_MARGIN = 2.0
 # Distance from the default pose (first reference frame) to the min / max over every reference clip
-# (scripts/tuning/reference_stats.py). The arm plate is constant in the reference (0 range, floored by action_scale_min).
+# (scripts/tuning/reference_stats.py, slow 2.4 s gait). The arm plate only rises (lateral steps), so its negative range is
+# 0 (floored by action_scale_min).
 ARTI_D1_ACTION_NEGATIVE_SCALE = {
-    "left_hip_yaw": 0.06016 * ARTI_D1_HIP_YAW_ACTION_SCALE_MARGIN,
-    "left_hip_roll": 0.12842 * ARTI_D1_ACTION_SCALE_MARGIN,
-    "left_hip_pitch": 0.42156 * ARTI_D1_ACTION_SCALE_MARGIN,
-    "left_knee": 0.48768 * ARTI_D1_ACTION_SCALE_MARGIN,
-    "left_ankle": 0.40274 * ARTI_D1_ACTION_SCALE_MARGIN,
-    "right_hip_yaw": 0.06016 * ARTI_D1_HIP_YAW_ACTION_SCALE_MARGIN,
-    "right_hip_roll": 0.17840 * ARTI_D1_ACTION_SCALE_MARGIN,
-    "right_hip_pitch": 0.42166 * ARTI_D1_ACTION_SCALE_MARGIN,
-    "right_knee": 0.45017 * ARTI_D1_ACTION_SCALE_MARGIN,
-    "right_ankle": 0.40285 * ARTI_D1_ACTION_SCALE_MARGIN,
+    "left_hip_yaw": 0.07964 * ARTI_D1_HIP_YAW_ACTION_SCALE_MARGIN,
+    "left_hip_roll": 0.18818 * ARTI_D1_ACTION_SCALE_MARGIN,
+    "left_hip_pitch": 0.55716 * ARTI_D1_ACTION_SCALE_MARGIN,
+    "left_knee": 0.37048 * ARTI_D1_ACTION_SCALE_MARGIN,
+    "left_ankle": 0.53680 * ARTI_D1_ACTION_SCALE_MARGIN,
+    "right_hip_yaw": 0.07964 * ARTI_D1_HIP_YAW_ACTION_SCALE_MARGIN,
+    "right_hip_roll": 0.26971 * ARTI_D1_ACTION_SCALE_MARGIN,
+    "right_hip_pitch": 0.56357 * ARTI_D1_ACTION_SCALE_MARGIN,
+    "right_knee": 0.41829 * ARTI_D1_ACTION_SCALE_MARGIN,
+    "right_ankle": 0.54485 * ARTI_D1_ACTION_SCALE_MARGIN,
     "left_arm_m8": 0.52203 * ARTI_D1_ACTION_SCALE_MARGIN,
     "left_arm_m8crank_plate": 0.0,
     "right_arm_m8": 0.52203 * ARTI_D1_ACTION_SCALE_MARGIN,
     "right_arm_m8crank_plate": 0.0,
 }
 ARTI_D1_ACTION_POSITIVE_SCALE = {
-    "left_hip_yaw": 0.06015 * ARTI_D1_HIP_YAW_ACTION_SCALE_MARGIN,
-    "left_hip_roll": 0.19446 * ARTI_D1_ACTION_SCALE_MARGIN,
-    "left_hip_pitch": 0.43361 * ARTI_D1_ACTION_SCALE_MARGIN,
-    "left_knee": 0.34219 * ARTI_D1_ACTION_SCALE_MARGIN,
-    "left_ankle": 0.42634 * ARTI_D1_ACTION_SCALE_MARGIN,
-    "right_hip_yaw": 0.06015 * ARTI_D1_HIP_YAW_ACTION_SCALE_MARGIN,
-    "right_hip_roll": 0.15507 * ARTI_D1_ACTION_SCALE_MARGIN,
-    "right_hip_pitch": 0.37904 * ARTI_D1_ACTION_SCALE_MARGIN,
-    "right_knee": 0.34238 * ARTI_D1_ACTION_SCALE_MARGIN,
-    "right_ankle": 0.37503 * ARTI_D1_ACTION_SCALE_MARGIN,
-    "left_arm_m8": 0.26179 * ARTI_D1_ACTION_SCALE_MARGIN,
-    "left_arm_m8crank_plate": 0.0,
-    "right_arm_m8": 0.26179 * ARTI_D1_ACTION_SCALE_MARGIN,
-    "right_arm_m8crank_plate": 0.0,
+    "left_hip_yaw": 0.07964 * ARTI_D1_HIP_YAW_ACTION_SCALE_MARGIN,
+    "left_hip_roll": 0.24714 * ARTI_D1_ACTION_SCALE_MARGIN,
+    "left_hip_pitch": 0.40044 * ARTI_D1_ACTION_SCALE_MARGIN,
+    "left_knee": 0.42256 * ARTI_D1_ACTION_SCALE_MARGIN,
+    "left_ankle": 0.38550 * ARTI_D1_ACTION_SCALE_MARGIN,
+    "right_hip_yaw": 0.07964 * ARTI_D1_HIP_YAW_ACTION_SCALE_MARGIN,
+    "right_hip_roll": 0.18677 * ARTI_D1_ACTION_SCALE_MARGIN,
+    "right_hip_pitch": 0.47759 * ARTI_D1_ACTION_SCALE_MARGIN,
+    "right_knee": 0.42499 * ARTI_D1_ACTION_SCALE_MARGIN,
+    "right_ankle": 0.46066 * ARTI_D1_ACTION_SCALE_MARGIN,
+    "left_arm_m8": 0.26180 * ARTI_D1_ACTION_SCALE_MARGIN,
+    "left_arm_m8crank_plate": 0.36542 * ARTI_D1_ACTION_SCALE_MARGIN,
+    "right_arm_m8": 0.26180 * ARTI_D1_ACTION_SCALE_MARGIN,
+    "right_arm_m8crank_plate": 0.36542 * ARTI_D1_ACTION_SCALE_MARGIN,
 }
 # Dynamixel position-mode model (robots/arti_d1.py): legs XH540-W270, arms XM430-W350, factory Position P Gain 800.
 ARTI_D1_JOINT_STIFFNESS = JOINT_STIFFNESS
 ARTI_D1_JOINT_DAMPING = JOINT_DAMPING
 ARTI_D1_JOINT_EFFORT_LIMIT = JOINT_EFFORT_LIMIT
 ARTI_D1_JOINT_VELOCITY_LIMIT = JOINT_VELOCITY_LIMIT
-# trunk_frame in arti_d1.urdf. The reference walk_com_height (0.24) is this plus the 0.01375 m pelvis origin height.
-ARTI_D1_TRUNK_OFFSET_FROM_PELVIS = (0.00965371, 0.0, 0.226248)
+# trunk_frame in arti_d1.urdf. The reference walk_com_height (0.255) is this plus the 0.00875 m pelvis origin height.
+ARTI_D1_TRUNK_OFFSET_FROM_PELVIS = (0.00964957, 0.0, 0.246248)
 # IMU mount (Xsens MTi, humanoid_controller sensor.yaml): assumed at the trunk frame until the real mount is measured.
 ARTI_D1_IMU_OFFSET_FROM_TRUNK = (0.0, 0.0, 0.0)
 ARTI_D1_IMU_OFFSET_FROM_PELVIS = (
@@ -76,8 +77,8 @@ ARTI_D1_IMU_OFFSET_FROM_PELVIS = (
     ARTI_D1_TRUNK_OFFSET_FROM_PELVIS[2] + ARTI_D1_IMU_OFFSET_FROM_TRUNK[2],
 )
 # left_foot_frame / right_foot_frame in arti_d1.urdf (sole centre in the foot link; the legs are mirrored in y).
-ARTI_D1_LEFT_FOOT_OFFSET_FROM_FOOT_LINK = (0.0135624237, -0.024, -0.0393326454)
-ARTI_D1_RIGHT_FOOT_OFFSET_FROM_FOOT_LINK = (0.0135624237, 0.024, -0.039332653)
+ARTI_D1_LEFT_FOOT_OFFSET_FROM_FOOT_LINK = (0.0135599213, -0.024, -0.0593316689)
+ARTI_D1_RIGHT_FOOT_OFFSET_FROM_FOOT_LINK = (0.0135599213, 0.024, -0.0593316765)
 
 
 @configclass
@@ -104,7 +105,7 @@ class ArtiD1EventCfg:
         func=mdp.randomize_rigid_body_mass,
         mode="startup",
         params={
-            # Pelvis carries 3.69 kg of the ~5.6 kg total; +-0.3 kg covers battery / payload drift.
+            # Pelvis carries 3.69 kg of the ~5.8 kg total; +-0.3 kg covers battery / payload drift.
             "asset_cfg": SceneEntityCfg("robot", body_names="pelvis"),
             "mass_distribution_params": (-0.3, 0.3),
             "operation": "add",
@@ -129,8 +130,8 @@ class ArtiD1EventCfg:
         mode="interval",
         interval_range_s=(10.0, 15.0),
         params={
-            # Walking speed is ~0.08-0.13 m/s; keep the push small against a full averaging window.
-            "velocity_range": {"x": (-0.06, 0.06), "y": (-0.06, 0.06), "yaw": (-0.25, 0.25)},
+            # Walking speed is only ~0.02-0.035 m/s; keep the push small against a full averaging window.
+            "velocity_range": {"x": (-0.04, 0.04), "y": (-0.04, 0.04), "yaw": (-0.15, 0.15)},
         },
     )
 
@@ -196,22 +197,22 @@ class ArtiD1AmpEnvCfg(DirectRLEnvCfg):
     action_scale_min = 0.25
     hip_yaw_action_scale_min = 0.10
 
-    # Min / max of the recomputed (1.44 s averaged) reference commands plus ~3% margin
-    # (scripts/tuning/reference_stats.py: x +-0.1288, y +-0.0525, yaw +-0.2398).
-    command_linear_x_range = (-0.133, 0.133)
-    command_linear_y_range = (-0.054, 0.054)
-    command_yaw_range = (-0.247, 0.247)
+    # Min / max of the recomputed (2.4 s averaged) reference commands plus ~3% margin
+    # (scripts/tuning/reference_stats.py: x +-0.0353, y +-0.0118, yaw +-0.0579).
+    command_linear_x_range = (-0.0364, 0.0364)
+    command_linear_y_range = (-0.0121, 0.0121)
+    command_yaw_range = (-0.0596, 0.0596)
     command_linear_velocity_scale = 0.5
     command_angular_velocity_scale = 0.25
     sample_commands_from_reference = True
     recompute_motion_commands = True
     use_average_velocities = True
-    # Two gait periods (0.72 s each): a shorter window leaves gait-frequency ripple in the tracked velocity.
-    average_velocity_window_s = 1.44
-    # Small relative to the command magnitude (|mean| 0.083 m/s, 0.10 rad/s), so standing still under a moving
-    # command earns little of the tracking reward (ARTI-H1 used 0.001 for ~half these speeds).
-    linear_velocity_tracking_sigma = 0.003
-    angular_velocity_tracking_sigma = 0.005
+    # One gait period (2.4 s): a shorter window leaves gait-frequency ripple in the tracked velocity.
+    average_velocity_window_s = 2.4
+    # Small relative to the command magnitude (|mean| 0.019 m/s, 0.027 rad/s), so standing still under a moving
+    # command earns little of the tracking reward (same as ARTI-H1, whose commands are on the same scale).
+    linear_velocity_tracking_sigma = 0.001
+    angular_velocity_tracking_sigma = 0.001
     linear_velocity_xy_reward_scale = 0.5
     angular_velocity_z_reward_scale = 0.5
     # Regularization terms are NOT scaled by step_dt (see _get_rewards); these are the per-step magnitudes directly.
@@ -226,8 +227,8 @@ class ArtiD1AmpEnvCfg(DirectRLEnvCfg):
     # Smoothness: -scale * sum_j (qd_j / ref_rms_j)^2 (reference speed rms per joint from the clips, floored).
     joint_vel_reward_scale = -0.015
     joint_vel_rms_floor = 0.17  # rad/s (~10 deg/s), keeps hip yaw and the constant arm plate from dominating
-    # -scale * sum qdd^2 (rad/s^2). The D1 gait is ~2x faster than ARTI-H1's, so the accelerations are ~4x larger.
-    joint_acc_reward_scale = -5.0e-7
+    # -scale * sum qdd^2 (rad/s^2); ~100 rad/s^2 per joint -> about -0.1 per step.
+    joint_acc_reward_scale = -2.0e-6
     # Added to common_step_counter by every curriculum (support fade, torque, regularization), so a warm start
     # continues the schedules instead of restarting them at step 0 (set to the checkpoint step).
     curriculum_step_offset = 0
@@ -246,8 +247,8 @@ class ArtiD1AmpEnvCfg(DirectRLEnvCfg):
     # Sag/lag-compensated command table (bins x joints, robot joint order) from scripts/tuning/ilc_nominal.py.
     nominal_gait_table_file = os.path.join(ISAACLAB_ASSETS_DIR, "motions", "arti_d1_nominal_gait_command.npy")
     # Balance "training wheels": pelvis torque kp * sin(tilt) - kd * roll/pitch rate (Nm), full strength until the
-    # first step count, then faded linearly to 0. Tipping moment of the whole robot at 0.2 rad is ~2.6 Nm (5.6 kg,
-    # CoM 0.24 m). Set kp = 0 to disable (e.g. for play / eval / warm-started fine-tuning).
+    # first step count, then faded linearly to 0. Tipping moment of the whole robot at 0.2 rad is ~2.9 Nm (5.8 kg,
+    # CoM 0.255 m). Set kp = 0 to disable (e.g. for play / eval / warm-started fine-tuning).
     balance_support_kp = 16.0
     balance_support_kd = 0.8
     balance_support_fade_steps = (150_000, 600_000)
@@ -257,40 +258,40 @@ class ArtiD1AmpEnvCfg(DirectRLEnvCfg):
     cycle_reference_motions = False
     # Penalize only the rolling left/right action-energy imbalance (permits the half-cycle phase offset of walking).
     symmetry_reward_scale = -0.05
-    symmetry_window_s = 1.44
+    symmetry_window_s = 2.4
     # Non-saturating reward for moving along each commanded planar axis: clamp(v_a / cmd_a, -1, 1) averaged over the
     # axes with |cmd_a| > min_command, so standing still scores 0 under a moving command.
     signed_progress_reward_scale = 0.1
-    signed_progress_min_command = 0.01
+    signed_progress_min_command = 0.005
     # Seconds between mid-episode command switches (uniform range); (0, 0) disables.
     command_resample_interval_s = (4.0, 8.0)
     # Sole height below which a foot counts as in contact (the asset has no contact sensor).
     foot_contact_height = 0.008
     # Paid per foot at touchdown: max(clamp(air_time, max) - target, 0), only under a moving command.
-    # Reference single support is 0.30 s.
+    # Reference single support is 0.8 s.
     feet_air_time_reward_scale = 5.0
     feet_air_time_target_s = 0.0
-    feet_air_time_max_s = 0.4
+    feet_air_time_max_s = 0.9
     # (stance_fraction_left - stance_fraction_right)^2 over a rolling window, under a moving command (off).
     contact_symmetry_reward_scale = 0.0
-    contact_symmetry_window_s = 1.44
-    # Gait clock (sin/cos in the policy observation), following the reference: phase_rate 1.38889 /s (0.72 s cycle),
-    # phase 0 = left single support start. From the reference foot contacts (reference_stats.py): right foot swings over
-    # [0.0125, 0.4292), left over [0.5125, 0.9292), half-sine swing height peaking at walk_foot_height 0.030 m. It is
-    # reset to the reference gait_phase of the RSI frame, so reference state and clock agree at reset.
-    gait_phase_rate = 1.38889
+    contact_symmetry_window_s = 2.4
+    # Gait clock (sin/cos in the policy observation), following the reference: phase_rate 0.41667 /s (2.4 s cycle,
+    # 0.8 s single support), phase 0 = left single support start. From the reference foot contacts (reference_stats.py):
+    # right foot swings over [0.0067, 0.34), left over [0.5067, 0.84), half-sine swing height peaking at walk_foot_height
+    # 0.030 m. It is reset to the reference gait_phase of the RSI frame, so reference state and clock agree at reset.
+    gait_phase_rate = 0.41667
     # Standing: under a zero command (max |vx|, |vy|, |wz| <= stand_command_threshold) the clock runs on only to the
     # next rest phase (mid double support) and stays there, so the nominal stepping holds a two-feet stance; it starts
     # again from there with the next moving command. Empty = the clock always runs (stepping in place at zero command).
-    gait_rest_phases = (0.4708, 0.9708)
+    gait_rest_phases = (0.4233, 0.9233)
     stand_command_threshold = 0.003
     # Standing (zero command) rewards: both soles down, and -scale * sum(joint_vel^2).
     stand_feet_contact_reward_scale = 0.5
     stand_joint_vel_reward_scale = 0.01
     # -scale * (|yaw rate| + |planar base speed|) while standing.
     stand_base_motion_reward_scale = 5.0
-    gait_swing_start_phase = (0.5125, 0.0125)  # (left, right)
-    gait_swing_duration_phase = 0.4167
+    gait_swing_start_phase = (0.5067, 0.0067)  # (left, right)
+    gait_swing_duration_phase = 0.3333
     gait_swing_height = 0.030
     # 0.02: a 5 mm lift already earns ~0.2, so a dragged foot sees a gradient toward lifting.
     gait_swing_height_sigma = 0.02
@@ -306,17 +307,19 @@ class ArtiD1AmpEnvCfg(DirectRLEnvCfg):
     foot_stagger_reward_scale = -8.0
     # Per touchdown: -scale * |step_k - step_(k-1)| (m).
     step_symmetry_reward_scale = -150.0
-    # Sole contact patch half-size (m) from the foot collision mesh (x +-0.0525, y +-0.0292 about the sole frame).
-    foot_sole_half_length = 0.0525
-    foot_sole_half_width = 0.0292
+    # Sole contact patch half-size (m): the flat bottom face of the foot mesh (x +-0.040, y +-0.0173 about the sole
+    # frame); the sole edge above it is a ~10 mm fillet out to x +-0.0525, y +-0.0295.
+    foot_sole_half_length = 0.040
+    foot_sole_half_width = 0.0173
     # -scale * sum_feet sin^2(sole tilt). Reference swing and stance soles are flat.
     foot_flat_reward_scale = -30.0
     # -scale * sum over feet off the ground of (roll rate^2 + pitch rate^2) (rad/s).
     swing_foot_ang_vel_reward_scale = -0.05
-    # Knee = shin link origin. Reference knee lift (swing peak - stance) is 18.3 / 18.3 mm (URDF FK of the clips).
+    # Knee = shin link origin. Reference knee lift (swing peak - stance) is 29.7 / 32.0 mm
+    # (scripts/tuning/reference_knee_lift.py).
     left_knee_body = "left_shin"
     right_knee_body = "right_shin"
-    knee_lift_target = 0.0183
+    knee_lift_target = 0.0309
     # Per touchdown: scale * |swing_k - swing_(k-1)| (s).
     swing_symmetry_reward_scale = -20.0
     knee_lift_sigma = 0.008
@@ -337,8 +340,8 @@ class ArtiD1AmpEnvCfg(DirectRLEnvCfg):
     foot_slip_reward_scale = -8.0
 
     early_termination = True
-    # Trunk frame height (reference 0.24 m).
-    termination_height = 0.15
+    # Trunk frame height (reference 0.255 m).
+    termination_height = 0.17
     # Trunk tilt from vertical, in radians. Height alone lets the robot survive in heavily tipped poses.
     termination_max_tilt_rad = 0.8
     reference_body = "pelvis"

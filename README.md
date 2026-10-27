@@ -10,7 +10,7 @@ extra arguments. Trained policies are exported to ONNX and deployed with
 ## Robot
 
 - BDX-like layout, 14 joints: per leg hip yaw / roll / pitch, knee, ankle (Dynamixel XH540-W270), per arm `arm_m8` and
-  `arm_m8crank_plate` (Dynamixel XM430-W350). ~5.6 kg, trunk 0.24 m.
+  `arm_m8crank_plate` (Dynamixel XM430-W350). ~5.8 kg, trunk 0.255 m.
 - Policy / action / observation joint order = Isaac Lab articulation order = Dynamixel IDs 1-14:
 
   | ID | joint | ID | joint |
@@ -56,10 +56,10 @@ python scripts/skrl/train.py --task Template-Arti-D1-Amp-Direct-v0 --algorithm A
 - Progress summary: `PY=<isaac lab python> bash scripts/tuning/check.sh`.
 
 Setup:
-- Reference motions `assets/motions/arti_d1`: 996 motion_generator clips (0.72 s cycle, 0.3 s single support, 3 cm
-  swing; 584 unique, exact duplicates are merged into sampling weights) plus a standing clip (`996.json`, weight 176).
+- Reference motions `assets/motions/arti_d1`: 1000 motion_generator clips (2.4 s cycle, 0.8 s single support, 3 cm
+  swing, CoM 0.255 m; one distinct command each) plus a standing clip (`1000.json`, weight 176).
 - Command (0, 0, 0) means stand still and balance: the gait clock stops at a double-support rest phase
-  (`gait_rest_phases` 0.4708 / 0.9708).
+  (`gait_rest_phases` 0.4233 / 0.9233).
 - Residual policy on an ILC nominal gait table (`assets/motions/arti_d1_nominal_gait_command.npy`).
 
 ## Play / evaluate / export
@@ -74,25 +74,23 @@ python -u scripts/tuning/check_onnx_in_env.py --onnx agent.onnx --headless
 python -u scripts/tuning/check_controller_obs.py --headless          # humanoid_controller ArtiD1 observation
 ```
 
-humanoid_controller `config/robot/ARTI-D1/robot.yaml` policy settings for this setup: `gait_phase_rate: 1.38889`,
-`initial_gait_phase: 0.9708`, `gait_rest_phases: [0.4708, 0.9708]`, `command_max: [0.133, 0.054, 0.247]`.
+humanoid_controller `config/robot/ARTI-D1/robot.yaml` policy settings for this setup: `gait_phase_rate: 0.41667`,
+`initial_gait_phase: 0.9233`, `gait_rest_phases: [0.4233, 0.9233]`, `command_max: [0.0364, 0.0121, 0.0596]`.
 
 ## Regenerate reference motions
 
 ```bash
-python scripts/tuning/gen_motions.py arti_d1 1000 10          # env_placo python, MOTION_GENERATOR=<motion_generator path>
+python scripts/tuning/gen_motions.py arti_d1 1000 20          # env_placo python, MOTION_GENERATOR=<motion_generator path>
 python scripts/tuning/reference_stats.py                       # default pose, action ranges, swing phases, commands
 M=source/arti_d1/arti_d1/assets/motions
-python scripts/tuning/make_stand_clip.py $M/arti_d1/0.json $M/arti_d1/996.json --phase 0.9708 --weight 176
+python scripts/tuning/make_stand_clip.py $M/arti_d1/0.json $M/arti_d1/1000.json --phase 0.9233 --weight 176
 python -u scripts/tuning/ilc_nominal.py --headless --iters 8   # writes $M/arti_d1_nominal_gait_command.npy
 ```
 
 ## Known gaps (sim-to-real)
 
-- The reference gait is fast for the servos: knee speed up to 8.6 rad/s (rms 3.1) against a 12 V no-load speed of
-  3.14 rad/s (XH540-W270). The sim caps joint speed at 10 rad/s and models the back-EMF only as damping; a slower
-  reference (longer `single_support_duration` in motion_generator `config/arti_d1/gait.json`) is closer to what the
-  real servos can follow.
+- Joint speed is capped at the 12 V no-load speed (3.14 rad/s legs) and the back-EMF is modelled only as damping. The
+  slow reference (2.4 s cycle) stays below it except brief knee peaks at touchdown.
 - Servo gains, delay, friction and the IMU mount are datasheet / assumed values: run a sysid and measure the IMU mount
   before trusting a policy on the robot.
 

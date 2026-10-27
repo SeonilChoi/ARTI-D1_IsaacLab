@@ -7,11 +7,17 @@ robot, num, jobs = sys.argv[1], int(sys.argv[2]), int(sys.argv[3])
 root = os.environ.get("MOTION_GENERATOR", "C:/motion_generator")  # motion_generator checkout
 b = json.load(open(f"{root}/config/{robot}/motion.json"))
 # Commands are rounded to 0.01, so the distinct set is a grid; generate every grid point once (no duplicates).
+# bounds = [min, max] magnitude per axis (motion_generator scripts/main.py): 0 or +-[min, max].
 def grid(bd):
-    hi = int(round(bd[1] * 100))
-    return [v / 100.0 for v in range(-hi, hi + 1)]
+    lo, hi = int(round(bd[0] * 100)), int(round(bd[1] * 100))
+    return sorted({0.0} | {s * v / 100.0 for v in range(max(lo, 1), hi + 1) for s in (-1, 1)})
 cmds = [(dx, dy, dth) for dx in grid(b["dx_bounds"]) for dy in grid(b["dy_bounds"]) for dth in grid(b["dth_bounds"])]
-if num > len(cmds):
+cmds = [c for c in cmds if any(c)]
+if num < len(cmds):
+    # fewer clips than grid points: a fixed-seed random subset, so every direction stays covered
+    rng = np.random.default_rng(0)
+    cmds = [cmds[i] for i in sorted(rng.choice(len(cmds), num, replace=False))]
+elif num > len(cmds):
     # more clips than the 0.01 grid: add distinct points of the 0.005 grid (fixed seed, reproducible)
     def fine(bd):
         hi = int(round(bd[1] * 200))

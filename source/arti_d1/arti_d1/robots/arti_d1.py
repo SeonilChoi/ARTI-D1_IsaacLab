@@ -12,24 +12,24 @@ LEG_JOINTS = ("hip_yaw", "hip_roll", "hip_pitch", "knee", "ankle")
 ARM_JOINTS = ("arm_m8", "arm_m8crank_plate")
 JOINT_NAMES = tuple(f"{side}_{j}" for side in ("left", "right") for j in LEG_JOINTS + ARM_JOINTS)
 
-# Standing pose = first frame of every reference clip (motion_generator arti_d1). The legs are mirrored in the URDF
-# (no pi rotation like ARTI-H1), so the hip_roll signs are opposite left / right. The arm plate sits at its -18 deg
-# rest angle (= the URDF lower limit).
+# Standing pose = first frame of every reference clip (motion_generator arti_d1, slow gait: CoM 0.255 m, feet 0.175 m
+# apart). The legs are mirrored in the URDF (no pi rotation like ARTI-H1), so the hip_roll signs are opposite
+# left / right. The arm plate sits at its -13 deg rest angle (= the URDF lower limit).
 JOINT_INIT_POS = {
     "left_hip_yaw": 0.0,
-    "left_hip_roll": -0.00424,
-    "left_hip_pitch": -0.11294,
-    "left_knee": 0.29456,
-    "left_ankle": -0.18163,
+    "left_hip_roll": -0.07065,
+    "left_hip_pitch": -0.0127,
+    "left_knee": 0.09122,
+    "left_ankle": -0.07853,
     "right_hip_yaw": 0.0,
-    "right_hip_roll": 0.00436,
-    "right_hip_pitch": -0.11284,
-    "right_knee": 0.29438,
-    "right_ankle": -0.18153,
-    "left_arm_m8": 0.0,
-    "left_arm_m8crank_plate": -0.3141,  # reference -0.31416 = URDF lower limit; kept just inside it
-    "right_arm_m8": 0.0,
-    "right_arm_m8crank_plate": -0.3141,
+    "right_hip_roll": 0.07065,
+    "right_hip_pitch": -0.01269,
+    "right_knee": 0.09122,
+    "right_ankle": -0.07853,
+    "left_arm_m8": -0.0006,
+    "left_arm_m8crank_plate": -0.2268,  # reference -0.22689 = URDF lower limit; kept just inside it
+    "right_arm_m8": -0.0006,
+    "right_arm_m8crank_plate": -0.2268,
 }
 
 # Dynamixel position-mode model. Legs: XH540-W270 (12 V stall 10.6 Nm, no load 30 rpm = 3.14 rad/s), arms: XM430-W350
@@ -63,9 +63,9 @@ def dynamixel_kd(joint_name: str) -> float:
 JOINT_STIFFNESS = {name: round(dynamixel_kp(name), 3) for name in JOINT_NAMES}
 JOINT_DAMPING = {name: round(dynamixel_kd(name), 3) for name in JOINT_NAMES}
 JOINT_EFFORT_LIMIT = {name: joint_motor(name)["stall_torque"] for name in JOINT_NAMES}
-# The reference gait (0.72 s cycle) moves the knee at up to 8.6 rad/s (rms 3.1), far above the 12 V no-load speed, so
-# the simulator cap is set from the reference (see README); the back-EMF damping above still makes fast motion costly.
-JOINT_VELOCITY_LIMIT = {name: 10.0 for name in JOINT_NAMES}
+# Capped at the 12 V no-load speed. The slow reference gait (2.4 s cycle) stays below it except brief knee peaks of
+# ~3.4 rad/s at touchdown (p99 3.1); the old 0.72 s gait needed up to 8.6 rad/s.
+JOINT_VELOCITY_LIMIT = {name: joint_motor(name)["no_load_speed"] for name in JOINT_NAMES}
 
 
 ARTI_D1_CFG = ArticulationCfg(
@@ -96,7 +96,7 @@ ARTI_D1_CFG = ArticulationCfg(
     ),
     init_state=ArticulationCfg.InitialStateCfg(
         # Reference pelvis origin height with the soles on the ground (root z of every clip).
-        pos=(0.0, 0.0, 0.01375),
+        pos=(0.0, 0.0, 0.00875),
         joint_pos=JOINT_INIT_POS,
     ),
     actuators={
