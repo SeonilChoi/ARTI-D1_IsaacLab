@@ -48,24 +48,24 @@ import arti_d1.tasks  # noqa: F401
 
 TASK = "Template-Arti-D1-Amp-Direct-v0"
 COMMANDS = [
-    ("forward", (0.080, 0.0, 0.0)),
-    ("forward_fast", (0.120, 0.0, 0.0)),
-    ("backward", (-0.080, 0.0, 0.0)),
-    ("left", (0.0, 0.040, 0.0)),
-    ("right", (0.0, -0.040, 0.0)),
-    ("turn_left", (0.0, 0.0, 0.150)),
+    ("forward", (0.045, 0.0, 0.0)),
+    ("forward_fast", (0.053, 0.0, 0.0)),
+    ("backward", (-0.045, 0.0, 0.0)),
+    ("left", (0.0, 0.024, 0.0)),
+    ("right", (0.0, -0.024, 0.0)),
+    ("turn_left", (0.0, 0.0, 0.120)),
 ]
 
 SEQ_DURATION_S = 5.0
-# Commands inside the training range (x .133 y .054 yaw .247) plus standing (zero command) segments; same as play.py.
+# Commands inside the training range (22 mm reference 0fb1c58: x .0534 y .0248 yaw .1234) plus standing (zero command) segments; same as play.py.
 PLAY_SEQUENCE = [
-    ("forward", (0.100, 0.0, 0.0)),
+    ("forward", (0.050, 0.0, 0.0)),
     ("stand", (0.0, 0.0, 0.0)),
-    ("side_left", (0.0, 0.040, 0.0)),
-    ("backward", (-0.080, 0.0, 0.0)),
+    ("side_left", (0.0, 0.024, 0.0)),
+    ("backward", (-0.045, 0.0, 0.0)),
     ("stand", (0.0, 0.0, 0.0)),
-    ("diagonal_right", (0.080, -0.030, 0.0)),
-    ("turn_left", (0.0, 0.0, 0.180)),
+    ("diagonal_right", (0.045, -0.018, 0.0)),
+    ("turn_left", (0.0, 0.0, 0.120)),
     ("stand", (0.0, 0.0, 0.0)),
 ]
 
