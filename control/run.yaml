@@ -1,8 +1,8 @@
-rev: 4                 # 지금 값보다 1 올리기
-mode: resume
+rev: 5                 # 지금 값보다 1 올리기
+mode: restart
 resume:
   checkpoint: latest
   curriculum_step_offset: auto
-# exp1: 06-45-28 run 이어서, task/style .5/.5 -> .3/.7 (600k 평가: 보폭 2 cm, 직진 추종 27 %, style .26, disc acc .998)
+# exp2: 발 높이 15->22 mm 기준 동작 (swing 0.55 s, 보폭 <= 4.5 cm; 서보 속도 3.03 rad/s, hip_roll 한계 안) -> 새로 학습, task/style .3/.7
 args: ["--num_envs", "4096", "agent.agent.experiment.checkpoint_interval=20000", "agent.agent.task_reward_scale=0.3", "agent.agent.style_reward_scale=0.7"]
 publish: []
