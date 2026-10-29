@@ -123,11 +123,11 @@ import arti_d1.tasks  # noqa: F401
 PLAY_COMMAND_DURATION_S = 5.0
 VIDEO_CAMERA_EYE = (0.3, -2.0, 0.6)
 VIDEO_CAMERA_LOOKAT = (0.3, 0.0, 0.06)
-# Commands inside the training range (22 mm reference 0fb1c58: x .0534 y .0248 yaw .1234) plus standing segments.
+# Commands inside the training range (22 mm, 10 deg hip_roll stance reference: x .0534 y .0215 yaw .1234) plus standing segments.
 PLAY_COMMAND_SEQUENCE = (
     ("forward", (0.050, 0.0, 0.0)),
     ("stand", (0.0, 0.0, 0.0)),
-    ("side_left", (0.0, 0.024, 0.0)),
+    ("side_left", (0.0, 0.020, 0.0)),
     ("backward", (-0.045, 0.0, 0.0)),
     ("stand", (0.0, 0.0, 0.0)),
     ("diagonal_right", (0.045, -0.018, 0.0)),

@@ -12,23 +12,24 @@ LEG_JOINTS = ("hip_yaw", "hip_roll", "hip_pitch", "knee", "ankle")
 ARM_JOINTS = ("arm_m8", "arm_m8crank_plate")
 JOINT_NAMES = tuple(f"{side}_{j}" for side in ("left", "right") for j in LEG_JOINTS + ARM_JOINTS)
 
-# Standing pose = first frame of every reference clip (motion_generator arti_d1, 1.36 s gait: CoM 0.255 m, feet 0.17 m
-# apart). The legs are mirrored in the URDF (no pi rotation like ARTI-H1), so the hip_roll signs are opposite
+# Standing pose = first frame of every reference clip (motion_generator arti_d1, 1.36 s gait: CoM 0.2585 m, feet 0.1354 m
+# apart = hip_roll 10 deg inward). The legs are mirrored in the URDF (no pi rotation like ARTI-H1), so the hip_roll
+# signs are opposite
 # left / right. The arm plate sits at its -13 deg rest angle (= the URDF lower limit).
 JOINT_INIT_POS = {
     "left_hip_yaw": 0.0,
-    "left_hip_roll": -0.08412,
-    "left_hip_pitch": -0.00549,
-    "left_knee": 0.07658,
-    "left_ankle": -0.07109,
+    "left_hip_roll": -0.17466,
+    "left_hip_pitch": -0.00293,
+    "left_knee": 0.07136,
+    "left_ankle": -0.06844,
     "right_hip_yaw": 0.0,
-    "right_hip_roll": 0.08412,
-    "right_hip_pitch": -0.00549,
-    "right_knee": 0.07658,
-    "right_ankle": -0.07108,
-    "left_arm_m8": -0.00157,
+    "right_hip_roll": 0.17466,
+    "right_hip_pitch": -0.00293,
+    "right_knee": 0.07136,
+    "right_ankle": -0.06844,
+    "left_arm_m8": -0.00048,
     "left_arm_m8crank_plate": -0.2268,  # reference -0.22689 = URDF lower limit; kept just inside it
-    "right_arm_m8": -0.00157,
+    "right_arm_m8": -0.00048,
     "right_arm_m8crank_plate": -0.2268,
 }
 
@@ -65,6 +66,7 @@ JOINT_DAMPING = {name: round(dynamixel_kd(name), 3) for name in JOINT_NAMES}
 JOINT_EFFORT_LIMIT = {name: joint_motor(name)["stall_torque"] for name in JOINT_NAMES}
 # Capped at the 12 V no-load speed. The reference gait (1.36 s cycle, 22 mm swing, steps <= 4.5 cm, feet 0.17 m apart)
 # is the highest swing that stays below it (leg joints <= 3.03 rad/s) with hip_roll in -18 / +12 deg (was 1.25 s / 15 mm);
+# the 10 deg inward hip_roll stance (feet 0.1354 m) reaches 3.3 rad/s knee in 0.15 % of reference frames;
 # the old 0.72 s gait needed up to 8.6 rad/s. Slower gaits cannot shift the CoM over the stance foot within that range.
 JOINT_VELOCITY_LIMIT = {name: joint_motor(name)["no_load_speed"] for name in JOINT_NAMES}
 
@@ -97,7 +99,7 @@ ARTI_D1_CFG = ArticulationCfg(
     ),
     init_state=ArticulationCfg.InitialStateCfg(
         # Reference pelvis origin height with the soles on the ground (root z of every clip).
-        pos=(0.0, 0.0, 0.00875),
+        pos=(0.0, 0.0, 0.01225),
         joint_pos=JOINT_INIT_POS,
     ),
     actuators={

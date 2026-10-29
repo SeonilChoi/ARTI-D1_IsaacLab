@@ -28,19 +28,19 @@ ARTI_D1_ACTION_SCALE_MARGIN = 1.2
 # The reference only uses +-0.065 rad of hip yaw; a PD target that small cannot overcome the stance-foot twist.
 ARTI_D1_HIP_YAW_ACTION_SCALE_MARGIN = 2.0
 # Distance from the default pose (first reference frame) to the min / max over every reference clip
-# (scripts/tuning/reference_stats.py, 1.36 s gait, 22 mm swing). The arm plate only rises (lateral steps), so its negative range is
+# (scripts/tuning/reference_stats.py, 1.36 s gait, 22 mm swing, hip_roll 10 deg inward stance). The arm plate only rises (lateral steps), so its negative range is
 # 0 (floored by action_scale_min).
 ARTI_D1_ACTION_NEGATIVE_SCALE = {
     "left_hip_yaw": 0.06259 * ARTI_D1_HIP_YAW_ACTION_SCALE_MARGIN,
-    "left_hip_roll": 0.22886 * ARTI_D1_ACTION_SCALE_MARGIN,
-    "left_hip_pitch": 0.41071 * ARTI_D1_ACTION_SCALE_MARGIN,
-    "left_knee": 0.19085 * ARTI_D1_ACTION_SCALE_MARGIN,
-    "left_ankle": 0.39728 * ARTI_D1_ACTION_SCALE_MARGIN,
+    "left_hip_roll": 0.13403 * ARTI_D1_ACTION_SCALE_MARGIN,
+    "left_hip_pitch": 0.33240 * ARTI_D1_ACTION_SCALE_MARGIN,
+    "left_knee": 0.34321 * ARTI_D1_ACTION_SCALE_MARGIN,
+    "left_ankle": 0.31999 * ARTI_D1_ACTION_SCALE_MARGIN,
     "right_hip_yaw": 0.06259 * ARTI_D1_HIP_YAW_ACTION_SCALE_MARGIN,
-    "right_hip_roll": 0.28829 * ARTI_D1_ACTION_SCALE_MARGIN,
-    "right_hip_pitch": 0.41361 * ARTI_D1_ACTION_SCALE_MARGIN,
-    "right_knee": 0.22767 * ARTI_D1_ACTION_SCALE_MARGIN,
-    "right_ankle": 0.40006 * ARTI_D1_ACTION_SCALE_MARGIN,
+    "right_hip_roll": 0.19130 * ARTI_D1_ACTION_SCALE_MARGIN,
+    "right_hip_pitch": 0.33299 * ARTI_D1_ACTION_SCALE_MARGIN,
+    "right_knee": 0.36214 * ARTI_D1_ACTION_SCALE_MARGIN,
+    "right_ankle": 0.32033 * ARTI_D1_ACTION_SCALE_MARGIN,
     "left_arm_m8": 0.52203 * ARTI_D1_ACTION_SCALE_MARGIN,
     "left_arm_m8crank_plate": 0.0,
     "right_arm_m8": 0.52203 * ARTI_D1_ACTION_SCALE_MARGIN,
@@ -48,15 +48,15 @@ ARTI_D1_ACTION_NEGATIVE_SCALE = {
 }
 ARTI_D1_ACTION_POSITIVE_SCALE = {
     "left_hip_yaw": 0.06259 * ARTI_D1_HIP_YAW_ACTION_SCALE_MARGIN,
-    "left_hip_roll": 0.26715 * ARTI_D1_ACTION_SCALE_MARGIN,
-    "left_hip_pitch": 0.25508 * ARTI_D1_ACTION_SCALE_MARGIN,
-    "left_knee": 0.31207 * ARTI_D1_ACTION_SCALE_MARGIN,
-    "left_ankle": 0.24158 * ARTI_D1_ACTION_SCALE_MARGIN,
+    "left_hip_roll": 0.17924 * ARTI_D1_ACTION_SCALE_MARGIN,
+    "left_hip_pitch": 0.34435 * ARTI_D1_ACTION_SCALE_MARGIN,
+    "left_knee": 0.16855 * ARTI_D1_ACTION_SCALE_MARGIN,
+    "left_ankle": 0.33688 * ARTI_D1_ACTION_SCALE_MARGIN,
     "right_hip_yaw": 0.06259 * ARTI_D1_HIP_YAW_ACTION_SCALE_MARGIN,
-    "right_hip_roll": 0.23407 * ARTI_D1_ACTION_SCALE_MARGIN,
-    "right_hip_pitch": 0.30497 * ARTI_D1_ACTION_SCALE_MARGIN,
-    "right_knee": 0.31213 * ARTI_D1_ACTION_SCALE_MARGIN,
-    "right_ankle": 0.29102 * ARTI_D1_ACTION_SCALE_MARGIN,
+    "right_hip_roll": 0.13592 * ARTI_D1_ACTION_SCALE_MARGIN,
+    "right_hip_pitch": 0.39544 * ARTI_D1_ACTION_SCALE_MARGIN,
+    "right_knee": 0.16866 * ARTI_D1_ACTION_SCALE_MARGIN,
+    "right_ankle": 0.38652 * ARTI_D1_ACTION_SCALE_MARGIN,
     "left_arm_m8": 0.26180 * ARTI_D1_ACTION_SCALE_MARGIN,
     "left_arm_m8crank_plate": 0.36542 * ARTI_D1_ACTION_SCALE_MARGIN,
     "right_arm_m8": 0.26180 * ARTI_D1_ACTION_SCALE_MARGIN,
@@ -67,7 +67,7 @@ ARTI_D1_JOINT_STIFFNESS = JOINT_STIFFNESS
 ARTI_D1_JOINT_DAMPING = JOINT_DAMPING
 ARTI_D1_JOINT_EFFORT_LIMIT = JOINT_EFFORT_LIMIT
 ARTI_D1_JOINT_VELOCITY_LIMIT = JOINT_VELOCITY_LIMIT
-# trunk_frame in arti_d1.urdf. The reference walk_com_height (0.255) is this plus the 0.00875 m pelvis origin height.
+# trunk_frame in arti_d1.urdf. The reference walk_com_height (0.2585) is this plus the 0.01225 m pelvis origin height.
 ARTI_D1_TRUNK_OFFSET_FROM_PELVIS = (0.00964957, 0.0, 0.246248)
 # IMU mount (Xsens MTi, humanoid_controller sensor.yaml): assumed at the trunk frame until the real mount is measured.
 ARTI_D1_IMU_OFFSET_FROM_TRUNK = (0.0, 0.0, 0.0)
@@ -198,9 +198,9 @@ class ArtiD1AmpEnvCfg(DirectRLEnvCfg):
     hip_yaw_action_scale_min = 0.10
 
     # Min / max of the recomputed (1.36 s averaged) reference commands plus ~3% margin
-    # (scripts/tuning/reference_stats.py: x +-0.0519, y +-0.0241, yaw +-0.1198).
+    # (scripts/tuning/reference_stats.py: x +-0.0519, y +-0.0209, yaw +-0.1198; feet 0.1354 m apart).
     command_linear_x_range = (-0.0534, 0.0534)
-    command_linear_y_range = (-0.0248, 0.0248)
+    command_linear_y_range = (-0.0215, 0.0215)
     command_yaw_range = (-0.1234, 0.1234)
     command_linear_velocity_scale = 0.5
     command_angular_velocity_scale = 0.25
@@ -316,11 +316,11 @@ class ArtiD1AmpEnvCfg(DirectRLEnvCfg):
     foot_flat_reward_scale = -30.0
     # -scale * sum over feet off the ground of (roll rate^2 + pitch rate^2) (rad/s).
     swing_foot_ang_vel_reward_scale = -0.05
-    # Knee = shin link origin. Reference knee lift (swing peak - stance) is 21.6 / 22.4 mm (22 mm swing)
+    # Knee = shin link origin. Reference knee lift (swing peak - stance) is 22.5 / 23.5 mm (22 mm swing, 10 deg hip_roll stance)
     # (scripts/tuning/reference_knee_lift.py).
     left_knee_body = "left_shin"
     right_knee_body = "right_shin"
-    knee_lift_target = 0.0220
+    knee_lift_target = 0.0230
     # Per touchdown: scale * |swing_k - swing_(k-1)| (s).
     swing_symmetry_reward_scale = -20.0
     knee_lift_sigma = 0.008
