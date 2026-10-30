@@ -29,6 +29,7 @@ parser.add_argument("--uniform_action_scale", type=float, default=0.6, help="mus
 parser.add_argument("--motion_folder", type=str, default=None, help="reference motion set the checkpoint was trained on")
 parser.add_argument("--nominal_table", type=str, default=None, help="nominal gait table the checkpoint was trained with")
 parser.add_argument("--hip_roll_limit", type=float, default=None, help="hard +-limit (rad) on hip_roll, as in training")
+parser.add_argument("--physics", type=str, default="isaacsim_physx", help="physics preset: isaacsim_physx | newton_mjwarp")
 AppLauncher.add_app_launcher_args(parser)
 args_cli = parser.parse_args()
 app_launcher = AppLauncher(args_cli)
@@ -42,7 +43,7 @@ import torch
 import torch.nn as nn
 
 import isaaclab_tasks  # noqa: F401
-from isaaclab_tasks.utils import parse_env_cfg
+from isaaclab_tasks.utils import resolve_task_config
 
 import arti_d1.tasks  # noqa: F401
 
@@ -172,7 +173,8 @@ class StepMeter:
 
 
 def make_env():
-    cfg = parse_env_cfg(TASK, num_envs=args_cli.num_envs, use_fabric=True)
+    cfg = resolve_task_config(TASK, None, overrides=[f"physics={args_cli.physics}"])[0]
+    cfg.scene.num_envs = args_cli.num_envs
     cfg.early_termination = False
     if hasattr(cfg, "balance_support_kp"):
         cfg.balance_support_kp = args_cli.support_kp  # training-only support torque, off unless diagnosing

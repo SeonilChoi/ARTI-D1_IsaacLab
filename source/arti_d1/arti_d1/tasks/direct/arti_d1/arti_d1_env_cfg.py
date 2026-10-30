@@ -271,6 +271,10 @@ class ArtiD1AmpEnvCfg(DirectRLEnvCfg):
         "arm_m8": 0.03, "arm_m8crank_plate": 0.03,
     }
     actuator_stick_velocity = 0.02  # rad/s
+    # DC motor voltage saturation: the PD drive term kp * (target - q) is capped at the stall torque (joint_effort_limit),
+    # so with kd = stall torque / no-load speed (back-EMF) the drive torque reaches 0 at the no-load speed. This caps the
+    # joint speed on every backend; MJWarp does not enforce joint velocity limits (PORTING_NOTES N1).
+    actuator_voltage_saturation = True
     # Per-env randomisation at start-up: delay + uniform(lo, hi) ms, armature and coulomb x uniform(lo, hi).
     actuator_delay_jitter_ms = (-6.0, 8.0)
     actuator_armature_scale_range = (0.3, 1.5)

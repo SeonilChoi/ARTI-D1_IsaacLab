@@ -412,7 +412,7 @@ class ArtiD1AmpEnv(DirectRLEnv):
               f"armature {self.cfg.actuator_armature}, coulomb {self.cfg.actuator_coulomb}", flush=True)
 
     def _apply_actuator_model(self, target: torch.Tensor) -> torch.Tensor:
-        """Called every physics step: delay the target, then shift it for Coulomb friction / freeze it when stuck."""
+        """Called every physics step: delay the target, shift it for Coulomb friction / freeze it when stuck, cap the drive."""
         steps = self.actuator_buffer.shape[0]
         self.actuator_buffer_head = (self.actuator_buffer_head + 1) % steps
         self.actuator_buffer[self.actuator_buffer_head] = target
@@ -427,7 +427,11 @@ class ArtiD1AmpEnv(DirectRLEnv):
         self.actuator_q_stick = torch.where(stick & ~self.actuator_stuck, q, self.actuator_q_stick)
         self.actuator_stuck = stick
         direction = torch.where(moving, torch.sign(qd), torch.sign(err))
-        return torch.where(stick, self.actuator_q_stick, delayed - direction * self.actuator_coulomb / kp)
+        target = torch.where(stick, self.actuator_q_stick, delayed - direction * self.actuator_coulomb / kp)
+        if self.cfg.actuator_voltage_saturation:
+            reach = self.joint_effort_limit / kp
+            target = q + torch.clamp(target - q, -reach, reach)
+        return target
 
     def _apply_balance_support(self):
         """Training-wheels torque on the pelvis that resists roll/pitch tilt, faded out by a curriculum.
