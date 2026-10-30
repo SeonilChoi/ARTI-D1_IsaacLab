@@ -259,3 +259,50 @@ If the real crank-rocker linkage is modelled:
   preset for a closed-loop arm.
 - Keep `self_collision_enabled` consistent with the rod/plate overlap (DR-Legs enables self collision with
   `collisionEnabled = 0` on the loop joints).
+
+## 11. Step 2 log (port)
+
+User answers: Q1 yes (document the MJWarp velocity-limit gap, measure it, PhysX unchanged), Q2 yes (tuning scripts
+ported minimally, `auto_train.sh` on the new CLI, `docker/` untouched).
+
+Method: 3-way merge of the H1 port (base H1 `main`, theirs H1 `isaaclab3`, ours D1 `main`, names normalised),
+then every hunk reviewed. Conflict resolutions:
+- `robots/arti_d1.py`: D1 joint tables kept; H1's in-memory USD patch taken with `_DANGLING_VISUAL_REFERENCE_BODIES =
+  ("trunk",)` (D1's base layer has only that dangling arc; H1 also had the feet).
+- `arti_d1_env.py` (2): D1 docstrings/comments, H1's `.torch` lines.
+- `eval_gait.py`: D1's per-foot `sole_offsets` corner line with `.torch`; H1's `--mode standpush` block not taken
+  (feature never existed on D1). `check_onnx_in_env.py`: H1's max-tilt stats not taken (same reason).
+- `control/run.yaml`: D1 content (its args have no `env.sim.physx.*` override). README: 3.x install/CLI, D1 commands.
+- Clean merges re-checked: the cfg got only the 3.x structure (`ArtiD1PhysicsCfg`, `ArtiD1SceneCfg`, Pva slot,
+  light); no H1-only DR term (pelvis CoM, IMU tilt walk, foot width) leaked in. No `data.*` read left without
+  `.torch`, no 2.x writer, no quaternion swap except the boundary conversions (robot-log WXYZ in
+  `check_onnx_in_env --save_log` / `check_controller_obs`, inactive Kit `command` IMU backend).
+
+D1-specific additions:
+- `robots/arti_d1.py`: `ARTI_D1_POLICY_JOINT_ORDER` (Dynamixel IDs 1-14) and `ARTI_D1_CFG.joint_ordering` set to it.
+  `ArtiD1SceneCfg.robot = ARTI_D1_CFG.replace(...)` keeps it.
+- `ArtiD1AmpEnv._check_joint_order()` (called right after `DirectRLEnv.__init__`): prints the backend, the backend's
+  own order and the public order, and raises unless `joint_names == ARTI_D1_POLICY_JOINT_ORDER`,
+  `find_joints(order, preserve_order=True) == 0..13`, effort / velocity limits and default pose match the cfg by
+  name, and stiffness / damping lie inside the start-up DR range of the by-name values (leg and arm ranges do not
+  overlap, so a swapped arm/leg joint is caught despite the +-30 % gain DR).
+- `body_ordering`: not set in Step 2 (needs the PhysX body order from a run; Step 3). The env resolves every body by
+  name (`find_bodies`), so body order is not policy-facing; it is set anyway because the docs require both.
+- `scripts/porting/compare_backends.py`: D1 joints, `action_space` zero action, `trunk`/arm-crank mass + inertia,
+  share of joint samples above the no-load speed (Q1). `check_amp_consistency.py`: AMP groups from `num_joints`,
+  no `pelvis_com` event.
+
+Deviation from the Step 1 plan:
+- `pt_to_onnx.py:ISAAC_JOINT_NAMES` and `check_controller_obs.py:POLICY` keep their own lists. `pt_to_onnx.py` only
+  needs torch (importing `arti_d1.robots` would pull Isaac Lab / Newton into the export), and `POLICY` deliberately
+  mirrors humanoid_controller's `kPolicyJointNames`, which makes it an independent cross-check. All three lists
+  are identical (checked).
+
+Verified: `uv pip install -e source/arti_d1`; `import arti_d1`; gym IDs `Template-Arti-D1-Amp-Direct-v0`
+(skrl_cfg + skrl_amp_cfg -> AMP yaml, default_agent skrl) and `Template-Arti-D1-Direct-v0` (skrl_cfg -> PPO yaml);
+`isaaclab list_envs --keyword Arti-D1 --show_presets` lists `isaacsim_physx [default]`, `newton_kamino`,
+`newton_mjwarp`, `ovphysx`; every changed .py byte-compiles, every changed .sh passes `bash -n`.
+
+Behaviour changes forced by the API (as H1): B2 `replay_demo.py --video` removed; B3 `play.py --video` without
+`_BlankFrameGuard`, no `--use_pretrained_checkpoint`; B4 `ovphysx` cannot express `solver_type` /
+`bounce_threshold_velocity`; B5 the Pva accelerometer has no +g (not in any observation).
