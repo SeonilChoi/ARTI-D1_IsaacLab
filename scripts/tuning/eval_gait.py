@@ -12,6 +12,7 @@
 """
 
 import argparse
+import os
 import sys
 
 from isaaclab.app import AppLauncher
@@ -451,6 +452,7 @@ def main():
         seg_joint = torch.zeros((len(PLAY_SEQUENCE), len(uenv.robot.data.joint_names)), device=uenv.device)
         seg_footyaw = torch.zeros((len(PLAY_SEQUENCE), 2), device=uenv.device)
         table = torch.tensor([c for _, c in PLAY_SEQUENCE], dtype=torch.float32, device=uenv.device)
+        fall_t = torch.full((uenv.num_envs,), -1.0, device=uenv.device)  # time of the first fall per env (s)
         with torch.inference_mode():
             for k in range(seg_steps * len(PLAY_SEQUENCE)):
                 j = k // seg_steps
@@ -464,7 +466,12 @@ def main():
                 uenv.commands[:] = cmds
                 pobs = obs["policy"].clone()
                 pobs[:, -3:] = cmds * uenv.command_scale
-                obs, _, _, _, _ = env.step(torch.clamp(policy(pobs), -1.0, 1.0))
+                raw = policy(pobs)
+                if os.environ.get("EVAL_FALL_DEBUG") and k in (0, 1, 2, 5, 10, 15, 20, 25, 30, 60, 120):
+                    print(f"[RAW] t {k * dt:.2f} |raw| max {raw.abs().max().item():.2f} mean {raw.abs().mean().item():.2f} "
+                          f"frac |raw|>1 {(raw.abs() > 1).float().mean().item():.2f} | |obs| max {pobs.abs().max().item():.1f} "
+                          f"(idx {int(pobs.abs().max(0).values.argmax())})")
+                obs, _, _, _, _ = env.step(torch.clamp(raw, -1.0, 1.0))
                 if k % seg_steps >= int(2.0 / dt):
                     seg_vel[j] += heading_velocity(uenv)
                     seg_n[j] += 1
@@ -484,6 +491,16 @@ def main():
                         dy = torch.remainder(yaw_of(d.body_quat_w.torch[:, bi]) - py + math.pi, 2 * math.pi) - math.pi
                         seg_footyaw[j, fi] += dy.mean()
                 min_h = torch.minimum(min_h, trunk_height(uenv))
+                new_fall = (min_h < 0.2) & (fall_t < 0)
+                if bool(new_fall.any()) and os.environ.get("EVAL_FALL_DEBUG"):
+                    dd = uenv.robot.data; e = int(torch.nonzero(new_fall)[0])
+                    from isaaclab.utils.math import quat_apply as _qa
+                    qq = dd.body_quat_w.torch[e:e + 1, uenv.termination_body_index]
+                    print(f"[FALL] t {k * dt:.2f} env {e} pelvis z {dd.body_pos_w.torch[e, uenv.termination_body_index, 2].item():.3f} "
+                          f"up_z {_qa(qq, uenv.up_axis_b[:1] if uenv.up_axis_b.dim() > 1 else uenv.up_axis_b[None])[0, 2].item():.3f} "
+                          f"lin vel {[round(v, 2) for v in dd.root_lin_vel_w.torch[e].tolist()]} ang vel {[round(v, 2) for v in dd.root_ang_vel_w.torch[e].tolist()]} "
+                          f"action {[round(v, 2) for v in uenv.actions[e].tolist()]}")
+                fall_t = torch.where(new_fall, torch.full_like(fall_t, k * dt), fall_t)
                 if k % seg_steps == seg_steps - 1:
                     seg_steps_lr.append(meter.summary([True] * uenv.num_envs))
                     seg_rom.append((jmin.clone(), jmax.clone(), vsq.clone(), nr))
@@ -507,6 +524,8 @@ def main():
                                      (meter.edge_drag / max(meter.n, 1)).mean(0).tolist()))
         fell = min_h < 0.2
         print(f"[EVAL-SEQ] checkpoint={args_cli.checkpoint} envs={uenv.num_envs} fell={int(fell.sum())}")
+        if bool(fell.any()):
+            print(f"[EVAL-SEQ] fall times s: {sorted(round(v, 2) for v in fall_t[fell].tolist())}")
         for j, (name, c) in enumerate(PLAY_SEQUENCE):
             v = (seg_vel[j] / max(seg_n[j], 1))[~fell].mean(0).tolist()
             (ls, ln), (rs, rn) = seg_steps_lr[j]
