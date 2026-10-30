@@ -25,6 +25,11 @@ if ys is not None:
     floor = [m._env_yaml_float(ckpt, "hip_yaw_action_scale_min", 0.0) if "hip_yaw" in n else m._env_yaml_float(ckpt, "action_scale_min", 0.0) for n in m.JOINT_NAMES]
     model.action_negative_scale.copy_(torch.tensor(m._to_isaac_order([max(v, f) for v, f in zip(ys[0], floor)])))
     model.action_positive_scale.copy_(torch.tensor(m._to_isaac_order([max(v, f) for v, f in zip(ys[1], floor)])))
+# Env side of the mapping: the default pose the run trained with (params/env.yaml), independent of the export's buffer.
+yaml_pos = m._env_yaml_joint_pos(ckpt)
+env_default = np.array([yaml_pos.get(n, float(model.default_joint_pos[i])) for i, n in enumerate(m.ISAAC_JOINT_NAMES)],
+                       dtype=np.float32)
+print(f"[VERIFY] env default pose from {'params/env.yaml' if yaml_pos else 'pt_to_onnx constants (no env.yaml)'}")
 sess = ort.InferenceSession(onnx_path, providers=["CPUExecutionProvider"])
 rng = np.random.default_rng(0); worst = 0.0; worst_nom = 0.0
 for k in range(200):
@@ -38,6 +43,6 @@ for k in range(200):
     x = ((ph + model.phase_step) % 1.0) * table.shape[0]; i0 = int(np.floor(x)) % table.shape[0]; w = x - np.floor(x)  # env reads one step ahead
     nom = (1 - w) * table[i0].numpy() + w * table[(i0 + 1) % table.shape[0]].numpy()
     scale = np.where(a >= 0, model.action_positive_scale.numpy(), model.action_negative_scale.numpy())
-    env_q = np.clip(model.default_joint_pos.numpy() + scale * a + nom, model.joint_lower.numpy(), model.joint_upper.numpy())
+    env_q = np.clip(env_default + scale * a + nom, model.joint_lower.numpy(), model.joint_upper.numpy())
     worst_nom = max(worst_nom, float(np.abs(env_q - q).max()))
 print(f"[VERIFY] 200 samples: max |torch - onnx| = {worst:.2e}, max |env mapping - onnx q_des| = {worst_nom:.2e}")

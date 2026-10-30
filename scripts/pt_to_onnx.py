@@ -31,24 +31,25 @@ JOINT_NAMES = [
     "right_arm_m8crank_plate",
 ]
 
-# robots/arti_d1.py JOINT_INIT_POS
+# robots/arti_d1.py JOINT_INIT_POS (hip_roll 10 deg inward stance, 0749163); only used when the checkpoint has no
+# params/env.yaml: the run's own init_state.joint_pos is read from there (_env_yaml_joint_pos).
 DEFAULT_JOINT_POS = [
-    0.0, -0.07065, -0.0127, 0.09122, -0.07853,
-    0.0, 0.07065, -0.01269, 0.09122, -0.07853,
-    -0.0006, -0.2268, -0.0006, -0.2268,
+    0.0, -0.17466, -0.00293, 0.07136, -0.06844,
+    0.0, 0.17466, -0.00293, 0.07136, -0.06844,
+    -0.00048, -0.2268, -0.00048, -0.2268,
 ]
 
 # Same values as ARTI_D1_ACTION_*_SCALE in arti_d1_env_cfg.py (before the margins); only used when the checkpoint has
 # no params/env.yaml and was trained with uniform_action_scale = 0.
 ACTION_NEGATIVE_SCALE = [
-    0.06476, 0.22724, 0.52521, 0.14786, 0.50663,
-    0.06476, 0.27683, 0.52562, 0.14882, 0.51030,
+    0.06259, 0.13403, 0.33240, 0.34321, 0.31999,
+    0.06259, 0.19130, 0.33299, 0.36214, 0.32033,
     0.52203, 0.00000, 0.52203, 0.00000,
 ]
 
 ACTION_POSITIVE_SCALE = [
-    0.06476, 0.25683, 0.22660, 0.41086, 0.20987,
-    0.06476, 0.23391, 0.26227, 0.41050, 0.23952,
+    0.06259, 0.17924, 0.34435, 0.16855, 0.33688,
+    0.06259, 0.13592, 0.39544, 0.16866, 0.38652,
     0.26180, 0.36542, 0.26180, 0.36542,
 ]
 
@@ -311,6 +312,34 @@ def _env_yaml_list(checkpoint_path: Path, key: str) -> list[float]:
     return []
 
 
+def _env_yaml_joint_pos(checkpoint_path: Path) -> dict[str, float]:
+    """The run's robot init_state.joint_pos (= env default_joint_pos) from params/env.yaml: under scene.robot
+    (Isaac Lab 3.x) or the top-level robot (2.x). Indentation-agnostic; {} if absent."""
+    env_yaml = checkpoint_path.parents[1] / "params" / "env.yaml"
+    if not env_yaml.is_file():
+        return {}
+    lines = env_yaml.read_text(encoding="utf-8").splitlines()
+    indent = lambda line: len(line) - len(line.lstrip())
+    for k, line in enumerate(lines):
+        if line.strip() != "robot:":
+            continue
+        for j in range(k + 1, len(lines)):
+            if lines[j].strip() and indent(lines[j]) <= indent(line):
+                break  # left the robot block
+            if lines[j].strip() == "joint_pos:":
+                out = {}
+                for nxt in lines[j + 1:]:
+                    if indent(nxt) <= indent(lines[j]) or ":" not in nxt:
+                        break
+                    name, value = nxt.strip().split(":", 1)
+                    try:
+                        out[name] = float(value)
+                    except ValueError:
+                        pass
+                return out
+    return {}
+
+
 def _env_yaml_scales(checkpoint_path: Path):
     env_yaml = checkpoint_path.parents[1] / "params" / "env.yaml"
     if not env_yaml.is_file():
@@ -442,6 +471,16 @@ def main() -> int:
         model.action_negative_scale.copy_(torch.tensor(_to_isaac_order([max(v, f) for v, f in zip(neg, floor)])))
         model.action_positive_scale.copy_(torch.tensor(_to_isaac_order([max(v, f) for v, f in zip(pos, floor)])))
         print("[INFO] Action scales taken from params/env.yaml")
+    yaml_pos = _env_yaml_joint_pos(checkpoint_path)
+    if yaml_pos:
+        # The default pose the run trained with (q_des = default + scale * action + nominal); constants are the fallback.
+        by_name = dict(zip(JOINT_NAMES, DEFAULT_JOINT_POS))
+        missing = [n for n in JOINT_NAMES if n not in yaml_pos]
+        by_name.update({n: v for n, v in yaml_pos.items() if n in by_name})
+        model.default_joint_pos.copy_(torch.tensor([by_name[n] for n in ISAAC_JOINT_NAMES]))
+        print(f"[INFO] Default joint pos taken from params/env.yaml{' (constants for ' + str(missing) + ')' if missing else ''}")
+    else:
+        print("[WARN] No init_state.joint_pos in params/env.yaml: using the DEFAULT_JOINT_POS constants")
     obs_dim = next(actor.parameters()).shape[1]
     action_dim = actor[-1].out_features
     print(f"[INFO] Policy MLP: {obs_dim} -> ... -> {action_dim}")

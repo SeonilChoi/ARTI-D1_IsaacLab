@@ -21,7 +21,7 @@ from isaaclab.sim import SimulationCfg
 from isaaclab.terrains import TerrainImporterCfg
 from isaaclab.utils import configclass
 
-from isaaclab_tasks.utils import PresetCfg
+from isaaclab_tasks.utils import PresetCfg, preset
 
 
 # 5 joints per leg (hip yaw / roll / pitch, knee, ankle) + 2 per arm (arm_m8, arm_m8crank_plate), like BDX.
@@ -89,6 +89,20 @@ ARTI_D1_LEFT_FOOT_OFFSET_FROM_FOOT_LINK = (0.0135599213, -0.024, -0.0593316689)
 ARTI_D1_RIGHT_FOOT_OFFSET_FROM_FOOT_LINK = (0.0135599213, 0.024, -0.0593316765)
 
 
+# Reflected rotor inertia (kg*m^2) per joint type, added to the joint (high-ratio Dynamixel gearheads). The env's
+# actuator model writes it (x a per-env random scale) at start-up (ArtiD1AmpEnvCfg.actuator_armature).
+ARTI_D1_ACTUATOR_ARMATURE = {
+    "hip_yaw": 0.005, "hip_roll": 0.005, "hip_pitch": 0.005, "knee": 0.005, "ankle": 0.005,
+    "arm_m8": 0.002, "arm_m8crank_plate": 0.002,
+}
+# SolverKamino sizes each DoF's dynamics at build time and raises if armature later crosses zero ("recreate
+# SolverKamino"), which the start-up armature write does on this USD (armature 0). Under newton_kamino the nominal
+# armature is therefore authored at build time as well; every other backend keeps None (USD value, then the env write).
+ARTI_D1_KAMINO_BUILD_ARMATURE = {
+    f"{side}_{joint}": value for side in ("left", "right") for joint, value in ARTI_D1_ACTUATOR_ARMATURE.items()
+}
+
+
 @configclass
 class ArtiD1PhysicsCfg(PresetCfg):
     """Physics backend presets, selected with physics=<name> (default: isaacsim_physx, the 2.x settings)."""
@@ -133,6 +147,7 @@ class ArtiD1SceneCfg(InteractiveSceneCfg):
                 actuator_effort_limit=ARTI_D1_JOINT_EFFORT_LIMIT,
                 joint_effort_limit=ARTI_D1_JOINT_EFFORT_LIMIT,
                 joint_velocity_limit=ARTI_D1_JOINT_VELOCITY_LIMIT,
+                armature=preset(default=None, newton_kamino=ARTI_D1_KAMINO_BUILD_ARMATURE),
             ),
         },
     )
@@ -248,10 +263,7 @@ class ArtiD1AmpEnvCfg(DirectRLEnvCfg):
         "arm_m8": 10.0, "arm_m8crank_plate": 10.0,
     }
     # Reflected rotor inertia (kg*m^2) added to the joint (high-ratio Dynamixel gearheads).
-    actuator_armature = {
-        "hip_yaw": 0.005, "hip_roll": 0.005, "hip_pitch": 0.005, "knee": 0.005, "ankle": 0.005,
-        "arm_m8": 0.002, "arm_m8crank_plate": 0.002,
-    }
+    actuator_armature = dict(ARTI_D1_ACTUATOR_ARMATURE)
     # Coulomb friction with stiction (Nm), modelled implicitly: the PD target is shifted by coulomb / kp against the
     # motion, and frozen where the joint stuck while |kp * error| <= coulomb.
     actuator_coulomb = {

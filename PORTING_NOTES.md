@@ -370,3 +370,38 @@ Behaviour differences on Newton (PhysX default unchanged):
 - N3. `trunk` frame body gets inertia 1e-6 kg m^2 from Newton's inertia validation (negligible).
 - N4. PhysX-only articulation/collision fields (solver iterations, sleep / stabilisation thresholds, contact / rest
   offset) have no Newton counterpart; contact comes from the preset's `NewtonShapeCfg`.
+
+### Test pass after the port (both backends)
+
+Runner: `scripts/porting/run_tests.sh <tests...>` (logs `logs/porting/test_<name>.log`, summary `logs/porting/tests.txt`).
+The 3-iteration smoke runs only covered 144 env steps (AMP rollouts 48), i.e. no episode timeout (900 steps), no push
+event (10-15 s), no early termination. This pass covers them.
+
+| Test | Isaac Sim PhysX | Newton MJWarp |
+|---|---|---|
+| AMP train 64 envs x 30 iters (1440 steps, `scripts/skrl/train.py`): timeouts at 899 steps, pushes, command resampling; 72 TB scalars | pass, all finite | pass, all finite; reward terms within run noise of PhysX |
+| AMP train, balance support off, 15 iters: early termination + reset from fallen states | pass, episodes 40-426 steps | pass, episodes 51-591 steps |
+| PPO task `Template-Arti-D1-Direct-v0`, 32 envs x 40 iters | pass | pass |
+| `check_amp_consistency.py` (RSI write -> read, AMP obs vs motion loader) | exact (toes 2.3e-4 m) | exact (root/joints 0, toes 1.8e-4 m; Newton FK confirms the joint remap moves the right joints) |
+| `scripts/skrl/play.py` (command sequence, scheduled pushes, 900-frame video) | pass | pass (`--viz newton_gl`) |
+| `pt_to_onnx.py` + `verify_onnx.py` on a 3.x checkpoint | pass after fix F2 | - |
+| `check_onnx_in_env.py` (ONNX q_des vs env target, 16 envs x 6 s) | 8.9e-7 rad after fix F2 (was 0.104) | PhysX-only script |
+| `eval_gait.py --mode reference / sequence`, `check_controller_obs.py` (obs groups <= 9e-7), `ilc_nominal.py`, `replay_demo.py` | pass | PhysX-only scripts (AppLauncher) |
+| `physics=newton_kamino` train 16 x 3 | - | pass after fix F1 |
+| `physics=ovphysx` | fails: `ModuleNotFoundError: ovphysx` (package not installed in this venv; environment, not project) | - |
+
+Fixes:
+- F1. **newton_kamino crashed on the first step** ("Changing joint dynamics allocation for joint 1 (left_arm_m8) ...
+  armature ... cross zero"). SolverKamino sizes each DoF at build time from the USD armature (0) and rejects the
+  env's start-up armature write. Fix (DR-Legs pattern): the actuator's `armature` is
+  `preset(default=None, newton_kamino=<nominal per-joint armature>)`, so Kamino builds with non-zero armature and the
+  randomised write only changes its value. `ARTI_D1_ACTUATOR_ARMATURE` is now the single source for the env's
+  `actuator_armature` (same numbers). PhysX / MJWarp resolve `None`: unchanged.
+- F2. **Pre-existing on `main`, not caused by the port: `pt_to_onnx.py` exported a stale default pose.**
+  `DEFAULT_JOINT_POS` still had the pre-`0749163` stance (hip_roll +-0.07065 instead of +-0.17466, plus old
+  hip_pitch / knee / ankle / arm values), so every exported `q_des` was off by up to 0.104 rad on 8 joints from the
+  pose the policy was trained around. `verify_onnx.py` could not see it (its "env mapping" reused the export's own
+  buffer). Fix: `pt_to_onnx` reads the run's `init_state.joint_pos` from `params/env.yaml` (3.x `scene.robot` or
+  2.x `robot` block), constants refreshed to the current `JOINT_INIT_POS` / action scales as the fallback;
+  `verify_onnx` takes the env side from `params/env.yaml`. **Every ONNX exported since `0749163` (exp4) must be
+  re-exported.**
