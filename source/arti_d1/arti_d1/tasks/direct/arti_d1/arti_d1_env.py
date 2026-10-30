@@ -672,6 +672,12 @@ class ArtiD1AmpEnv(DirectRLEnv):
             torch.sum(torch.square(torch.clamp(self.previous_actions - self.actions, -2.0, 2.0)), dim=-1)
             * self.cfg.action_rate_reward_scale
         )
+        # Raw actions are clamped to +-1 before use, so nothing kept the policy mean inside the bound: it drifted to
+        # |raw| ~20 (half the joints saturated, bang-bang falls within 0.4 s). Overshoot capped at 3 to bound the term.
+        action_bound_reward = (
+            torch.sum(torch.square(torch.clamp(self.actions.abs() - 1.0, 0.0, 3.0)), dim=-1)
+            * self.cfg.action_bound_reward_scale
+        )
         applied_torque = self.robot.actuators.applied_effort.torch
         torque_scale = self._torque_curriculum_fraction()
         torque_reward = (
@@ -764,6 +770,7 @@ class ArtiD1AmpEnv(DirectRLEnv):
             + alive_reward
             + torque_reward
             + joint_power_reward
+            + action_bound_reward
             + joint_vel_reward
             + joint_acc_reward
             + action_rate_reward
@@ -798,6 +805,8 @@ class ArtiD1AmpEnv(DirectRLEnv):
             "Gait/joint_vel_rms_deg_s": torch.rad2deg(torch.sqrt(joint_vel_sq.mean() / joint_vel_sq.new_tensor(float(self.robot.num_joints)))),
             "Gait/joint_acc_rms": torch.sqrt(joint_acc_sq.mean() / self.robot.num_joints),
             "Reward/action_rate": action_rate_reward.mean(),
+            "Reward/action_bound": action_bound_reward.mean(),
+            "Policy/raw_action_saturated_fraction": (self.actions.abs() > 1.0).float().mean(),
             "Torque/rms_Nm": torch.sqrt(torch.mean(torch.square(applied_torque))),
             "Torque/max_abs_Nm": torch.abs(applied_torque).max(dim=-1).values.mean(),
             "Torque/joint_power_W": joint_power.mean(),

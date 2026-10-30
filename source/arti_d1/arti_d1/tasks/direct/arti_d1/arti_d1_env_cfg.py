@@ -353,6 +353,8 @@ class ArtiD1AmpEnvCfg(DirectRLEnvCfg):
     balance_support_kd = 0.8
     balance_support_fade_steps = (150_000, 600_000)
     action_rate_reward_scale = -0.5
+    # Penalty on raw policy output beyond the +-1 clamp (see _get_rewards), not ramped.
+    action_bound_reward_scale = -1.0
     alive_reward_scale = 0.1
     motion_time_scale = 1.0
     cycle_reference_motions = False
