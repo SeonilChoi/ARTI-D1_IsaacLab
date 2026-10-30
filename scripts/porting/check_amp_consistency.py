@@ -40,6 +40,7 @@ with launch_simulation(cfg, args):
     u.scene.update(dt=0.0)
 
     d = u.robot.data
+    print("[CHK] body order:", list(d.body_names))
     q_sim = d.body_quat_w.torch[:, u.ref_body_index]
     q_ref = root_state[:, 3:7]
     print("[CHK] root quat |dot| min (1 = same rotation):", torch.abs((q_sim * q_ref).sum(-1)).min().item())

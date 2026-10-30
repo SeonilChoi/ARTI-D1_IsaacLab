@@ -306,3 +306,24 @@ Verified: `uv pip install -e source/arti_d1`; `import arti_d1`; gym IDs `Templat
 Behaviour changes forced by the API (as H1): B2 `replay_demo.py --video` removed; B3 `play.py --video` without
 `_BlankFrameGuard`, no `--use_pretrained_checkpoint`; B4 `ovphysx` cannot express `solver_type` /
 `bounce_threshold_velocity`; B5 the Pva accelerometer has no +g (not in any observation).
+
+## Fix log
+
+### Step 3: physics=isaacsim_physx
+
+- `isaaclab train --rl_library skrl --task Template-Arti-D1-Amp-Direct-v0 physics=isaacsim_physx --num_envs 16
+  --max_iterations 3`: passed on the first run (exit 0, no Traceback, no NaN, final checkpoint saved).
+  Log: logs/porting/smoke_isaacsim_physx.log. No code fix needed.
+- Joint-order assert on Isaac Sim PhysX: backend order == public order == Dynamixel IDs 1-14 (so `joint_ordering` is
+  normalised to `None`: no map, same tensors as 2.x); names, `find_joints(preserve_order=True)`, gains within DR range,
+  effort / velocity limits and default pose all OK.
+- `scripts/porting/check_amp_consistency.py physics=isaacsim_physx` (logs/porting/check_amp_physx.log): root quat
+  |dot| = 1.0, root pos 2.4e-7 m, joints 0; AMP groups orientation 2.4e-7, velocities <= 2.6e-8, joints 0,
+  toes 2.3e-4 m (sole offset vs motion data, same as H1). The XYZW port is exact end to end.
+- PhysX body order recorded there and written into `ARTI_D1_BODY_ORDER` / `body_ordering` (breadth-first, `trunk`
+  at index 5); the start-up check now also asserts it. Re-run through `scripts/skrl/train.py` (wrapper) with
+  `agent.agent.experiment.write_interval=48`: exit 0, 66 TensorBoard scalars, none non-finite, AMP diagnostics
+  written. Log: logs/porting/smoke_isaacsim_physx_wrapper.log.
+- Warning `Skipping fragment updates on instanced prims ... No collision targets matched` (PhysxCollisionCfg
+  contact_offset 0.02 / rest_offset 0): the collider prims are instanced; Isaac Lab 2.3.2 also skipped instanced
+  prims (H1 fix log), so these values never reached this asset in 2.x either. Not a behaviour change; kept.

@@ -12,7 +12,7 @@ from isaaclab.assets import Articulation
 from isaaclab.envs import DirectRLEnv
 from isaaclab.utils.math import quat_apply
 
-from arti_d1.robots.arti_d1 import ARTI_D1_POLICY_JOINT_ORDER
+from arti_d1.robots.arti_d1 import ARTI_D1_BODY_ORDER, ARTI_D1_POLICY_JOINT_ORDER
 from arti_d1.tasks.utils import MotionLoader
 from arti_d1.tasks.utils.mti3_imu import Mti3ImuModel, create_mti3_imu_sensor_prims, make_mti3_pva_cfg
 
@@ -231,9 +231,11 @@ class ArtiD1AmpEnv(DirectRLEnv):
             want = torch.tensor([init[n] for n in names], device=self.device)
             if not torch.allclose(self.robot.data.default_joint_pos.torch[0], want, atol=1e-5):
                 errors.append(f"default_joint_pos {self.robot.data.default_joint_pos.torch[0].tolist()} != {want.tolist()}")
+        if list(self.robot.data.body_names) != list(ARTI_D1_BODY_ORDER):
+            errors.append(f"body_names {list(self.robot.data.body_names)} != {list(ARTI_D1_BODY_ORDER)}")
         if errors:
             raise RuntimeError("[JOINT-ORDER] FAILED on " + backend + ":\n  " + "\n  ".join(errors))
-        print(f"[JOINT-ORDER] OK on {backend}: names, find_joints, gains, limits and default pose in Dynamixel order", flush=True)
+        print(f"[JOINT-ORDER] OK on {backend}: names, find_joints, gains, limits and default pose in Dynamixel order; body order pinned", flush=True)
 
     def _stale_joint_feedback(self) -> tuple[torch.Tensor, torch.Tensor]:
         """Joint position / velocity the policy sees. Servos sharing one bus (cfg.joint_obs_stale_keywords; every

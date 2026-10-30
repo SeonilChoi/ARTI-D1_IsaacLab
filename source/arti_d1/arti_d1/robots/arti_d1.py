@@ -124,6 +124,28 @@ JOINT_INIT_POS = {
     "right_arm_m8crank_plate": -0.2268,
 }
 
+# Isaac Sim PhysX body order (breadth-first), recorded from the 3.x PhysX run (scripts/porting/check_amp_consistency.py).
+# The env resolves bodies by name, so this is not policy-facing; it keeps body tensors identical across backends
+# (the Isaac Lab ordering docs say to set joint_ordering and body_ordering together).
+ARTI_D1_BODY_ORDER = (
+    "pelvis",
+    "left_arm_m8_crank",
+    "left_hip",
+    "right_arm_m8_crank",
+    "right_hip",
+    "trunk",
+    "left_arm_plate",
+    "left_roll_to_pitch",
+    "right_arm_plate",
+    "right_roll_to_pitch",
+    "left_thigh",
+    "right_thigh",
+    "left_shin",
+    "right_shin",
+    "left_foot_link",
+    "right_foot_link",
+)
+
 # Dynamixel position-mode model. Legs: XH540-W270 (12 V stall 10.6 Nm, no load 30 rpm = 3.14 rad/s), arms: XM430-W350
 # (12 V stall 4.1 Nm, no load 46 rpm = 4.82 rad/s); the URDF effort / velocity limits are these datasheet values.
 # The servo applies PWM = P / 128 * error[pulse] (885 = full voltage = stall torque at zero speed), and the DC motor
@@ -196,6 +218,7 @@ ARTI_D1_CFG = ArticulationCfg(
     ),
     # Public (policy) order on every backend; on Isaac Sim PhysX it equals the backend order, so no map is installed.
     joint_ordering=ARTI_D1_POLICY_JOINT_ORDER,
+    body_ordering=ARTI_D1_BODY_ORDER,
     init_state=ArticulationCfg.InitialStateCfg(
         # Reference pelvis origin height with the soles on the ground (root z of every clip).
         pos=(0.0, 0.0, 0.01225),
