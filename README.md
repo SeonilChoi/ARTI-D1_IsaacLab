@@ -58,6 +58,15 @@ isaaclab train --rl_library skrl --task Template-Arti-D1-Amp-Direct-v0 physics=i
 python scripts/skrl/train.py --task Template-Arti-D1-Amp-Direct-v0 physics=isaacsim_physx
 ```
 
+Server (Newton, in a tmux session):
+
+```bash
+tmux new -s d1
+source /opt/isaac/IsaacLab-main/.venv/bin/activate
+cd /opt/isaac/projects/arti_d1
+isaaclab train --rl_library skrl --task Template-Arti-D1-Amp-Direct-v0 physics=newton_mjwarp --num_envs 4096
+```
+
 - Physics: `physics=isaacsim_physx` (default, the original PhysX settings), `physics=newton_mjwarp`
   (Newton / MuJoCo-Warp), `physics=newton_kamino` (untuned stub). Add `--viz newton_gl` (or `--viz kit`) to watch.
 
@@ -83,6 +92,15 @@ python scripts/pt_to_onnx.py --checkpoint <pt> --output agent.onnx
 python -u scripts/tuning/verify_onnx.py <pt> agent.onnx
 python -u scripts/tuning/check_onnx_in_env.py --onnx agent.onnx
 python -u scripts/tuning/check_controller_obs.py          # humanoid_controller ArtiD1 observation
+```
+
+Watch a policy in the Kit viewer over WebRTC livestream (`--livestream 2`; open it with the Isaac Sim WebRTC Streaming
+Client):
+
+```bash
+cd /opt/isaac/projects/arti_d1
+isaaclab play --rl_library skrl --task Template-Arti-D1-Amp-Direct-v0 physics=newton_mjwarp \
+  --num_envs 16 --checkpoint latest --viz kit --livestream 2
 ```
 
 humanoid_controller `config/robot/ARTI-D1/robot.yaml` policy settings for this setup: `gait_phase_rate: 0.8`,
