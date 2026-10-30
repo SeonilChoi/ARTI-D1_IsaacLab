@@ -327,3 +327,46 @@ Behaviour changes forced by the API (as H1): B2 `replay_demo.py --video` removed
 - Warning `Skipping fragment updates on instanced prims ... No collision targets matched` (PhysxCollisionCfg
   contact_offset 0.02 / rest_offset 0): the collider prims are instanced; Isaac Lab 2.3.2 also skipped instanced
   prims (H1 fix log), so these values never reached this asset in 2.x either. Not a behaviour change; kept.
+
+### Step 4: physics=newton_mjwarp
+
+- `isaaclab train ... physics=newton_mjwarp --num_envs 16 --max_iterations 3`: passed on the first run (exit 0, no
+  Traceback, no NaN, checkpoint saved). Log: logs/porting/smoke_newton_mjwarp.log. No code fix and no preset change
+  were needed.
+- Joint order on Newton/MJWarp: the **backend order is depth-first** (`left_arm_m8, left_arm_m8crank_plate,
+  left_hip_yaw, left_hip_roll, left_hip_pitch, left_knee, left_ankle, right_arm_m8, ...`), as predicted in Step 1.
+  `joint_ordering` maps it to the Dynamixel public order; the start-up check passed (names, find_joints, gains within DR
+  range, limits, default pose, body order). Without the map every action / observation index would have been wrong.
+- USD patch works: Newton builds the 15 convex-hull shapes from the child meshes (contacts below). The remaining
+  "CollisionAPI applied to an unknown UsdGeomGPrim type" warnings are for the original Xform prims, which Newton skips.
+- Standstill A/B (`scripts/porting/compare_backends.py`, 16 envs, 4 s, zero action = nominal gait + training balance
+  support, no DR; logs/porting/ab_{isaacsim_physx,newton_mjwarp}.log):
+
+  | | Isaac Sim PhysX | Newton MJWarp |
+  |---|---|---|
+  | kp / kd / armature / effort / vel limit (arm, leg) | 18.88 / 0.851 / 0.002 / 4.1 / 4.8; 48.80 / 3.376 / 0.005 / 10.6 / 3.1 | identical |
+  | total mass | 5.791 kg | 5.791 kg |
+  | trunk inertia diag | 4e-12 | 1e-6 (Newton inertia validation; 0.006 % of the pelvis' 0.017) |
+  | pelvis z mean | 15.9 mm | 16.3 mm |
+  | min sole z (penetration < 0) | +1.36 mm | +0.63 mm |
+  | PD tracking error / joint vel rms | 0.0291 rad / 0.538 rad/s | 0.0265 rad / 0.560 rad/s |
+  | pelvis tilt | 2.92 deg | 3.35 deg |
+  | joint samples above no-load speed (Q1) | 0.011 % | **0.87 %** |
+  | terminations / finite | 0 / yes | 0 / yes |
+
+  The H1-derived contact values (ke 1.6e5, kd 1100, margin 0) keep the 5.8 kg robot's soles within 0.7 mm of PhysX
+  and nothing sinks, so the `newton_mjwarp` preset is kept unchanged. Q1: MJWarp has no velocity clamp, and at
+  standstill-stepping 0.87 % of joint samples exceed the Dynamixel no-load speed (PhysX 0.011 %); documented,
+  not compensated (user decision).
+- Play: `isaaclab play --rl_library skrl --task Template-Arti-D1-Amp-Direct-v0 physics=newton_mjwarp --num_envs 4
+  --viz newton_gl --checkpoint <smoke agent_144.pt> --video viz --video_length 300`: exit 0, joint-order check OK,
+  300 frames written. Frames at 0.1 / 2.5 / 4.9 s: all 4 robots upright, both feet on the ground, no explosion or
+  sinking (3-iteration policy = nominal gait + balance support). Log: logs/porting/play_newton_gl.log.
+- `newton_kamino`: stub only, not run (arms are open chains; see section 10).
+
+Behaviour differences on Newton (PhysX default unchanged):
+- N1. No joint velocity clamp under MJWarp (above).
+- N2. Material DR uses one friction coefficient (`dynamic_friction_range`, `num_buckets`, `make_consistent` ignored).
+- N3. `trunk` frame body gets inertia 1e-6 kg m^2 from Newton's inertia validation (negligible).
+- N4. PhysX-only articulation/collision fields (solver iterations, sleep / stabilisation thresholds, contact / rest
+  offset) have no Newton counterpart; contact comes from the preset's `NewtonShapeCfg`.
