@@ -393,8 +393,9 @@ class ArtiD1AmpEnvCfg(DirectRLEnvCfg):
     gait_swing_height_sigma = 0.011
     # Fraction of feet whose contact state matches the clock (stance foot down, swing foot up).
     gait_contact_reward_scale = 1.0
-    # exp(-(z - z_ref)^2 / sigma^2) averaged over the feet that should be swinging.
-    gait_swing_height_reward_scale = 1.0
+    # exp(-(z - z_ref)^2 / sigma^2) averaged over the feet that should be swinging. x3 (server exp3/exp4 arg, now the
+    # default): at x1 the feet stay at 13-17 mm vs the 22 mm reference and the air ratio collapses (PhysX exp2, Newton 585k).
+    gait_swing_height_reward_scale = 3.0
     # Share of the swing-height term paid linearly in sole height (clamped at gait_swing_height), rest = exp kernel.
     gait_swing_lift_weight = 0.5
     # -scale per foot that is still on the ground while the clock says it should swing (moving commands only).
