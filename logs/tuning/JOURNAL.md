@@ -52,3 +52,19 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   speed at the no-load speed on every backend. A/B (standstill nominal gait): above-no-load samples Newton .774 % -> .024 %
   (PhysX .032 % -> 0 %), joint vel rms Newton .519 / PhysX .522 rad/s, pelvis tilt 3.4 / 3.2 deg, sole penetration
   Newton +0.94 mm / PhysX +1.32 mm. Balance support fades 150k-600k: support-off evals are meaningful from ~600k.
+- 10-30 19:1x check 270k (run 17-37-41, 64 it/s): ep 899 (support on), style .22, disc .996, lin track .021/.027,
+  air ratio .21 -> .17, base roll 1.0 deg, Reward/total .89 -> .03 (torque/regularization curricula ramping).
+  EVAL seq 32, same ckpt on both backends (support off, so reference only before 600k):
+  | | Newton | PhysX |
+  | fell | 0/32 | 0/32 |
+  | fwd .05 got | .023 | .013 |
+  | foot max height walk / stand | 31-59 / 15 mm | 24-28 / 9 mm |
+  | hip_yaw torque rms / vel rms | .30 Nm / 5 deg/s | .71 Nm / 11 deg/s |
+  | all-joint torque / power | 1.08 Nm / 5.7 W | 1.6 Nm / 9.2 W |
+  Newton fwd segment: one env rolled (roll range 74 deg); no Dynamixel over-speed on either (voltage saturation works).
+  Probe of the torque gap (compare_backends, zero action, + new torque / stance foot spin metrics): torques
+  Newton hip_yaw .18 / knee 2.29 / ankle .78 vs PhysX .66 / 3.11 / 1.12 Nm; stance foot yaw rate Newton 8.5 vs PhysX
+  11.3 deg/s -> not missing torsional friction. MJWarp multiccd: no effect (plane-convex already multi-contact).
+  Contact sweep: ke 1e6 -> hip_yaw .21; kd 300 -> .24; ke 1e6 + kd 300 explodes. -> the gap is not contact stiffness.
+  Decision: no change. Next: fixed-base (hung) step/chirp on both backends to separate joint dynamics from contact.
+  Video auto_270000.mp4 (Newton, VIDEO_SOURCE=newton_gl; Kit recording gives 0 frames under Newton) 2001 frames, 0 blank.

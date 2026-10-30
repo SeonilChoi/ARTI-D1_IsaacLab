@@ -60,6 +60,10 @@ with launch_simulation(cfg, args):
     zero = torch.zeros(u.num_envs, u.cfg.action_space, device=u.device)
     steps = int(args.seconds / u.step_dt)
     pelvis_z, sole_min, sole_max, track_err, qd_rms, tilt, over_vel, fallen = [], [], [], [], [], [], [], 0
+    groups = {g: [i for i, j in enumerate(names) if j.endswith(g)] for g in ("hip_yaw", "hip_roll", "hip_pitch", "knee", "ankle")}
+    torque_sq = {g: [] for g in groups}
+    foot_ids = (u.left_toe_body_index, u.right_toe_body_index)
+    stance_yaw_rate_sq, stance_n = 0.0, 0
     for k in range(steps):
         _, _, term, trunc, _ = env.step(zero)
         d = u.robot.data
@@ -78,6 +82,14 @@ with launch_simulation(cfg, args):
         qd_rms.append(torch.sqrt((d.joint_vel.torch**2).mean()).item())
         tilt.append(torch.rad2deg(torch.acos((-d.projected_gravity_b.torch[:, 2]).clamp(-1, 1))).mean().item())
         fallen += int(term.sum().item())
+        tau = u.robot.actuators.applied_effort.torch
+        for g, idx in groups.items():
+            torque_sq[g].append((tau[:, idx] ** 2).mean().item())
+        # stance foot spin: |yaw rate| of a foot whose sole is within 3 mm of the ground (torsional friction probe)
+        wz = d.body_ang_vel_w.torch[:, list(foot_ids), 2]
+        stance = feet < 0.003
+        stance_yaw_rate_sq += float((wz[stance] ** 2).sum().item())
+        stance_n += int(stance.sum().item())
     n = len(pelvis_z)
 
     def mean(x, a=0):
@@ -90,5 +102,7 @@ with launch_simulation(cfg, args):
     print(f"[AB] |PD target - q| mean {mean(track_err):.4f} rad, joint vel rms {mean(qd_rms):.3f} rad/s, pelvis tilt {mean(tilt):.2f} deg")
     print(f"[AB] joint samples above the no-load speed {mean(over_vel) * 100:.3f} %, max |qd| / limit "
           f"{(d.joint_vel.torch.abs() / vel_limit).max().item():.2f} (last step)")
+    print("[AB] applied torque rms Nm: " + " | ".join(f"{g} {mean(v) ** 0.5:.3f}" for g, v in torque_sq.items()))
+    print(f"[AB] stance foot yaw rate rms {(stance_yaw_rate_sq / max(stance_n, 1)) ** 0.5 * 57.2958:.2f} deg/s ({stance_n} samples)")
     print(f"[AB] terminations {fallen}, finite {all(map(lambda v: v == v, pelvis_z + track_err))}")
     env.close()

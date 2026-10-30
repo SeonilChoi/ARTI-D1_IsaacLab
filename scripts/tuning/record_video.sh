@@ -6,6 +6,7 @@ cd "$(dirname "$0")/../.."
 # Isaac Lab 3.x: viz:kit keeps the 2.x Kit RTX recording and its env-0 camera; VIDEO_SOURCE=newton_gl records with the
 # lighter Newton GL visualizer instead. PHYSICS selects the physics preset of the play run.
 VIDEO_SOURCE=${VIDEO_SOURCE:-viz:kit}; PHYSICS=${PHYSICS:-isaacsim_physx}
+# Kit recording writes 0 frames with PHYSICS=newton_mjwarp (10-30): use VIDEO_SOURCE=newton_gl for Newton.
 CKPT=$1; NAME=$2; shift 2  # remaining args (e.g. env.uniform_action_scale=0.6) are passed to play.py
 RUN_DIR=$(dirname "$(dirname "$CKPT")")
 mkdir -p logs/tuning/videos
