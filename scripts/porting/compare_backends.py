@@ -25,6 +25,7 @@ TASK = "Template-Arti-D1-Amp-Direct-v0"
 parser = argparse.ArgumentParser()
 parser.add_argument("--seconds", type=float, default=4.0)
 parser.add_argument("--num_envs", type=int, default=16)
+parser.add_argument("--hang", action="store_true", help="fixed base 0.6 m up (feet in the air): joint dynamics without contact")
 add_launcher_args(parser)
 args, hydra_args = setup_preset_cli(parser, sys.argv[1:])
 cfg = parse_env_cfg(TASK, num_envs=args.num_envs, overrides=hydra_args)
@@ -36,10 +37,17 @@ cfg.actuator_delay_jitter_ms = (0.0, 0.0)
 cfg.actuator_armature_scale_range = (1.0, 1.0)
 cfg.actuator_coulomb_scale_range = (1.0, 1.0)
 cfg.command_resample_interval_s = (0.0, 0.0)
+if args.hang:
+    cfg.scene.robot.spawn.fix_root_link = True  # 3.x: spawner-level flag
+    cfg.balance_support_kp = 0.0
 with launch_simulation(cfg, args):
     env = gym.make(TASK, cfg=cfg)
     u = env.unwrapped
     env.reset()
+    if args.hang:
+        root = u._default_root_state(torch.arange(u.num_envs, device=u.device))
+        root[:, :3] = u.scene.env_origins + torch.tensor([0.0, 0.0, 0.6], device=u.device)
+        u.robot.write_root_pose_to_sim_index(root_pose=root[:, :7])
     d = u.robot.data
     names = d.joint_names
     for j in ("left_arm_m8", "left_arm_m8crank_plate", "left_hip_roll", "left_knee", "left_ankle"):

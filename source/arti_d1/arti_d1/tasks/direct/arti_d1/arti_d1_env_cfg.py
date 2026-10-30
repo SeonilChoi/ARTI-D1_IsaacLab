@@ -125,7 +125,10 @@ class ArtiD1PhysicsCfg(PresetCfg):
         ),
         num_substeps=1,
         debug_mode=False,
-        default_shape_cfg=NewtonShapeCfg(margin=0.0, ke=160000.0, kd=1100.0),
+        # kd 1100 (H1 value) over-damps the D1 contact: with balance support off the zero-action nominal gait stays up on
+        # Newton (tilt 6 deg) but topples on PhysX (44.5 deg), and hip_yaw torque is .19 vs .55 Nm. kd 450: tilt 31.6 deg,
+        # hip_yaw .40 Nm, sole penetration 1.0 mm (PhysX 1.3); kd 300 diverges (scripts/porting/compare_backends.py).
+        default_shape_cfg=NewtonShapeCfg(margin=0.0, ke=160000.0, kd=450.0),
     )
     # Stub for the closed-loop variants (core/velocity pattern); not tuned.
     newton_kamino: NewtonCfg = NewtonCfg(solver_cfg=KaminoPADMMSolverCfg(max_contacts_per_world=64))
