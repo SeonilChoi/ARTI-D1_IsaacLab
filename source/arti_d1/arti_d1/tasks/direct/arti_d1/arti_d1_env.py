@@ -666,8 +666,10 @@ class ArtiD1AmpEnv(DirectRLEnv):
         )
         # No step_dt factor: at 60 Hz it shrank both penalties by ~60x, leaving the torque
         # term at ~0.003% of the tracking reward and the gait effectively unregularized.
+        # Difference clamped to the applied range (+-2): raw actions are unbounded, and a few blown-up envs gave
+        # per-step penalties of -9000 that dominated the value targets (Newton kd 450 run collapsed after 1.2M).
         action_rate_reward = (
-            torch.sum(torch.square(self.previous_actions - self.actions), dim=-1)
+            torch.sum(torch.square(torch.clamp(self.previous_actions - self.actions, -2.0, 2.0)), dim=-1)
             * self.cfg.action_rate_reward_scale
         )
         applied_torque = self.robot.actuators.applied_effort.torch
