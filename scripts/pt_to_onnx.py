@@ -31,11 +31,11 @@ JOINT_NAMES = [
     "right_arm_m8crank_plate",
 ]
 
-# robots/arti_d1.py JOINT_INIT_POS (hip_roll 10 deg inward stance, 0749163); only used when the checkpoint has no
+# robots/arti_d1.py JOINT_INIT_POS (hip_roll 10 deg inward stance on the 0.15 rad hip_roll URDF); only used when the checkpoint has no
 # params/env.yaml: the run's own init_state.joint_pos is read from there (_env_yaml_joint_pos).
 DEFAULT_JOINT_POS = [
-    0.0, -0.17466, -0.00293, 0.07136, -0.06844,
-    0.0, 0.17466, -0.00293, 0.07136, -0.06844,
+    0.0, -0.02466, -0.00293, 0.07136, -0.06844,
+    0.0, 0.02466, -0.00293, 0.07136, -0.06844,
     -0.00048, -0.2268, -0.00048, -0.2268,
 ]
 

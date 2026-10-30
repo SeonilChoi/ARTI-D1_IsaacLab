@@ -38,8 +38,9 @@ setup(
         "arti_d1": [
             "assets/meshes/arti_d1/*.stl",
             "assets/models/arti_d1/*.urdf",
-            "assets/models/arti_d1/arti_d1/*.usd",
-            "assets/models/arti_d1/arti_d1/configuration/*.usd",
+            "assets/models/arti_d1/arti_d1/*.usda",
+            "assets/models/arti_d1/arti_d1/payloads/*.usd*",
+            "assets/models/arti_d1/arti_d1/payloads/Physics/*.usda",
             "assets/motions/arti_d1/*.json",
         ]
     },

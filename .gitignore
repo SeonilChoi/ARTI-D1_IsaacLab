@@ -15,6 +15,7 @@
 **/*.usdz
 # ...except the robot model the training spawns
 !source/arti_d1/arti_d1/assets/models/**/*.usd
+!source/arti_d1/arti_d1/assets/models/**/*.usda
 
 # Python
 .DS_Store

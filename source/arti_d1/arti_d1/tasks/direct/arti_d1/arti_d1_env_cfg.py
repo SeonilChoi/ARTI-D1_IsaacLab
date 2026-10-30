@@ -75,8 +75,8 @@ ARTI_D1_JOINT_STIFFNESS = JOINT_STIFFNESS
 ARTI_D1_JOINT_DAMPING = JOINT_DAMPING
 ARTI_D1_JOINT_EFFORT_LIMIT = JOINT_EFFORT_LIMIT
 ARTI_D1_JOINT_VELOCITY_LIMIT = JOINT_VELOCITY_LIMIT
-# trunk_frame in arti_d1.urdf. The reference walk_com_height (0.2585) is this plus the 0.01225 m pelvis origin height.
-ARTI_D1_TRUNK_OFFSET_FROM_PELVIS = (0.00964957, 0.0, 0.246248)
+# trunk_frame in arti_d1.urdf. The reference walk_com_height (0.2585) is this plus the 0.00445 m pelvis origin height.
+ARTI_D1_TRUNK_OFFSET_FROM_PELVIS = (0.00964957, 0.0, 0.254045)
 # IMU mount (Xsens MTi, humanoid_controller sensor.yaml): assumed at the trunk frame until the real mount is measured.
 ARTI_D1_IMU_OFFSET_FROM_TRUNK = (0.0, 0.0, 0.0)
 ARTI_D1_IMU_OFFSET_FROM_PELVIS = (
@@ -452,8 +452,9 @@ class ArtiD1AmpEnvCfg(DirectRLEnvCfg):
     imu_backend = "isaaclab"
     imu_body = "pelvis"
     imu_sensor_name = "mti3_imu"
-    imu_prim_path = "/World/envs/env_.*/Robot/pelvis"
-    imu_parent_path_template = "/World/envs/env_{env_id}/Robot/{body}"
+    # URDF importer 3.0 nests the links under Robot/Geometry along the kinematic tree (the pelvis is the root link).
+    imu_prim_path = "/World/envs/env_.*/Robot/Geometry/pelvis"
+    imu_parent_path_template = "/World/envs/env_{env_id}/Robot/Geometry/{body}"
     imu_sensor_period_s = 0.0
     imu_linear_acceleration_filter_size = 1
     imu_angular_velocity_filter_size = 1
