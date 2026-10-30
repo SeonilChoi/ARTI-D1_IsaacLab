@@ -7,8 +7,8 @@
 --mode policy: deterministic policy from a checkpoint under fixed commands, reporting the achieved
     velocity per command.
 
-    python scripts/tuning/eval_gait.py --mode reference --headless
-    python scripts/tuning/eval_gait.py --mode policy --checkpoint <agent.pt> --headless
+    python scripts/tuning/eval_gait.py --mode reference
+    python scripts/tuning/eval_gait.py --mode policy --checkpoint <agent.pt>
 """
 
 import argparse
@@ -115,7 +115,7 @@ class StepMeter:
         self.air += (feet[..., 2] > 0.01).float()
         from isaaclab.utils.math import quat_apply, quat_apply_inverse, euler_xyz_from_quat, quat_from_euler_xyz
         d = u.robot.data
-        pq = d.body_quat_w[:, u.ref_body_index]
+        pq = d.body_quat_w.torch[:, u.ref_body_index]
         r_, p_, y_ = euler_xyz_from_quat(pq)
         hq = quat_from_euler_xyz(torch.zeros_like(y_), torch.zeros_like(y_), y_)
         # pelvis roll / pitch relative to its own heading (wrap to [-pi, pi])
@@ -123,22 +123,22 @@ class StepMeter:
         roll = torch.rad2deg(torch.atan2(-up[:, 1], up[:, 2])); pitch = torch.rad2deg(torch.atan2(up[:, 0], up[:, 2]))
         rp = torch.stack((roll, pitch), dim=-1)
         self.rp_min = torch.minimum(self.rp_min, rp); self.rp_max = torch.maximum(self.rp_max, rp)
-        w = quat_apply_inverse(hq, d.body_ang_vel_w[:, u.ref_body_index])
+        w = quat_apply_inverse(hq, d.body_ang_vel_w.torch[:, u.ref_body_index])
         self.rate_sq += torch.rad2deg(w[:, :2]) ** 2
-        v = quat_apply_inverse(hq, d.body_lin_vel_w[:, u.ref_body_index])
+        v = quat_apply_inverse(hq, d.body_lin_vel_w.torch[:, u.ref_body_index])
         self.vy_list.append(v[:, 1].clone())
         for fi, bi in enumerate(self.sole_ids):
-            q = d.body_quat_w[:, bi]
+            q = d.body_quat_w.torch[:, bi]
             up = quat_apply(q, torch.tensor([[0.0, 0.0, 1.0]], device=u.device).expand(u.num_envs, -1))
             tilt = torch.rad2deg(torch.acos(torch.clamp(up[:, 2], -1.0, 1.0)))
-            cz = torch.stack([ (d.body_pos_w[:, bi] + quat_apply(q, (self.sole_offsets[fi] + c).expand(u.num_envs, -1)))[:, 2] for c in self.corners ], dim=-1).min(dim=-1).values
+            cz = torch.stack([ (d.body_pos_w.torch[:, bi] + quat_apply(q, (self.sole_offsets[fi] + c).expand(u.num_envs, -1)))[:, 2] for c in self.corners ], dim=-1).min(dim=-1).values
             swing = feet[:, fi, 2] > 0.01
             self.tilt_sum[:, fi] += tilt * swing
             self.corner_sum[:, fi] += cz * swing
             self.swing_n[:, fi] += swing.float()
             # centre lifted (> 8 mm) while the lowest sole corner is still on the ground (< 3 mm): edge dragging
             self.edge_drag[:, fi] += ((feet[:, fi, 2] > 0.008) & (cz < 0.003)).float()
-            kz = d.body_pos_w[:, self.knee_ids[fi], 2]
+            kz = d.body_pos_w.torch[:, self.knee_ids[fi], 2]
             self.knee_swing_max[:, fi] = torch.where(contact[:, fi], self.knee_swing_max[:, fi], torch.maximum(self.knee_swing_max[:, fi], kz))
             self.knee_stance_sum[:, fi] += kz * contact[:, fi]
             self.knee_stance_n[:, fi] += contact[:, fi].float()
@@ -150,8 +150,8 @@ class StepMeter:
                 self.knee_swing_max[:, fi] = torch.where(td, torch.zeros_like(kz), self.knee_swing_max[:, fi])
         self.n += 1
         if self.prev is not None:
-            q = u.robot.data.body_quat_w[:, u.ref_body_index]
-            w, x, y, z = q.unbind(-1)
+            q = u.robot.data.body_quat_w.torch[:, u.ref_body_index]
+            x, y, z, w = q.unbind(-1)  # Isaac Lab 3.x: (x, y, z, w)
             yaw = torch.atan2(2 * (w * z + x * y), 1 - 2 * (y * y + z * z))
             head = torch.stack((torch.cos(yaw), torch.sin(yaw)), dim=-1)
             for foot in (0, 1):
@@ -177,7 +177,7 @@ def make_env():
     if hasattr(cfg, "balance_support_kp"):
         cfg.balance_support_kp = args_cli.support_kp  # training-only support torque, off unless diagnosing
     if args_cli.kp_scale != 1.0:
-        act = cfg.robot.actuators["body"]
+        act = cfg.scene.robot.actuators["body"]
         act.stiffness = {k: v * args_cli.kp_scale for k, v in act.stiffness.items()}
         act.damping = {k: v * args_cli.kp_scale ** 0.5 for k, v in act.damping.items()}
     if args_cli.no_randomization:
@@ -244,22 +244,22 @@ def print_torque(tag, names, tsq, pw, n, mask=None):
 
 
 def accumulate_torque(uenv, tsq, pw):
-    tau = uenv.robot.data.applied_torque
+    tau = uenv.robot.actuators.applied_effort.torch
     tsq += tau ** 2
-    pw += (tau * uenv.robot.data.joint_vel).abs().sum(-1)
+    pw += (tau * uenv.robot.data.joint_vel.torch).abs().sum(-1)
 
 
 def heading_velocity(uenv):
     idx = uenv.ref_body_index
-    quat_xyzw = uenv.robot.data.body_quat_w[:, idx][:, [1, 2, 3, 0]]
+    quat_xyzw = uenv.robot.data.body_quat_w.torch[:, idx]
     _, lin, ang = uenv.motion_loader.normalize_heading_observation(
-        quat_xyzw, uenv.robot.data.body_lin_vel_w[:, idx], uenv.robot.data.body_ang_vel_w[:, idx]
+        quat_xyzw, uenv.robot.data.body_lin_vel_w.torch[:, idx], uenv.robot.data.body_ang_vel_w.torch[:, idx]
     )
     return torch.cat((lin[:, :2], ang[:, 2:3]), dim=-1)
 
 
 def trunk_height(uenv):
-    return uenv.robot.data.body_pos_w[:, uenv.termination_body_index, 2] + uenv.termination_body_offset[0, 2]
+    return uenv.robot.data.body_pos_w.torch[:, uenv.termination_body_index, 2] + uenv.termination_body_offset[0, 2]
 
 
 def write_reference_state(uenv, motion_ids, t):
@@ -267,21 +267,22 @@ def write_reference_state(uenv, motion_ids, t):
     rp, rq, rv, rw, jp, jv, _, _ = uenv.motion_loader.sample(
         uenv.num_envs, motion_ids=motion_ids, times=np.full(uenv.num_envs, t), return_full_state=True
     )
-    root = uenv.robot.data.default_root_state.clone()
+    root = uenv._default_root_state(env_ids)
     root[:, :3] = rp + uenv.scene.env_origins
-    root[:, 3:7] = rq[:, [3, 0, 1, 2]]
+    root[:, 3:7] = rq  # motion loader and Isaac Lab 3.x are both (x, y, z, w)
     root[:, 7:10] = rv
     root[:, 10:13] = rw
-    uenv.robot.write_root_link_pose_to_sim(root[:, :7], env_ids)
-    uenv.robot.write_root_com_velocity_to_sim(root[:, 7:], env_ids)
-    uenv.robot.write_joint_state_to_sim(jp, jv, None, env_ids)
+    uenv.robot.write_root_link_pose_to_sim_index(root_pose=root[:, :7], env_ids=env_ids)
+    uenv.robot.write_root_com_velocity_to_sim_index(root_velocity=root[:, 7:], env_ids=env_ids)
+    uenv.robot.write_joint_position_to_sim_index(position=jp, env_ids=env_ids)
+    uenv.robot.write_joint_velocity_to_sim_index(velocity=jv, env_ids=env_ids)
 
 
 def reference_actions(uenv, motion_ids, t):
     jp = uenv.motion_loader.sample(
         uenv.num_envs, motion_ids=motion_ids, times=np.full(uenv.num_envs, t), return_full_state=True
     )[4]
-    delta = jp - uenv.robot.data.default_joint_pos
+    delta = jp - uenv.robot.data.default_joint_pos.torch
     scale = torch.where(delta >= 0.0, uenv.action_positive_scale, uenv.action_negative_scale)
     return delta / scale
 
@@ -347,19 +348,19 @@ def main():
                     d = uenv.robot.data
                     ref = uenv.motion_loader.sample(uenv.num_envs, motion_ids=motion_ids,
                                                     times=np.full(uenv.num_envs, (k + 1) * dt), return_full_state=True)
-                    print(f"[DBG] t={(k+1)*dt:.2f} pelvis_w={[round(v,3) for v in (d.body_pos_w[0, uenv.ref_body_index]-uenv.scene.env_origins[0]).tolist()]} "
+                    print(f"[DBG] t={(k+1)*dt:.2f} pelvis_w={[round(v,3) for v in (d.body_pos_w.torch[0, uenv.ref_body_index]-uenv.scene.env_origins[0]).tolist()]} "
                           f"ref_root={[round(v,3) for v in ref[0][0].tolist()]}")
                     print(f"      act={[round(v,2) for v in acts[0].tolist()]}")
                     print(f"      q_ref={[round(v,3) for v in ref[4][0].tolist()]}")
-                    print(f"      q_sim={[round(v,3) for v in d.joint_pos[0].tolist()]}")
-                    print(f"      q_tgt={[round(v,3) for v in d.joint_pos_target[0].tolist()]}")
-                    lt = d.body_pos_w[0, uenv.left_toe_body_index, 2].item(); rt = d.body_pos_w[0, uenv.right_toe_body_index, 2].item()
+                    print(f"      q_sim={[round(v,3) for v in d.joint_pos.torch[0].tolist()]}")
+                    print(f"      q_tgt={[round(v,3) for v in uenv.robot.actuators.target_command.position.torch[0].tolist()]}")
+                    lt = d.body_pos_w.torch[0, uenv.left_toe_body_index, 2].item(); rt = d.body_pos_w.torch[0, uenv.right_toe_body_index, 2].item()
                     print(f"      footlink_z L={lt:.3f} R={rt:.3f} names={d.joint_names if k==0 else ''}")
                 if k >= warm:
                     ref_meter.update()
                     vel_sum += heading_velocity(uenv)
-                    qj = uenv.robot.data.joint_pos; jmin = torch.minimum(jmin, qj); jmax = torch.maximum(jmax, qj)
-                    vsq += uenv.robot.data.joint_vel ** 2; nr += 1
+                    qj = uenv.robot.data.joint_pos.torch; jmin = torch.minimum(jmin, qj); jmax = torch.maximum(jmax, qj)
+                    vsq += uenv.robot.data.joint_vel.torch ** 2; nr += 1
                     accumulate_torque(uenv, tsq, pw)
                 min_h = torch.minimum(min_h, trunk_height(uenv))
         vel = vel_sum / (steps - warm)
@@ -455,17 +456,17 @@ def main():
                     meter.update()
                     d = uenv.robot.data
                     names = d.joint_names
-                    seg_joint[j] += d.joint_pos.mean(0)
-                    jmin = torch.minimum(jmin, d.joint_pos); jmax = torch.maximum(jmax, d.joint_pos)
-                    vsq += d.joint_vel ** 2; nr += 1
+                    seg_joint[j] += d.joint_pos.torch.mean(0)
+                    jmin = torch.minimum(jmin, d.joint_pos.torch); jmax = torch.maximum(jmax, d.joint_pos.torch)
+                    vsq += d.joint_vel.torch ** 2; nr += 1
                     accumulate_torque(uenv, tsq, pw)
-                    all_tau.append(uenv.robot.data.applied_torque.abs().clone()); all_vel.append(d.joint_vel.abs().clone())
+                    all_tau.append(uenv.robot.actuators.applied_effort.torch.abs().clone()); all_vel.append(d.joint_vel.torch.abs().clone())
                     def yaw_of(q):
-                        w, x, y, z = q.unbind(-1)
+                        x, y, z, w = q.unbind(-1)  # Isaac Lab 3.x: (x, y, z, w)
                         return torch.atan2(2 * (w * z + x * y), 1 - 2 * (y * y + z * z))
-                    py = yaw_of(d.body_quat_w[:, uenv.ref_body_index])
+                    py = yaw_of(d.body_quat_w.torch[:, uenv.ref_body_index])
                     for fi, bi in enumerate((uenv.left_toe_body_index, uenv.right_toe_body_index)):
-                        dy = torch.remainder(yaw_of(d.body_quat_w[:, bi]) - py + math.pi, 2 * math.pi) - math.pi
+                        dy = torch.remainder(yaw_of(d.body_quat_w.torch[:, bi]) - py + math.pi, 2 * math.pi) - math.pi
                         seg_footyaw[j, fi] += dy.mean()
                 min_h = torch.minimum(min_h, trunk_height(uenv))
                 if k % seg_steps == seg_steps - 1:
