@@ -119,11 +119,14 @@ class StepMeter:
         pq = d.body_quat_w.torch[:, u.ref_body_index]
         r_, p_, y_ = euler_xyz_from_quat(pq)
         hq = quat_from_euler_xyz(torch.zeros_like(y_), torch.zeros_like(y_), y_)
-        # pelvis roll / pitch relative to its own heading (wrap to [-pi, pi])
-        up = quat_apply_inverse(hq, quat_apply(pq, torch.tensor([[0.0, 0.0, 1.0]], device=u.device).expand(u.num_envs, -1)))
-        roll = torch.rad2deg(torch.atan2(-up[:, 1], up[:, 2])); pitch = torch.rad2deg(torch.atan2(up[:, 0], up[:, 2]))
+        # pelvis roll / pitch from the world up axis in the pelvis frame
+        up = quat_apply_inverse(pq, torch.tensor([[0.0, 0.0, 1.0]], device=u.device).expand(u.num_envs, -1))
+        roll = torch.rad2deg(torch.atan2(up[:, 1], up[:, 2])); pitch = torch.rad2deg(torch.atan2(-up[:, 0], up[:, 2]))
         rp = torch.stack((roll, pitch), dim=-1)
         self.rp_min = torch.minimum(self.rp_min, rp); self.rp_max = torch.maximum(self.rp_max, rp)
+        self.min_upz = torch.minimum(getattr(self, "min_upz", up[:, 2]), up[:, 2])  # most tilted pelvis per env
+        self.max_angvel = torch.maximum(getattr(self, "max_angvel", torch.zeros_like(up[:, 2])),
+                                        torch.linalg.norm(d.body_ang_vel_w.torch[:, u.ref_body_index], dim=-1))
         w = quat_apply_inverse(hq, d.body_ang_vel_w.torch[:, u.ref_body_index])
         self.rate_sq += torch.rad2deg(w[:, :2]) ** 2
         v = quat_apply_inverse(hq, d.body_lin_vel_w.torch[:, u.ref_body_index])
@@ -261,7 +264,17 @@ def heading_velocity(uenv):
 
 
 def trunk_height(uenv):
-    return uenv.robot.data.body_pos_w.torch[:, uenv.termination_body_index, 2] + uenv.termination_body_offset[0, 2]
+    # Same rule as the env termination: the trunk offset rotates with the pelvis, and a tilt past
+    # termination_max_tilt_rad counts as a fall. The old unrotated offset (+0.15 m) kept a pelvis lying at 0.09 m
+    # above the 0.2 m threshold, so fallen / flipped D1 robots were reported as fell=0.
+    from isaaclab.utils.math import quat_apply
+    d = uenv.robot.data
+    q = d.body_quat_w.torch[:, uenv.termination_body_index]
+    z = (d.body_pos_w.torch[:, uenv.termination_body_index] + quat_apply(q, uenv.termination_body_offset.expand(uenv.num_envs, -1)))[:, 2]
+    if uenv.termination_min_up_z is not None:
+        up_z = quat_apply(q, uenv.up_axis_b.expand(uenv.num_envs, -1))[:, 2]
+        z = torch.where(up_z < uenv.termination_min_up_z, torch.zeros_like(z), z)
+    return z
 
 
 def write_reference_state(uenv, motion_ids, t):
@@ -480,7 +493,13 @@ def main():
                     kpk = [float(np.mean(meter.knee_peaks[i])) if meter.knee_peaks[i] else float("nan") for i in (0, 1)]
                     seg_knee.append((kpk, kst))
                     vy = torch.stack(meter.vy_list, dim=0)
-                    seg_base.append(((meter.rp_max - meter.rp_min).mean(0).tolist(),
+                    rpr_env = meter.rp_max - meter.rp_min
+                    print(f"[EVAL-SEQ] seg {len(seg_base) + 1} roll range per env: median {rpr_env[:, 0].median().item():.2f} "
+                          f"max {rpr_env[:, 0].max().item():.2f} (env {int(rpr_env[:, 0].argmax())}) | envs > 30 deg "
+                          f"{int((rpr_env[:, 0] > 30.0).sum())} | min height {min_h.min().item():.3f} m | pelvis up_z min "
+                          f"{meter.min_upz.min().item():.2f}, envs < 0.5: {int((meter.min_upz < 0.5).sum())} | max pelvis ang vel "
+                          f"{meter.max_angvel.max().item():.1f} rad/s (median {meter.max_angvel.median().item():.1f})")
+                    seg_base.append((rpr_env.mean(0).tolist(),
                                      torch.sqrt(meter.rate_sq / max(meter.n, 1)).mean(0).tolist(),
                                      (vy - vy.mean(0, keepdim=True)).std(0).mean().item()))
                     sn = meter.swing_n.clamp_min(1.0)
