@@ -65,15 +65,15 @@ logger = logging.getLogger(__name__)
 PLAY_COMMAND_DURATION_S = 5.0
 VIDEO_CAMERA_EYE = (0.3, -2.0, 0.6)
 VIDEO_CAMERA_LOOKAT = (0.3, 0.0, 0.06)
-# Commands inside the training range (22 mm, 10 deg hip_roll stance reference: x .0534 y .0215 yaw .1234) plus standing segments.
+# Commands inside the training range (28 mm / 1.625 s reference: x .0428 y .0173 yaw .0987) plus standing segments.
 PLAY_COMMAND_SEQUENCE = (
-    ("forward", (0.050, 0.0, 0.0)),
+    ("forward", (0.040, 0.0, 0.0)),
     ("stand", (0.0, 0.0, 0.0)),
-    ("side_left", (0.0, 0.020, 0.0)),
-    ("backward", (-0.045, 0.0, 0.0)),
+    ("side_left", (0.0, 0.016, 0.0)),
+    ("backward", (-0.040, 0.0, 0.0)),
     ("stand", (0.0, 0.0, 0.0)),
-    ("diagonal_right", (0.045, -0.018, 0.0)),
-    ("turn_left", (0.0, 0.0, 0.120)),
+    ("diagonal_right", (0.038, -0.015, 0.0)),
+    ("turn_left", (0.0, 0.0, 0.095)),
     ("stand", (0.0, 0.0, 0.0)),
 )
 

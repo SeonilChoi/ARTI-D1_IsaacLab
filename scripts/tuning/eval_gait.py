@@ -49,25 +49,27 @@ from isaaclab_tasks.utils import resolve_task_config
 import arti_d1.tasks  # noqa: F401
 
 TASK = "Template-Arti-D1-Amp-Direct-v0"
-COMMANDS = [
-    ("forward", (0.045, 0.0, 0.0)),
-    ("forward_fast", (0.053, 0.0, 0.0)),
-    ("backward", (-0.045, 0.0, 0.0)),
-    ("left", (0.0, 0.020, 0.0)),
-    ("right", (0.0, -0.020, 0.0)),
-    ("turn_left", (0.0, 0.0, 0.120)),
+COMMANDS = [  # 28 mm / 1.625 s ranges: x +-0.0428, y +-0.0173, yaw +-0.0987
+    ("forward", (0.036, 0.0, 0.0)),
+    ("forward_fast", (0.042, 0.0, 0.0)),
+    ("backward", (-0.036, 0.0, 0.0)),
+    ("left", (0.0, 0.016, 0.0)),
+    ("right", (0.0, -0.016, 0.0)),
+    ("turn_left", (0.0, 0.0, 0.095)),
 ]
 
 SEQ_DURATION_S = 5.0
 # Commands inside the training range (22 mm, 10 deg hip_roll stance reference: x .0534 y .0215 yaw .1234) plus standing (zero command) segments; same as play.py.
+# Inside the 28 mm / 1.625 s command ranges (x +-0.0428, y +-0.0173, yaw +-0.0987); the 22 mm / 1.36 s set used
+# forward .05, side .02, backward -.045, diagonal (.045, -.018), turn .12.
 PLAY_SEQUENCE = [
-    ("forward", (0.050, 0.0, 0.0)),
+    ("forward", (0.040, 0.0, 0.0)),
     ("stand", (0.0, 0.0, 0.0)),
-    ("side_left", (0.0, 0.020, 0.0)),
-    ("backward", (-0.045, 0.0, 0.0)),
+    ("side_left", (0.0, 0.016, 0.0)),
+    ("backward", (-0.040, 0.0, 0.0)),
     ("stand", (0.0, 0.0, 0.0)),
-    ("diagonal_right", (0.045, -0.018, 0.0)),
-    ("turn_left", (0.0, 0.0, 0.120)),
+    ("diagonal_right", (0.038, -0.015, 0.0)),
+    ("turn_left", (0.0, 0.0, 0.095)),
     ("stand", (0.0, 0.0, 0.0)),
 ]
 

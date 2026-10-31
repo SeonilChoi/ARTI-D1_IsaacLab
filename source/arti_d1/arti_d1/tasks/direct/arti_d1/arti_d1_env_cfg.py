@@ -36,7 +36,8 @@ ARTI_D1_ACTION_SCALE_MARGIN = 1.2
 # The reference only uses +-0.065 rad of hip yaw; a PD target that small cannot overcome the stance-foot twist.
 ARTI_D1_HIP_YAW_ACTION_SCALE_MARGIN = 2.0
 # Distance from the default pose (first reference frame) to the min / max over every reference clip
-# (scripts/tuning/reference_stats.py, 1.36 s gait, 22 mm swing, hip_roll 10 deg inward stance). The arm plate only rises (lateral steps), so its negative range is
+# (scripts/tuning/reference_stats.py, 1.36 s gait, 22 mm swing, hip_roll 10 deg inward stance; kept for the 28 mm / 1.625 s
+# set so warm starts keep the action meaning: the larger knee flex is in the nominal table). The arm plate only rises (lateral steps), so its negative range is
 # 0 (floored by action_scale_min).
 ARTI_D1_ACTION_NEGATIVE_SCALE = {
     "left_hip_yaw": 0.06259 * ARTI_D1_HIP_YAW_ACTION_SCALE_MARGIN,
@@ -297,18 +298,19 @@ class ArtiD1AmpEnvCfg(DirectRLEnvCfg):
     action_scale_min = 0.25
     hip_yaw_action_scale_min = 0.10
 
-    # Min / max of the recomputed (1.36 s averaged) reference commands plus ~3% margin
-    # (scripts/tuning/reference_stats.py: x +-0.0519, y +-0.0209, yaw +-0.1198; feet 0.1354 m apart).
-    command_linear_x_range = (-0.0534, 0.0534)
-    command_linear_y_range = (-0.0215, 0.0215)
-    command_yaw_range = (-0.1234, 0.1234)
+    # Min / max of the recomputed (1.625 s averaged) reference commands plus ~3% margin
+    # (WINDOW_S=1.625 scripts/tuning/reference_stats.py: x +-0.0415, y +-0.0168, yaw +-0.0958; feet 0.1354 m apart).
+    # 28 mm / 1.625 s set: same step lengths as the 22 mm / 1.36 s set, so ~20% slower.
+    command_linear_x_range = (-0.0428, 0.0428)
+    command_linear_y_range = (-0.0173, 0.0173)
+    command_yaw_range = (-0.0987, 0.0987)
     command_linear_velocity_scale = 0.5
     command_angular_velocity_scale = 0.25
     sample_commands_from_reference = True
     recompute_motion_commands = True
     use_average_velocities = True
-    # One gait period (1.36 s): a shorter window leaves gait-frequency ripple in the tracked velocity.
-    average_velocity_window_s = 1.36
+    # One gait period (1.625 s): a shorter window leaves gait-frequency ripple in the tracked velocity.
+    average_velocity_window_s = 1.625
     # Small relative to the command magnitude (|mean| x 0.028 m/s, yaw 0.058 rad/s), so standing still under a moving
     # command earns little of the tracking reward (the 1.25 s gait used 0.002 / 0.003 for |mean| x 0.042, yaw 0.061).
     linear_velocity_tracking_sigma = 0.0015
@@ -360,7 +362,7 @@ class ArtiD1AmpEnvCfg(DirectRLEnvCfg):
     cycle_reference_motions = False
     # Penalize only the rolling left/right action-energy imbalance (permits the half-cycle phase offset of walking).
     symmetry_reward_scale = -0.05
-    symmetry_window_s = 1.36
+    symmetry_window_s = 1.625
     # Non-saturating reward for moving along each commanded planar axis: clamp(v_a / cmd_a, -1, 1) averaged over the
     # axes with |cmd_a| > min_command, so standing still scores 0 under a moving command.
     signed_progress_reward_scale = 0.1
@@ -376,27 +378,27 @@ class ArtiD1AmpEnvCfg(DirectRLEnvCfg):
     feet_air_time_max_s = 0.65
     # (stance_fraction_left - stance_fraction_right)^2 over a rolling window, under a moving command (off).
     contact_symmetry_reward_scale = 0.0
-    contact_symmetry_window_s = 1.36
-    # Gait clock (sin/cos in the policy observation), following the reference: phase_rate 0.73593 /s (1.359 s cycle,
-    # 0.55 s single support), phase 0 = left single support start. From the reference foot contacts (reference_stats.py):
-    # right foot swings over [0.0055, 0.4103), left over [0.5072, 0.9120), half-sine swing height peaking at
-    # walk_foot_height 0.022 m. It is reset to the reference gait_phase of the RSI frame, so reference state and clock
+    contact_symmetry_window_s = 1.625
+    # Gait clock (sin/cos in the policy observation), following the reference: phase_rate 0.61538 /s (1.625 s cycle,
+    # 0.65 s single support), phase 0 = left single support start. From the reference foot contacts (reference_stats.py):
+    # right foot swings over [0.0046, 0.4046), left over [0.5099, 0.9099), half-sine swing height peaking at
+    # walk_foot_height 0.028 m. (Was 1.36 s / 0.55 s / 22 mm until 10-31: the user asked for a higher, more natural step;
+    # 28 mm needs the slower cycle to keep the knee under the 3.14 rad/s X540 no-load speed, max 3.4 in 0.5% of frames.) It is reset to the reference gait_phase of the RSI frame, so reference state and clock
     # agree at reset.
-    gait_phase_rate = 0.73593
+    gait_phase_rate = 0.61538
     # Standing: under a zero command (max |vx|, |vy|, |wz| <= stand_command_threshold) the clock runs on only to the
     # next rest phase (mid double support) and stays there, so the nominal stepping holds a two-feet stance; it starts
     # again from there with the next moving command. Empty = the clock always runs (stepping in place at zero command).
-    gait_rest_phases = (0.4588, 0.9588)
+    gait_rest_phases = (0.4572, 0.9572)
     stand_command_threshold = 0.003
     # Standing (zero command) rewards: both soles down, and -scale * sum(joint_vel^2).
     stand_feet_contact_reward_scale = 0.5
     stand_joint_vel_reward_scale = 0.01
     # -scale * (|yaw rate| + |planar base speed|) while standing.
     stand_base_motion_reward_scale = 5.0
-    gait_swing_start_phase = (0.5072, 0.0055)  # (left, right)
-    gait_swing_duration_phase = 0.4048
-    # 35 mm: the user asked for more foot lift after the videos (the reference clips lift 22 mm; Newton 1.165M lifted 25-30).
-    gait_swing_height = 0.035
+    gait_swing_start_phase = (0.5099, 0.0046)  # (left, right)
+    gait_swing_duration_phase = 0.4000
+    gait_swing_height = 0.028
     # 0.011 (0.008 at the 15 mm swing): a 5 mm lift already earns ~0.2, so a dragged foot sees a gradient toward lifting.
     gait_swing_height_sigma = 0.011
     # Fraction of feet whose contact state matches the clock (stance foot down, swing foot up).
@@ -420,11 +422,11 @@ class ArtiD1AmpEnvCfg(DirectRLEnvCfg):
     foot_flat_reward_scale = -30.0
     # -scale * sum over feet off the ground of (roll rate^2 + pitch rate^2) (rad/s).
     swing_foot_ang_vel_reward_scale = -0.05
-    # Knee = shin link origin. Reference knee lift (swing peak - stance) is 22.5 / 23.5 mm (22 mm swing, 10 deg hip_roll stance)
+    # Knee = shin link origin. Reference knee lift (swing peak - stance) is 26.6 / 27.9 mm (28 mm swing, 10 deg hip_roll stance)
     # (scripts/tuning/reference_knee_lift.py).
     left_knee_body = "left_shin"
     right_knee_body = "right_shin"
-    knee_lift_target = 0.0360  # raised with gait_swing_height (reference 23 mm at the 22 mm swing)
+    knee_lift_target = 0.0272  # reference_knee_lift.py on the 28 mm set: left 26.6, right 27.9 mm
     # Per touchdown: scale * |swing_k - swing_(k-1)| (s).
     swing_symmetry_reward_scale = -20.0
     knee_lift_sigma = 0.008
