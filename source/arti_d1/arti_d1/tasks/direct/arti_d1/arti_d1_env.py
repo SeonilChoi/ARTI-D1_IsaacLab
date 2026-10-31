@@ -171,6 +171,7 @@ class ArtiD1AmpEnv(DirectRLEnv):
         # Knee lift target is paid once per foot per gait cycle (reset at the start of that foot's clock swing).
         self.knee_lift_paid = torch.zeros((self.num_envs, 2), dtype=torch.bool, device=self.device)
         self.last_expected_swing = torch.zeros((self.num_envs, 2), dtype=torch.bool, device=self.device)
+        self.lifted_this_cycle = torch.zeros((self.num_envs, 2), dtype=torch.bool, device=self.device)
         self.ankle_pitch_ids = [self.robot.find_joints(n)[0][0] for n in self.cfg.ankle_pitch_joint_names]
         self.ankle_pitch_max = torch.full((self.num_envs, 2), -math.inf, dtype=torch.float32, device=self.device)
         self.ankle_pitch_min = torch.full((self.num_envs, 2), math.inf, dtype=torch.float32, device=self.device)
@@ -794,6 +795,7 @@ class ArtiD1AmpEnv(DirectRLEnv):
             + self._swing_symmetry_reward
             + self._ankle_symmetry_reward
             + self._knee_lift_reward
+            + self._extra_liftoff_reward
             + base_flat_reward
             + base_ang_vel_reward
             + base_sway_reward
@@ -833,6 +835,7 @@ class ArtiD1AmpEnv(DirectRLEnv):
             "Reward/swing_symmetry": self._swing_symmetry_reward.mean(),
             "Reward/ankle_pitch_symmetry": self._ankle_symmetry_reward.mean(),
             "Reward/knee_lift": self._knee_lift_reward.mean(),
+            "Reward/extra_liftoff": self._extra_liftoff_reward.mean(),
             "Reward/base_flat": base_flat_reward.mean(),
             "Reward/base_ang_vel": base_ang_vel_reward.mean(),
             "Reward/base_sway": base_sway_reward.mean(),
@@ -947,6 +950,7 @@ class ArtiD1AmpEnv(DirectRLEnv):
 
         contact = sole_height < self.cfg.foot_contact_height
         first_contact = contact & ~self.feet_last_contact
+        self._liftoff = ~contact & self.feet_last_contact
         self.feet_air_time += self.step_dt
         # Positive part only: a negative payout for short early steps taught run 2026-09-23_22-56-52
         # to stop lifting its feet at all.
@@ -1032,7 +1036,15 @@ class ArtiD1AmpEnv(DirectRLEnv):
         # Paid per touchdown, the target term made run 2026-10-31_09-46-26 split the right swing into two short hops
         # (phase .04-.14 and .30-.38, left one swing): only the first touchdown since the clock swing began pays.
         expected_swing, expected_height = self._expected_gait()
-        self.knee_lift_paid &= ~(expected_swing & ~self.last_expected_swing)
+        swing_start = expected_swing & ~self.last_expected_swing
+        self.knee_lift_paid &= ~swing_start
+        # Every liftoff after the first one since that foot's clock swing began (cfg.extra_liftoff_reward_scale).
+        self.lifted_this_cycle &= ~swing_start
+        extra_liftoff = self._liftoff & self.lifted_this_cycle
+        self.lifted_this_cycle |= self._liftoff
+        self._extra_liftoff_reward = (
+            extra_liftoff.float().sum(dim=-1) * moving_command.float() * self.cfg.extra_liftoff_reward_scale
+        )
         self.last_expected_swing = expected_swing
         for foot in (0, 1):
             touchdown = first_contact[:, foot] & (self.knee_swing_peak[:, foot] > 0.0) & stance_known[:, foot]
@@ -1258,6 +1270,7 @@ class ArtiD1AmpEnv(DirectRLEnv):
         self.has_last_knee_lift[env_ids] = False
         self.knee_lift_paid[env_ids] = False
         self.last_expected_swing[env_ids] = False
+        self.lifted_this_cycle[env_ids] = False
         self.last_swing_time[env_ids] = 0.0
         self.has_last_swing[env_ids] = False
         self.mti3_imu.reset(env_ids, root_state[:, 3:7], root_state[:, 10:13])

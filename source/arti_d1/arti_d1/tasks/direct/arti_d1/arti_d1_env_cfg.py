@@ -437,6 +437,10 @@ class ArtiD1AmpEnvCfg(DirectRLEnvCfg):
     ankle_pitch_joint_names = ("left_ankle", "right_ankle")
     # Per touchdown: scale * exp(-((lift - target) / sigma)^2).
     knee_lift_reward_scale = 2.0
+    # Per liftoff after a foot's first one in a gait cycle (cycle = from the start of its clock swing), moving commands
+    # only. Run 2026-10-31_09-46-26 hopped the right foot twice per cycle (phase .04-.14 and .30-.38) on both engines;
+    # the once-per-cycle knee lift payout (b76d196) did not change it (that term paid ~0.002 / step).
+    extra_liftoff_reward_scale = -10.0
     # Pelvis level: -scale * |projected gravity xy|^2 (= sin^2 tilt). Reference roll/pitch = 0.
     base_flat_reward_scale = -60.0
     # -scale * (roll_rate^2 + pitch_rate^2) in rad/s.
