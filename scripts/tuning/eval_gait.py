@@ -30,6 +30,7 @@ parser.add_argument("--uniform_action_scale", type=float, default=0.6, help="mus
 parser.add_argument("--motion_folder", type=str, default=None, help="reference motion set the checkpoint was trained on")
 parser.add_argument("--nominal_table", type=str, default=None, help="nominal gait table the checkpoint was trained with")
 parser.add_argument("--hip_roll_limit", type=float, default=None, help="hard +-limit (rad) on hip_roll, as in training")
+parser.add_argument("--reset", choices=("standstill", "rsi"), default="standstill", help="sequence mode start state")
 parser.add_argument("--physics", type=str, default="isaacsim_physx", help="physics preset: isaacsim_physx | newton_mjwarp")
 AppLauncher.add_app_launcher_args(parser)
 args_cli = parser.parse_args()
@@ -207,7 +208,10 @@ def make_env():
         # Same conditions as scripts/skrl/play.py: trained reset strategy, pushes on, 30 s episode.
         cfg.episode_length_s = SEQ_DURATION_S * len(PLAY_SEQUENCE) + 1.0
         if hasattr(cfg, "reset_standstill_probability"):
-            cfg.reset_standstill_probability = 0.0  # keep results comparable with earlier runs
+            # standstill: every env starts from the clip's first frame (double-support standstill), as the robot does.
+            # rsi (the old default, eval logs before 10-31 11:30): random clip times whose motion often disagrees with
+            # the forced eval command, so most "falls" happened 0.4-0.9 s after the reset.
+            cfg.reset_standstill_probability = 1.0 if args_cli.reset == "standstill" else 0.0
     else:
         cfg.events.push_robot = None
         cfg.reset_strategy = "random_start" if args_cli.mode == "policy" else "default"
