@@ -478,6 +478,12 @@ def main():
                           f"frac |raw|>1 {(raw.abs() > 1).float().mean().item():.2f} | |obs| max {pobs.abs().max().item():.1f} "
                           f"(idx {int(pobs.abs().max(0).values.argmax())})")
                 obs, _, _, _, _ = env.step(torch.clamp(raw, -1.0, 1.0))
+                up_env = (fall_t < 0).float().unsqueeze(-1)  # envs that have not fallen yet
+                sat = torch.stack((((raw.abs() > 1.0).float() * up_env).sum(0), up_env.sum(0).expand(raw.shape[1])))
+                raw_sat = raw_sat + sat if k else sat
+                if k == seg_steps * len(PLAY_SEQUENCE) - 1:  # per-joint share of standing env-steps with |raw| > 1
+                    frac = (raw_sat[0] / raw_sat[1].clamp_min(1.0)).tolist()
+                    print("[RAW-SAT] " + " ".join(f"{n}:{v:.2f}" for n, v in zip(uenv.robot.data.joint_names, frac)))
                 if os.environ.get("EVAL_STEP_DEBUG"):  # env 0 liftoff / touchdown order with the clock phase
                     up = (meter.feet()[0, :, 2] > 0.008).tolist()
                     for fi, side in enumerate("LR"):
