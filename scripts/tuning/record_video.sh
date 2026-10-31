@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Record the 40 s play command sequence of a checkpoint to logs/tuning/videos/<name>.mp4
-#   bash scripts/tuning/record_video.sh <checkpoint.pt> <name>
+#   bash scripts/tuning/record_video.sh <checkpoint.pt> <name>   (front view; pass --video_view side for the old side view)
 PY=${PY:-python}  # Isaac Lab python; set PY=... if it is not on PATH as "python"
 cd "$(dirname "$0")/../.."
 # Isaac Lab 3.x: viz:kit keeps the 2.x Kit RTX recording and its env-0 camera; VIDEO_SOURCE=newton_gl records with the

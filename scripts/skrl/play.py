@@ -63,8 +63,11 @@ import arti_d1.tasks  # noqa: F401, E402
 logger = logging.getLogger(__name__)
 
 PLAY_COMMAND_DURATION_S = 5.0
-VIDEO_CAMERA_EYE = (0.3, -2.0, 0.6)
-VIDEO_CAMERA_LOOKAT = (0.3, 0.0, 0.06)
+# (eye, lookat) per --video_view, in env 0's frame. Front: on +x, facing the robot that walks toward it (user, 10-31).
+VIDEO_CAMERAS = {
+    "front": ((1.6, 0.0, 0.45), (0.0, 0.0, 0.12)),
+    "side": ((0.3, -2.0, 0.6), (0.3, 0.0, 0.06)),
+}
 # Commands inside the training range (28 mm / 1.625 s reference: x .0428 y .0173 yaw .0987) plus standing segments.
 PLAY_COMMAND_SEQUENCE = (
     ("forward", (0.040, 0.0, 0.0)),
@@ -146,6 +149,7 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--checkpoint", type=str, default=None, help="Checkpoint path, or latest/best.")
     parser.add_argument("--video_width", type=int, default=1920, help="Recorded video width in pixels.")
     parser.add_argument("--video_height", type=int, default=1080, help="Recorded video height in pixels.")
+    parser.add_argument("--video_view", choices=tuple(VIDEO_CAMERAS), default="front", help="Video camera direction.")
     parser.add_argument("--no_push", action="store_true", default=False, help="Disable the scheduled play pushes.")
     parser.add_argument("--push_scale", type=float, default=1.0, help="Scale of the scheduled play pushes.")
     cli_args_skrl.add_skrl_args(parser)
@@ -193,8 +197,7 @@ def main(argv: list[str] | None = None) -> None:
         env_cfg.viewer.origin_type = "env"
         env_cfg.viewer.env_index = 0
         env_cfg.viewer.asset_name = None
-        env_cfg.viewer.eye = VIDEO_CAMERA_EYE
-        env_cfg.viewer.lookat = VIDEO_CAMERA_LOOKAT
+        env_cfg.viewer.eye, env_cfg.viewer.lookat = VIDEO_CAMERAS[args_cli.video_view]
         env_cfg.viewer.resolution = (args_cli.video_width, args_cli.video_height)
     pre_launch_video_config(env_cfg, args_cli)
 
