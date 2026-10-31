@@ -395,7 +395,8 @@ class ArtiD1AmpEnvCfg(DirectRLEnvCfg):
     stand_base_motion_reward_scale = 5.0
     gait_swing_start_phase = (0.5072, 0.0055)  # (left, right)
     gait_swing_duration_phase = 0.4048
-    gait_swing_height = 0.022
+    # 35 mm: the user asked for more foot lift after the videos (the reference clips lift 22 mm; Newton 1.165M lifted 25-30).
+    gait_swing_height = 0.035
     # 0.011 (0.008 at the 15 mm swing): a 5 mm lift already earns ~0.2, so a dragged foot sees a gradient toward lifting.
     gait_swing_height_sigma = 0.011
     # Fraction of feet whose contact state matches the clock (stance foot down, swing foot up).
@@ -423,7 +424,7 @@ class ArtiD1AmpEnvCfg(DirectRLEnvCfg):
     # (scripts/tuning/reference_knee_lift.py).
     left_knee_body = "left_shin"
     right_knee_body = "right_shin"
-    knee_lift_target = 0.0230
+    knee_lift_target = 0.0360  # raised with gait_swing_height (reference 23 mm at the 22 mm swing)
     # Per touchdown: scale * |swing_k - swing_(k-1)| (s).
     swing_symmetry_reward_scale = -20.0
     knee_lift_sigma = 0.008
