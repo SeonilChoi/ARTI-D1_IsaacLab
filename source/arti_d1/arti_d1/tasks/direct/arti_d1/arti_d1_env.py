@@ -168,6 +168,9 @@ class ArtiD1AmpEnv(DirectRLEnv):
         self.knee_stance_height = torch.zeros((self.num_envs, 2), dtype=torch.float32, device=self.device)
         self.last_knee_lift = torch.zeros(self.num_envs, dtype=torch.float32, device=self.device)
         self.has_last_knee_lift = torch.zeros(self.num_envs, dtype=torch.bool, device=self.device)
+        # Knee lift target is paid once per foot per gait cycle (reset at the start of that foot's clock swing).
+        self.knee_lift_paid = torch.zeros((self.num_envs, 2), dtype=torch.bool, device=self.device)
+        self.last_expected_swing = torch.zeros((self.num_envs, 2), dtype=torch.bool, device=self.device)
         self.ankle_pitch_ids = [self.robot.find_joints(n)[0][0] for n in self.cfg.ankle_pitch_joint_names]
         self.ankle_pitch_max = torch.full((self.num_envs, 2), -math.inf, dtype=torch.float32, device=self.device)
         self.ankle_pitch_min = torch.full((self.num_envs, 2), math.inf, dtype=torch.float32, device=self.device)
@@ -1026,6 +1029,11 @@ class ArtiD1AmpEnv(DirectRLEnv):
         self.knee_swing_peak = torch.where(contact, self.knee_swing_peak, torch.maximum(self.knee_swing_peak, knee_z))
         knee_sym_penalty = torch.zeros(self.num_envs, dtype=torch.float32, device=self.device)
         knee_target_reward = torch.zeros(self.num_envs, dtype=torch.float32, device=self.device)
+        # Paid per touchdown, the target term made run 2026-10-31_09-46-26 split the right swing into two short hops
+        # (phase .04-.14 and .30-.38, left one swing): only the first touchdown since the clock swing began pays.
+        expected_swing, expected_height = self._expected_gait()
+        self.knee_lift_paid &= ~(expected_swing & ~self.last_expected_swing)
+        self.last_expected_swing = expected_swing
         for foot in (0, 1):
             touchdown = first_contact[:, foot] & (self.knee_swing_peak[:, foot] > 0.0) & stance_known[:, foot]
             lift = self.knee_swing_peak[:, foot] - self.knee_stance_height[:, foot]
@@ -1034,11 +1042,12 @@ class ArtiD1AmpEnv(DirectRLEnv):
                 touchdown & self.has_last_knee_lift, gap, torch.zeros_like(gap)
             )
             knee_target_reward = knee_target_reward + torch.where(
-                touchdown,
+                touchdown & ~self.knee_lift_paid[:, foot],
                 torch.exp(-torch.square((lift - self.cfg.knee_lift_target) / self.cfg.knee_lift_sigma)),
                 torch.zeros_like(lift),
             )
             self.last_knee_lift = torch.where(touchdown, lift, self.last_knee_lift)
+            self.knee_lift_paid[:, foot] |= touchdown
             self.has_last_knee_lift = self.has_last_knee_lift | touchdown
             self.knee_swing_peak[:, foot] = torch.where(
                 first_contact[:, foot], torch.zeros_like(lift), self.knee_swing_peak[:, foot]
@@ -1067,7 +1076,6 @@ class ArtiD1AmpEnv(DirectRLEnv):
             ankle_sym_penalty * moving_command.float() * self.cfg.ankle_pitch_symmetry_reward_scale
         )
 
-        expected_swing, expected_height = self._expected_gait()
         contact_match = torch.where(expected_swing, ~contact, contact).float().mean(dim=-1)
         self._gait_contact_reward = contact_match * moving_command.float() * self.cfg.gait_contact_reward_scale
         standing = (~moving_command).float()
@@ -1248,6 +1256,8 @@ class ArtiD1AmpEnv(DirectRLEnv):
         self.knee_stance_height[env_ids] = 0.0
         self.last_knee_lift[env_ids] = 0.0
         self.has_last_knee_lift[env_ids] = False
+        self.knee_lift_paid[env_ids] = False
+        self.last_expected_swing[env_ids] = False
         self.last_swing_time[env_ids] = 0.0
         self.has_last_swing[env_ids] = False
         self.mti3_imu.reset(env_ids, root_state[:, 3:7], root_state[:, 10:13])

@@ -478,6 +478,13 @@ def main():
                           f"frac |raw|>1 {(raw.abs() > 1).float().mean().item():.2f} | |obs| max {pobs.abs().max().item():.1f} "
                           f"(idx {int(pobs.abs().max(0).values.argmax())})")
                 obs, _, _, _, _ = env.step(torch.clamp(raw, -1.0, 1.0))
+                if os.environ.get("EVAL_STEP_DEBUG"):  # env 0 liftoff / touchdown order with the clock phase
+                    up = (meter.feet()[0, :, 2] > 0.008).tolist()
+                    for fi, side in enumerate("LR"):
+                        if k > 0 and up[fi] != step_up[fi]:
+                            print(f"[STEP] t {k * dt:6.2f} {PLAY_SEQUENCE[j][0]:14s} {side} {'lift' if up[fi] else 'down'} "
+                                  f"phase {uenv.gait_phase[0].item():.3f}")
+                    step_up = up
                 if k % seg_steps >= int(2.0 / dt):
                     seg_vel[j] += heading_velocity(uenv)
                     seg_n[j] += 1
