@@ -43,6 +43,7 @@ parser.add_argument("--motion_dir", type=str, default=None, help="Clip folder (o
 parser.add_argument("--clips", type=str, required=True, help="Comma-separated clip indices, played in order.")
 parser.add_argument("--seconds", type=float, default=8.0, help="Seconds per clip.")
 parser.add_argument("--out", type=str, required=True, help="Output mp4 path.")
+parser.add_argument("--view", choices=("side", "front"), default="side", help="Camera: side (-y) or front (+x, facing the robot).")
 add_launcher_args(parser)
 args_cli, hydra_args = setup_preset_cli(parser, sys.argv[1:])
 enable_cameras_for_video(args_cli)
@@ -68,8 +69,12 @@ env_cfg.events = None
 env_cfg.viewer.origin_type = "env"
 env_cfg.viewer.env_index = 0
 env_cfg.viewer.asset_name = None
-env_cfg.viewer.eye = (0.15, -0.9, 0.3)  # closer than play.py: one robot, legs readable
-env_cfg.viewer.lookat = (0.1, 0.0, 0.13)
+if args_cli.view == "front":  # the robot walks along +x toward the camera
+    env_cfg.viewer.eye = (1.1, 0.0, 0.3)
+    env_cfg.viewer.lookat = (0.0, 0.0, 0.13)
+else:  # closer than play.py: one robot, legs readable
+    env_cfg.viewer.eye = (0.15, -0.9, 0.3)
+    env_cfg.viewer.lookat = (0.1, 0.0, 0.13)
 env_cfg.viewer.resolution = (1280, 720)
 steps_per_clip = int(round(args_cli.seconds / (env_cfg.sim.dt * env_cfg.decimation)))
 args_cli.video_length = steps_per_clip * len(clips)  # the recorder still caps a clip at 2000 frames
