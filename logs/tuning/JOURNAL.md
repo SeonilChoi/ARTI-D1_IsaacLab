@@ -255,3 +255,6 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
 - 20-07-37 agent_1220000 (cum 1.68M): plateau since ~600k (width .181, tilt 2.8, roll 1.1, ep 884, style .27). Eval
   Newton 0/32, PhysX 2/32 (2.6, 31.2 s); width 187/192 mm; torque rms all 1.10 vs 1.81 Nm (hip_yaw .20 vs .73). Video
   auto_w1220k.mp4 0 blank. No change: waiting for the user's foot-geometry answer.
+- 20-07-37 agent_1530000 (cum 1.99M): plateau (width .180, tilt 3.0, roll 1.1, ep 852, style .28). Eval Newton 0/32,
+  PhysX 0/32; width 185/189 mm; torque rms all 1.10 vs 1.68 Nm (hip_yaw .20 vs .70). Video auto_w1530k.mp4 0 blank.
+  No change: waiting for the user's foot-geometry answer.
