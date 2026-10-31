@@ -415,6 +415,12 @@ class ArtiD1AmpEnvCfg(DirectRLEnvCfg):
     gait_swing_contact_penalty_scale = 1.0
     # |cycle-averaged x_right - x_left| in the heading frame (L1).
     foot_stagger_reward_scale = -8.0
+    # |cycle-averaged lateral sole distance - stance_width_target| (L1, m), standing and walking. Run 2026-10-31_17-30-17
+    # rolled both hips ~0.15 rad outward (hip_roll mean +-0.13 walking, +-0.17 standing vs -+0.025), cancelling the
+    # 0.15 rad inward hip_roll frame of the URDF (real robot too, BDX-like): soles 193-211 mm apart, legs look vertical.
+    stance_width_reward_scale = -10.0
+    # Mean left - right toe y in the pelvis frame over 60 reference clips (28 mm set): 0.137 m (p5 .123, p95 .152).
+    stance_width_target = 0.137
     # Per touchdown: -scale * |step_k - step_(k-1)| (m).
     step_symmetry_reward_scale = -150.0
     # Sole contact patch half-size (m): the flat bottom face of the foot mesh (x +-0.040, y +-0.0173 about the sole

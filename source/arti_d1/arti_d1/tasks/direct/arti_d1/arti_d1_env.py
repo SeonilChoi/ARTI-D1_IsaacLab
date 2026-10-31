@@ -158,6 +158,7 @@ class ArtiD1AmpEnv(DirectRLEnv):
         self.feet_contact_ema = torch.ones((self.num_envs, 2), dtype=torch.float32, device=self.device)
         self.gait_phase = torch.zeros(self.num_envs, dtype=torch.float32, device=self.device)
         self.foot_stagger_ema = torch.zeros(self.num_envs, dtype=torch.float32, device=self.device)
+        self.stance_width_ema = torch.full((self.num_envs,), self.cfg.stance_width_target, dtype=torch.float32, device=self.device)
         self.last_step_length = torch.zeros(self.num_envs, dtype=torch.float32, device=self.device)
         self.has_last_step = torch.zeros(self.num_envs, dtype=torch.bool, device=self.device)
         self.knee_body_indices = [
@@ -788,6 +789,7 @@ class ArtiD1AmpEnv(DirectRLEnv):
             + self._gait_swing_contact_penalty
             + self._gait_height_reward
             + self._foot_stagger_reward
+            + self._stance_width_reward
             + self._step_symmetry_reward
             + self._foot_flat_reward
             + self._foot_ang_vel_reward
@@ -842,6 +844,8 @@ class ArtiD1AmpEnv(DirectRLEnv):
             "Gait/base_roll_abs_deg": torch.abs(self._base_roll_deg).mean(),
             "Gait/foot_tilt_deg": self._foot_tilt_deg.mean(),
             "Gait/foot_stagger_abs": torch.abs(self.foot_stagger_ema).mean(),
+            "Gait/stance_width": self.stance_width_ema.mean(),
+            "Reward/stance_width": self._stance_width_reward.mean(),
             "Gait/air_ratio_left": 1.0 - feet_contact[:, 0].float().mean(),
             "Gait/air_ratio_right": 1.0 - feet_contact[:, 1].float().mean(),
             "Progress/forward": _masked_mean(progress[:, 0], planar_command[:, 0] > self.cfg.signed_progress_min_command),
@@ -1004,6 +1008,11 @@ class ArtiD1AmpEnv(DirectRLEnv):
         self.foot_stagger_ema.lerp_(local_feet[:, 1, 0] - local_feet[:, 0, 0], self.foot_stagger_alpha)
         # L1: the quadratic form flattened out at ~1.2 cm (run 2026-09-24_07-15-59).
         self._foot_stagger_reward = torch.abs(self.foot_stagger_ema) * self.cfg.foot_stagger_reward_scale
+        # Lateral sole distance (left - right, pelvis frame) averaged over one gait cycle vs the reference stance.
+        self.stance_width_ema.lerp_(local_feet[:, 0, 1] - local_feet[:, 1, 1], self.foot_stagger_alpha)
+        self._stance_width_reward = (
+            torch.abs(self.stance_width_ema - self.cfg.stance_width_target) * self.cfg.stance_width_reward_scale
+        )
 
         # Step-length symmetry, paid at each touchdown: |step_k - step_(k-1)| where step = (touching sole -
         # other sole) along the heading. A symmetric gait alternates equal steps, so this is 0 there.
@@ -1258,6 +1267,7 @@ class ArtiD1AmpEnv(DirectRLEnv):
         self.feet_last_contact[env_ids] = True
         self.feet_contact_ema[env_ids] = 1.0
         self.foot_stagger_ema[env_ids] = 0.0
+        self.stance_width_ema[env_ids] = self.cfg.stance_width_target
         self.last_step_length[env_ids] = 0.0
         self.has_last_step[env_ids] = False
         self.knee_swing_peak[env_ids] = 0.0

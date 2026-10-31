@@ -457,6 +457,7 @@ def main():
         seg_base = []
         seg_joint = torch.zeros((len(PLAY_SEQUENCE), len(uenv.robot.data.joint_names)), device=uenv.device)
         seg_footyaw = torch.zeros((len(PLAY_SEQUENCE), 2), device=uenv.device)
+        seg_width = torch.zeros(len(PLAY_SEQUENCE), device=uenv.device)  # lateral sole distance in the pelvis heading frame
         table = torch.tensor([c for _, c in PLAY_SEQUENCE], dtype=torch.float32, device=uenv.device)
         fall_t = torch.full((uenv.num_envs,), -1.0, device=uenv.device)  # time of the first fall per env (s)
         with torch.inference_mode():
@@ -506,6 +507,8 @@ def main():
                         x, y, z, w = q.unbind(-1)  # Isaac Lab 3.x: (x, y, z, w)
                         return torch.atan2(2 * (w * z + x * y), 1 - 2 * (y * y + z * z))
                     py = yaw_of(d.body_quat_w.torch[:, uenv.ref_body_index])
+                    lr = meter.feet()[:, 0] - meter.feet()[:, 1]
+                    seg_width[j] += (-torch.sin(py) * lr[:, 0] + torch.cos(py) * lr[:, 1]).mean()
                     for fi, bi in enumerate((uenv.left_toe_body_index, uenv.right_toe_body_index)):
                         dy = torch.remainder(yaw_of(d.body_quat_w.torch[:, bi]) - py + math.pi, 2 * math.pi) - math.pi
                         seg_footyaw[j, fi] += dy.mean()
@@ -561,6 +564,8 @@ def main():
             print_torque(name, uenv.robot.data.joint_names, *seg_torque[j], ~fell)
             jn = uenv.robot.data.joint_names; jm = (seg_joint[j] / max(seg_n[j], 1)).tolist()
             fy = (seg_footyaw[j] / max(seg_n[j], 1)).tolist()
+            print(f"       hip_roll mean L {jm[jn.index('left_hip_roll')]:+.4f} R {jm[jn.index('right_hip_roll')]:+.4f} rad "
+                  f"(default -/+0.0247) | sole width {seg_width[j].item() / max(seg_n[j], 1) * 1000:.1f} mm (reference 135)")
             print(f"       hip_yaw mean L {jm[jn.index('left_hip_yaw')]:+.4f} R {jm[jn.index('right_hip_yaw')]:+.4f} rad | "
                   f"foot yaw rel. pelvis L {math.degrees(fy[0]):+.2f} deg R {math.degrees(fy[1]):+.2f} deg")
         # Motor sizing over the whole sequence (non-fallen envs): torque rms / p99 / max (Nm), speed rms / p99 / max (rpm).
