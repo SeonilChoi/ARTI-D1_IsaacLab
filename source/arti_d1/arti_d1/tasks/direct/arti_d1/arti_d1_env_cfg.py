@@ -130,8 +130,11 @@ class ArtiD1PhysicsCfg(PresetCfg):
         # Newton (tilt 6 deg) but topples on PhysX (44.5 deg), and hip_yaw torque is .19 vs .55 Nm. kd 450: tilt 31.6 deg,
         # hip_yaw .40 Nm, sole penetration 1.0 mm (PhysX 1.3); kd 300 diverges (scripts/porting/compare_backends.py).
         # kd 450 sits on a knife edge (500 already behaves like 1100) and both runs continued from its 1.21M ckpt
-        # degraded (eval falls 5 -> 17 of 32 on Newton, 3 -> 15 on PhysX), so use 500: stable side of the edge.
-        default_shape_cfg=NewtonShapeCfg(margin=0.0, ke=160000.0, kd=500.0),
+        # degraded (eval falls 5 -> 17 of 32 on Newton, 3 -> 15 on PhysX), so 500 was tried. Back to 1100 (10-31): a FRESH
+        # run at 500 learned a tilted-foot shuffle from the first steps (25k: foot tilt 11.3 deg, roll 4.0, reward -3.5)
+        # while the same code at 1100 matches the earlier healthy fresh run (3.4 deg, 2.8, +1.1); 500 gave no open-loop
+        # gain toward PhysX over 1100 anyway. The PhysX contact gap stays open.
+        default_shape_cfg=NewtonShapeCfg(margin=0.0, ke=160000.0, kd=1100.0),
     )
     # Stub for the closed-loop variants (core/velocity pattern); not tuned.
     newton_kamino: NewtonCfg = NewtonCfg(solver_cfg=KaminoPADMMSolverCfg(max_contacts_per_world=64))
