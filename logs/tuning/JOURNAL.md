@@ -361,3 +361,6 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   verdict: score (support off) A 0/32 fell / B 3/32; walk roll rms 1.49/1.77, pitch .90/1.05; stand pitch rms 1.08/1.64 deg;
   standpush A 0,0,0,2/8 (recovery steps, 2.2 lifts at .5) / B 0,0,1,3/8. A learned stopping/push recovery later than B
   (A 600k: 13/32, 11/32). Asked the user whether to resume A from agent_920000.
+- User then said: stop A, resume B. A resume (run 2026-11-02_08-13-13, no ckpt) stopped after ~1 min. B resumed from
+  17-54-36 agent_955000 (offset 955000, same overrides, 2048 envs) -> run 2026-11-02_08-13-47, log
+  logs/train/train_physx_pureRL_push_resume955k.log. A's final ckpt stays 17-53-46 agent_920000.
