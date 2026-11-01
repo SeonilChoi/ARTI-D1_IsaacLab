@@ -469,6 +469,10 @@ class ArtiD1AmpEnvCfg(DirectRLEnvCfg):
     base_ang_vel_xy_reward_scale = -0.5
     # -scale * (lateral vel - its window mean)^2 in m/s.
     base_lateral_sway_reward_scale = -10.0
+    # Per touchdown: -scale * (downward sole speed in the step before contact)^2 (m/s), standing and walking. PhysX B
+    # (17-54-36) stamped harder over training: eval touchdown speed 192 (350k) -> 319 (475k) -> 363 mm/s (920k).
+    # 5.0: -0.65 per touchdown at 0.36 m/s, about half the air-time payout of a 0.25 s swing.
+    foot_touchdown_speed_reward_scale = -5.0
     # Sum over stance feet of |v_xy|^2 at the sole (skating penalty).
     foot_slip_reward_scale = -8.0
 

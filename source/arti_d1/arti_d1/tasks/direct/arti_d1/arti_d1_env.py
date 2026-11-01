@@ -156,6 +156,7 @@ class ArtiD1AmpEnv(DirectRLEnv):
         self.stand_push_timer = torch.zeros(self.num_envs, dtype=torch.float32, device=self.device)
         self.feet_air_time = torch.zeros((self.num_envs, 2), dtype=torch.float32, device=self.device)
         self.feet_last_contact = torch.ones((self.num_envs, 2), dtype=torch.bool, device=self.device)
+        self.feet_last_vz = torch.zeros((self.num_envs, 2), dtype=torch.float32, device=self.device)
         self.feet_contact_ema = torch.ones((self.num_envs, 2), dtype=torch.float32, device=self.device)
         self.gait_phase = torch.zeros(self.num_envs, dtype=torch.float32, device=self.device)
         self.foot_stagger_ema = torch.zeros(self.num_envs, dtype=torch.float32, device=self.device)
@@ -825,6 +826,7 @@ class ArtiD1AmpEnv(DirectRLEnv):
             + self._ankle_symmetry_reward
             + self._knee_lift_reward
             + self._extra_liftoff_reward
+            + self._touchdown_speed_reward
             + base_flat_reward
             + base_ang_vel_reward
             + base_sway_reward
@@ -865,6 +867,7 @@ class ArtiD1AmpEnv(DirectRLEnv):
             "Reward/ankle_pitch_symmetry": self._ankle_symmetry_reward.mean(),
             "Reward/knee_lift": self._knee_lift_reward.mean(),
             "Reward/extra_liftoff": self._extra_liftoff_reward.mean(),
+            "Reward/touchdown_speed": self._touchdown_speed_reward.mean(),
             "Reward/base_flat": base_flat_reward.mean(),
             "Reward/base_ang_vel": base_ang_vel_reward.mean(),
             "Reward/base_sway": base_sway_reward.mean(),
@@ -1019,6 +1022,14 @@ class ArtiD1AmpEnv(DirectRLEnv):
             self.has_last_swing = self.has_last_swing | touchdown
         self._swing_symmetry_reward = swing_penalty * moving_command.float() * self.cfg.swing_symmetry_reward_scale
         self.feet_air_time = torch.where(contact, torch.zeros_like(self.feet_air_time), self.feet_air_time)
+        # Touchdown impact: downward sole speed of the step before contact (the contact step is already braked),
+        # the same sample eval_gait reports as "touchdown speed".
+        impact_speed = torch.clamp(-self.feet_last_vz, min=0.0)
+        self._touchdown_speed_reward = (
+            torch.sum(torch.square(impact_speed) * first_contact.float(), dim=-1)
+            * self.cfg.foot_touchdown_speed_reward_scale
+        )
+        self.feet_last_vz = feet_velocity[..., 2].clone()
         self.feet_last_contact = contact
 
         slip = torch.sum(torch.sum(torch.square(feet_velocity[..., :2]), dim=-1) * contact.float(), dim=-1)
@@ -1308,6 +1319,7 @@ class ArtiD1AmpEnv(DirectRLEnv):
         self.symmetry_action_energy[env_ids] = 0.0
         self.feet_air_time[env_ids] = 0.0
         self.feet_last_contact[env_ids] = True
+        self.feet_last_vz[env_ids] = 0.0
         self.feet_contact_ema[env_ids] = 1.0
         self.foot_stagger_ema[env_ids] = 0.0
         self.stance_width_ema[env_ids] = self.cfg.stance_width_target

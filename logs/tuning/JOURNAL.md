@@ -364,3 +364,17 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
 - User then said: stop A, resume B. A resume (run 2026-11-02_08-13-13, no ckpt) stopped after ~1 min. B resumed from
   17-54-36 agent_955000 (offset 955000, same overrides, 2048 envs) -> run 2026-11-02_08-13-47, log
   logs/train/train_physx_pureRL_push_resume955k.log. A's final ckpt stays 17-53-46 agent_920000.
+- 2026-11-02 CORRECTION of the 920k "A better" recheck (user saw A fall right at the start of auto_A_920k.mp4). Contact
+  sheet of the video: env 0 in A collapses at 0.5 s and is reset at ~1.5 s; B from the same start state keeps standing.
+  The 920k scorecard used standstill starts only (score mode forces reset_standstill_probability=1), and the videos
+  were only blank-checked, never watched. Sequence eval with RSI starts (play/train-like mix): A fell 7/32 (5 of them at
+  0.48-0.60 s after reset) vs B 3/32 (first at 1.25 s) -> eval_{A,B}_920k_rsi.log. A is NOT more robust overall: it
+  fails starts from mid-gait states. The decision to keep B stands. Lesson: verdicts need --reset rsi sequence too and
+  a watched video (frame contact sheet), not only the blank check.
+- 2026-11-02 08:34 B + touchdown speed penalty (USER approved): -5 * (downward sole speed the step before contact)^2 per
+  touchdown (cfg foot_touchdown_speed_reward_scale, TB Reward/touchdown_speed), same sample as eval "touchdown speed".
+  Reason: eval touchdown speed rose 192 -> 319 -> 345 -> 363 mm/s (350k..920k). B stopped (SIGINT) at 08-13-47
+  agent_25000 (cum 980k); warm start from it, offset 980000, same overrides, 2048 envs -> run 2026-11-02_08-34-40, log
+  logs/train/train_physx_pureRL_touchdown.log. First TB: touchdown_speed -0.0086/step vs feet_air_time +0.018.
+  Watch: eval touchdown speed (target < 250 mm/s), air ratio / swing height not collapsing, falls (920k: score 3/32,
+  rsi 3/32, standpush 0,0,1,3/8). Warm start can hide side effects: if the swing shrinks, check with a short fresh A/B.
