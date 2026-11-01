@@ -350,3 +350,9 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   Standpush A 0,2,3,6/8, B 0,1,3,6/8. Sequence fell 17/17; falls binned by segment: A 475k all 17 in stand segments,
   B 12/17 in stand (350k: A 17/19, B 23/26 in stand). => walking is mostly stable; the failure is stopping (walk -> zero
   command), the pitch rms in stand (5.8-7 deg) shows it. Standpush from a standstill is fine. No changes (comparison).
+- A/B VERDICT at 600k (support 0 in both). Score (support off): falls A 13/32 B 4/32, time up 32.0/37.5 s; walk roll rms
+  1.32/1.84, pitch .86/1.12 deg, sway 147/153 mm/s, joint acc 23.3/23.4, slip 28/25 mm/s, swing h 29/27 mm, touchdown
+  417/345 mm/s, power 6.9/7.1 W; stand pitch rms 4.5/2.0 deg. Sequence fell A 20/32 (19 in stand segments) / B 4/32.
+  Standpush .2/.3/.4/.5: A 0,1,4,6/8 (=baseline), B 0,0,1,3/8 with real recovery steps (0.5 m/s: 6 foot lifts, 176 mm drift).
+  => B (pure RL) is clearly more stable (stopping + pushes); A walks marginally smoother (less roll, lower power).
+  Single checkpoint, 32 envs: B's jump from 475k (18/32) to 600k (4/32) should be confirmed on later ckpts.
