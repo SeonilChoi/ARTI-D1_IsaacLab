@@ -67,8 +67,11 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
 | 2026-11-01_17-21-00 | B: PURE RL, fresh: agent.agent.style_reward_scale=0.0 task_reward_scale=1.0, same env/USD (sole pad, neutral roll, width), nominal gait table kept | stopped at ~25k: A/B moved to PhysX |
 | 2026-11-01_17-27-12 | A on PhysX 4096 (aborted: two PhysX 4096 runs OOM, 7.5 GB each) | stopped |
 | 2026-11-01_17-28-57 | B on PhysX 4096 | crashed at start: CUDA OOM |
-| 2026-11-01_17-31-40 | A: AMP on PhysX, fresh, 2048 env (style .5 / task .5) | running (log train_physx_amp.log) |
-| 2026-11-01_17-32-31 | B: pure RL on PhysX, fresh, 2048 env (style 0 / task 1, same nets/hparams = PPO update) | running (log train_physx_pureRL.log) |
+| 2026-11-01_17-31-40 | A: AMP on PhysX, fresh, 2048 env (style .5 / task .5) | stopped at ~10k: restarted with standing pushes |
+| 2026-11-01_17-32-31 | B: pure RL on PhysX, fresh, 2048 env (style 0 / task 1, same nets/hparams = PPO update) | stopped at ~10k: restarted with standing pushes |
+| 2026-11-01_17-49-34 | smoke 64 env PhysX (standing pushes, B overrides) | done: standing_fraction ~.3, no error |
+| 2026-11-01_17-53-46 | A: AMP on PhysX, fresh, 2048 env + standing 20 % / pushes 0.1-0.4 m/s (b89eb4c) | running (log train_physx_amp_push.log) |
+| 2026-11-01_17-54-36 | B: pure RL on PhysX, fresh, 2048 env, style 0 / task 1 + same standing pushes (b89eb4c) | running (log train_physx_pureRL_push.log) |
 
 - ea6c5cb voltage saturation: PD drive kp*(target-q) capped at the stall torque; with kd = stall/no-load this caps joint
   speed at the no-load speed on every backend. A/B (standstill nominal gait): above-no-load samples Newton .774 % -> .024 %
@@ -309,3 +312,8 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   other std/lr) so B uses the AMP agent with style 0 / task 1 (same nets, PPO policy loss; the discriminator pays 0) for a
   fair A/B. Two PhysX 4096 runs do not fit (7.5 GB each, B OOM) -> both fresh at 2048 env, ~20 it/s each. Checks eval
   PhysX only (cron eafe77c2). Compare after both pass ~600k (support off).
+- USER: does PPO learn to resist pushes while standing? Only 1 of 1001 clips stands (~0.1 % of training) and the pushes
+  are +-0.05 m/s, so neither run trained it. b89eb4c: stand_command_probability .2, standing pushes 0.1-0.4 m/s every
+  2-4 s, eval --mode standpush (push .2/.3/.4/.5 m/s x 8 directions at 3 s). Baseline AMP 14-16-37 agent_440000 PhysX:
+  0/8, 1/8, 4/8, 7/8 fell, no recovery step (logs/tuning/eval_standpush_p440k_physx.log). Restarted A and B fresh
+  (17-53-46 / 17-54-36), cron f936f757 adds the standpush eval.
