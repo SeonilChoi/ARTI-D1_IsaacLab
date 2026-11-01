@@ -290,3 +290,10 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   pad: 0 / 5); forward roll range 5.7/5.6 deg (PhysX was 14.4), lateral osc 161/154 mm/s (194/172), hip_roll p-p 9-11 deg
   (17), knee 23 (30), feet 29-32 mm; PhysX stand roll .25 deg, no foot lifting (was ~10 mm). Torque rms all 1.24 vs 1.75
   (hip_yaw .24 vs .83). hip_roll mean -.038/+.044, width 131/133 mm. Video auto_p120k.mp4 0 blank. Continue.
+- 14-16-37 agent_405000 (cum 900k): flat (width .136, tilt 2.7, roll 1.6, joint_acc 62, style .29, train ep ~600 for
+  300k). Eval standstill reset (DR + pushes on): Newton 0/32, PhysX 2/32 (1.2, 10.7 s); hip_roll mean -.028/+.028 (ref .025),
+  width 136 mm; hip_roll p-p 8-9, knee 21-24, lateral osc 160/150 mm/s; torque all 1.22 vs 1.78 (hip_yaw .25 vs .84).
+  Newton --reset rsi: 15/32 fell at 0.4-1.2 s -> the short training episodes are RSI-start falls (random clip frame vs
+  state), not mid-walk instability; vertical-leg policy had ep 858. Not acted on yet (real robot starts from standstill);
+  candidate if it persists: check the RSI root height with the pad (sole up to 17 deg roll mid-gait). Video auto_p405k.mp4
+  0 blank. Continue.
