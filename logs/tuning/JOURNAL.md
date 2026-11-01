@@ -63,7 +63,8 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
 | 2026-10-31_20-07-37 | + stance width reward -10 x |width - 0.137| (d020a9a), warm start 17-30-17 agent_430000, offset 455000 | stopped at 2125k (cum 2.58M): plateau, width .180 (foot_flat vs 10 deg reference sole roll) |
 | 2026-10-31_21-13-01 | FRESH (no ckpt) with stance width reward (d020a9a), kd 1100; parallel A/B vs warm start 20-07-37 | stopped at 230k: width .183 like the warm start (hip_roll ~ +-0.15 is foot-flat geometry, see Log) |
 | 2026-11-01_11-03-31 | FRESH: foot tilt measured from the 10 deg reference sole roll (3432243), stance width -10 kept, kd 1100 | stopped at 495k: legs inward OK (width 130-135, hip_roll -.04/+.045); next: sole pad |
-| 2026-11-01_14-16-37 | + flat sole pad collider at the 10 deg stance roll (52f2ff0, USD), warm start 11-03-31 agent_495000, offset 495000 | running (log train_newton_solepad.log) |
+| 2026-11-01_14-16-37 | + flat sole pad collider at the 10 deg stance roll (52f2ff0, USD), warm start 11-03-31 agent_495000, offset 495000 | A of the AMP vs pure-RL comparison, running (log train_newton_solepad.log) |
+| 2026-11-01_17-21-00 | B: PURE RL, fresh: agent.agent.style_reward_scale=0.0 task_reward_scale=1.0, same env/USD (sole pad, neutral roll, width), nominal gait table kept | running in parallel (log train_newton_pureRL.log) |
 
 - ea6c5cb voltage saturation: PD drive kp*(target-q) capped at the stall torque; with kd = stall/no-load this caps joint
   speed at the no-load speed on every backend. A/B (standstill nominal gait): above-no-load samples Newton .774 % -> .024 %
@@ -297,3 +298,6 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   state), not mid-walk instability; vertical-leg policy had ep 858. Not acted on yet (real robot starts from standstill);
   candidate if it persists: check the RSI root height with the pad (sole up to 17 deg roll mid-gait). Video auto_p405k.mp4
   0 blank. Continue.
+- USER: "could it walk with RL instead of imitation?" -> A/B: A = AMP 14-16-37 (keeps running), B = pure RL 17-21-00
+  (style 0, task 1; discriminator still trains but pays nothing; nominal gait table kept). USER: stop the Newton vs PhysX
+  comparison -> checks eval Newton only. Compare at B ~600k (support off): falls, ROM, sway, torque, front video.
