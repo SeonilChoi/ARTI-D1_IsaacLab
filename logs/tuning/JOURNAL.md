@@ -323,3 +323,8 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   Standpush (standpush_{A,B}_95k.log), fell at .2/.3/.4/.5 m/s: A 0/8, 1/7, 4/8, 7/8 (= old baseline, survivors take
   0.3-1.0 foot lifts); B 2/8, 3/6, 4/5, 5/7 (6 fell before the push). Videos skipped: OOM with both trainings running
   (Kit and newton_gl both need >3.5 GB free). No changes.
+- A/B check A 225k / B 235k (support fading from 150k, evals reference only). check.sh A/B: width 126.6/125.8 mm, roll 2.5/2.5 deg,
+  foot tilt 3.2/3.3, air .18/.18, joint_acc 71.6/70.5, ep len 899/898, style 0.27/0.25. PhysX sequence: both 32/32 fell, now later
+  (A median ~2.1 s, B ~2.0 s, was ~1 s at 95k); fwd-walk sole width A 93 / B 109 mm (narrowing when stumbling), standing ~129 / 132-146 mm
+  (B standing hip_roll noisier, roll range up to 25 deg in some segs). Standpush fell .2/.3/.4/.5: A 0/8, 2/8, 4/8, 6/8; B 0/8, 1/7, 4/8,
+  6/8 (B caught up; still ~baseline). Videos skipped (OOM with both trainings). No changes.
