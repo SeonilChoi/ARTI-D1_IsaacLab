@@ -62,7 +62,8 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
 | 2026-10-31_17-30-17 | Newton kd 500 -> 1100 (884ea2f), continue 17-21-04 agent_25000, offset 25000 (= fresh lineage) | stopped at 430k (cum 455k): legs splayed (hip_roll ~0.15 out) |
 | 2026-10-31_20-07-37 | + stance width reward -10 x |width - 0.137| (d020a9a), warm start 17-30-17 agent_430000, offset 455000 | stopped at 2125k (cum 2.58M): plateau, width .180 (foot_flat vs 10 deg reference sole roll) |
 | 2026-10-31_21-13-01 | FRESH (no ckpt) with stance width reward (d020a9a), kd 1100; parallel A/B vs warm start 20-07-37 | stopped at 230k: width .183 like the warm start (hip_roll ~ +-0.15 is foot-flat geometry, see Log) |
-| 2026-11-01_11-03-31 | FRESH: foot tilt measured from the 10 deg reference sole roll (3432243), stance width -10 kept, kd 1100 | running (log train_newton_neutralroll.log) |
+| 2026-11-01_11-03-31 | FRESH: foot tilt measured from the 10 deg reference sole roll (3432243), stance width -10 kept, kd 1100 | stopped at 495k: legs inward OK (width 130-135, hip_roll -.04/+.045); next: sole pad |
+| 2026-11-01_14-16-37 | + flat sole pad collider at the 10 deg stance roll (52f2ff0, USD), warm start 11-03-31 agent_495000, offset 495000 | running (log train_newton_solepad.log) |
 
 - ea6c5cb voltage saturation: PD drive kp*(target-q) capped at the stall torque; with kd = stall/no-load this caps joint
   speed at the no-load speed on every backend. A/B (standstill nominal gait): above-no-load samples Newton .774 % -> .024 %
@@ -276,3 +277,11 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   style .25, ep 899. Eval Newton 0/32, PhysX 5/32 (1.4-11.7 s, ref only <600k); hip_roll mean -.041/+.045 (ref -/+.025),
   sole width 130/134 mm (ref 135) -> legs inward like the demo; hip_roll RAW-SAT 0 (was .10-.16). Torque rms all 1.32 vs
   1.74 Nm (hip_yaw .25 vs .74). Video auto_n330k.mp4 0 blank, legs visibly angled in, soles on inner edge. Continue.
+- USER: "walk smoothly and stably". 330k eval showed big motions (hip_roll p-p 17 deg vs 6, knee 30, lateral vel osc
+  194 mm/s, PhysX roll range 14 deg, PhysX feet lift ~10 mm while standing). The rigid sole stands on one edge at the
+  10 deg stance roll (it is the OUTER edge: lowest flat-face corner y = -0.0079 on the left foot) while the real soft pad
+  lands as a face. 52f2ff0: 8 mm box collider under each foot link, flat at the stance roll, bottom through the lowest
+  sole corner (purpose guide). compare_backends nominal gait, no pad -> pad: PhysX stance foot spin 10.4 -> 5.0 deg/s,
+  tilt 3.66 -> 3.20, min sole z 1.3 -> 2.8 mm; Newton spin 11.0 -> 7.7, tilt 3.45 -> 3.15, min sole 1.05 -> 1.21 mm;
+  hip_yaw torque gap unchanged (.66 vs .19). Logs cmp_{pad,nopad}_*.log. Warm start 495k -> 14-16-37.
+  Note: git show of base.usda gives the LFS pointer; use `git show HEAD:<f> | git lfs smudge`.
