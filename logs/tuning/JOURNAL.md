@@ -356,3 +356,8 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   Standpush .2/.3/.4/.5: A 0,1,4,6/8 (=baseline), B 0,0,1,3/8 with real recovery steps (0.5 m/s: 6 foot lifts, 176 mm drift).
   => B (pure RL) is clearly more stable (stopping + pushes); A walks marginally smoother (less roll, lower power).
   Single checkpoint, 32 envs: B's jump from 475k (18/32) to 600k (4/32) should be confirmed on later ckpts.
+- User chose "continue B, stop A" on the 600k verdict; A stopped (SIGINT) at agent_920000 (it had kept training while the
+  question waited). Videos 0 blank: logs/tuning/videos/auto_{A,B}_{600k,920k}.mp4. Recheck at 920k REVERSES the 600k
+  verdict: score (support off) A 0/32 fell / B 3/32; walk roll rms 1.49/1.77, pitch .90/1.05; stand pitch rms 1.08/1.64 deg;
+  standpush A 0,0,0,2/8 (recovery steps, 2.2 lifts at .5) / B 0,0,1,3/8. A learned stopping/push recovery later than B
+  (A 600k: 13/32, 11/32). Asked the user whether to resume A from agent_920000.
