@@ -18,7 +18,7 @@ import sys
 from isaaclab.app import AppLauncher
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--mode", choices=["reference", "policy", "sequence", "standpush"], required=True)
+parser.add_argument("--mode", choices=["reference", "policy", "sequence", "standpush", "score"], required=True)
 parser.add_argument("--checkpoint", type=str, default=None)
 parser.add_argument("--num_envs", type=int, default=96)
 parser.add_argument("--seconds", type=float, default=14.0)
@@ -31,6 +31,8 @@ parser.add_argument("--motion_folder", type=str, default=None, help="reference m
 parser.add_argument("--nominal_table", type=str, default=None, help="nominal gait table the checkpoint was trained with")
 parser.add_argument("--hip_roll_limit", type=float, default=None, help="hard +-limit (rad) on hip_roll, as in training")
 parser.add_argument("--reset", choices=("standstill", "rsi"), default="standstill", help="sequence mode start state")
+parser.add_argument("--train_step", type=int, default=0,
+                    help="score mode: evaluate as at this training step (balance support / curriculum fractions); 0 = support off")
 parser.add_argument("--physics", type=str, default="isaacsim_physx", help="physics preset: isaacsim_physx | newton_mjwarp")
 AppLauncher.add_app_launcher_args(parser)
 args_cli = parser.parse_args()
@@ -211,6 +213,13 @@ def make_env():
     if hasattr(cfg, "command_resample_interval_s"):
         cfg.command_resample_interval_s = (0.0, 0.0)  # the eval drives the commands itself
     cfg.episode_length_s = args_cli.seconds + 5.0
+    if args_cli.mode == "score":
+        # Same sequence and reset as --mode sequence; --train_step sets the curriculum (balance support) the policy had then.
+        cfg.episode_length_s = SEQ_DURATION_S * len(PLAY_SEQUENCE) + 1.0
+        cfg.reset_standstill_probability = 1.0
+        if args_cli.train_step > 0:
+            cfg.curriculum_step_offset = args_cli.train_step
+            cfg.balance_support_kp = type(cfg)().balance_support_kp
     if args_cli.mode == "sequence":
         # Same conditions as scripts/skrl/play.py: trained reset strategy, pushes on, 30 s episode.
         cfg.episode_length_s = SEQ_DURATION_S * len(PLAY_SEQUENCE) + 1.0
@@ -355,6 +364,153 @@ def load_policy(path, device):
     pre = ck.get("observation_preprocessor") or ck.get("state_preprocessor")
     scaler = Scaler({k: v.to(device) for k, v in pre.items()}) if pre else nn.Identity()
     return lambda obs: actor(scaler(obs))
+
+
+SCORE_SKIP_S = 1.0  # transition after each command change, not scored
+
+
+def run_score(env, uenv, obs):
+    """Walking-performance scorecard over PLAY_SEQUENCE: stability, tracking, smoothness, gait quality, effort.
+
+    Every metric is accumulated only over env-steps before that env's first fall, separately for walking and
+    standing segments, so a policy that falls early is not rewarded with fewer bad samples (falls are reported).
+    """
+    from isaaclab.utils.math import quat_apply_inverse, euler_xyz_from_quat, quat_from_euler_xyz
+    policy = load_policy(args_cli.checkpoint, uenv.device)
+    n, dev, dt = uenv.num_envs, uenv.device, uenv.step_dt
+    d = uenv.robot.data
+    seg_steps = int(SEQ_DURATION_S / dt)
+    skip = int(SCORE_SKIP_S / dt)
+    table = torch.tensor([c for _, c in PLAY_SEQUENCE], dtype=torch.float32, device=dev)
+    feet_ids = [uenv.left_toe_body_index, uenv.right_toe_body_index]
+    mass = d.body_mass.torch.to(dev).reshape(n, -1).sum(-1)
+    acc = {}  # name -> (sum per env, count per env), per kind "walk" / "stand"
+
+    def add(kind, name, value, mask):
+        s, c = acc.setdefault((kind, name), (torch.zeros(n, device=dev), torch.zeros(n, device=dev)))
+        s += torch.where(mask, value, torch.zeros_like(value)); c += mask.float()
+
+    events = {}  # per-event samples (touchdown impact, swing height, swing time) as python lists
+
+    def add_events(kind, name, value, mask):
+        events.setdefault((kind, name), []).extend(value[mask].tolist())
+
+    fall_t = torch.full((n,), -1.0, device=dev)
+    min_h = torch.full((n,), 1e9, device=dev)
+    prev_a = prev_a2 = prev_qd = prev_v = None
+    prev_contact = torch.ones((n, 2), dtype=torch.bool, device=dev)
+    prev_vz = torch.zeros((n, 2), device=dev)
+    swing_t = torch.zeros((n, 2), device=dev); swing_h = torch.zeros((n, 2), device=dev)
+    up_w = torch.tensor([[0.0, 0.0, 1.0]], device=dev).expand(n, -1)
+    seg_hv = torch.zeros((n, 3), device=dev); seg_c = torch.zeros(n, device=dev)
+    with torch.inference_mode():
+        for k in range(seg_steps * len(PLAY_SEQUENCE)):
+            j = k // seg_steps
+            cmd = table[j].expand(n, -1)
+            kind = "stand" if PLAY_SEQUENCE[j][0] == "stand" else "walk"
+            uenv.commands[:] = cmd
+            pobs = obs["policy"].clone()
+            pobs[:, -3:] = cmd * uenv.command_scale
+            a = torch.clamp(policy(pobs), -1.0, 1.0)
+            obs, _, _, _, _ = env.step(a)
+            min_h = torch.minimum(min_h, trunk_height(uenv))
+            fall_t = torch.where((min_h < 0.2) & (fall_t < 0), torch.full_like(fall_t, k * dt), fall_t)
+            alive = fall_t < 0
+            m = alive & (k % seg_steps >= skip)
+            pq = d.body_quat_w.torch[:, uenv.ref_body_index]
+            _, _, yaw = euler_xyz_from_quat(pq)
+            hq = quat_from_euler_xyz(torch.zeros_like(yaw), torch.zeros_like(yaw), yaw)
+            v_h = quat_apply_inverse(hq, d.body_lin_vel_w.torch[:, uenv.ref_body_index])
+            w_h = quat_apply_inverse(hq, d.body_ang_vel_w.torch[:, uenv.ref_body_index])
+            up = quat_apply_inverse(pq, up_w)
+            roll = torch.rad2deg(torch.atan2(up[:, 1], up[:, 2])); pitch = torch.rad2deg(torch.atan2(-up[:, 0], up[:, 2]))
+            qd, tau = d.joint_vel.torch, uenv.robot.actuators.applied_effort.torch
+            hv = heading_velocity(uenv)
+            # stability
+            add(kind, "roll_sq", roll ** 2, m); add(kind, "pitch_sq", pitch ** 2, m)
+            add(kind, "rollrate_sq", torch.rad2deg(w_h[:, 0]) ** 2, m); add(kind, "pitchrate_sq", torch.rad2deg(w_h[:, 1]) ** 2, m)
+            # tracking (heading frame), x / y in mm/s, yaw in deg/s
+            # tracking: segment-mean velocity vs command (the gait's own oscillation is the sway term below)
+            seg_hv += torch.where(m.unsqueeze(-1), hv, torch.zeros_like(hv)); seg_c += m.float()
+            if k % seg_steps == seg_steps - 1:
+                ok = alive & (seg_c > 0)
+                err = seg_hv / seg_c.clamp_min(1.0).unsqueeze(-1) - cmd
+                add(kind, "err_x_sq", (err[:, 0] * 1000) ** 2, ok); add(kind, "err_y_sq", (err[:, 1] * 1000) ** 2, ok)
+                add(kind, "err_yaw_sq", torch.rad2deg(err[:, 2]) ** 2, ok)
+                seg_hv.zero_(); seg_c.zero_()
+            add(kind, "sway_sq", (v_h[:, 1] * 1000) ** 2, m)
+            # smoothness
+            if prev_a is not None:
+                add(kind, "action_rate_sq", ((a - prev_a) ** 2).mean(-1), m)
+                add(kind, "joint_acc_sq", (((qd - prev_qd) / dt) ** 2).mean(-1), m)
+                pa = (v_h - prev_v) / dt
+                add(kind, "pelvis_acc_y_sq", pa[:, 1] ** 2, m); add(kind, "pelvis_acc_z_sq", pa[:, 2] ** 2, m)
+                if prev_a2 is not None:
+                    add(kind, "action_jerk_sq", ((a - 2 * prev_a + prev_a2) ** 2).mean(-1), m)
+            prev_a2, prev_a, prev_qd, prev_v = prev_a, a.clone(), qd.clone(), v_h.clone()
+            # effort
+            power = (tau * qd).abs().sum(-1)
+            add(kind, "torque_sq", (tau ** 2).mean(-1), m); add(kind, "power", power, m)
+            add(kind, "cot_num", power, m); add(kind, "cot_den", mass * 9.81 * torch.linalg.norm(v_h[:, :2], dim=-1), m)
+            # feet: sole height contact, slip, touchdown impact, swing height / time, stance width
+            fz = torch.stack([uenv._get_offset_body_position(uenv.left_toe_body_index, uenv.left_toe_body_offset, uenv.has_left_toe_body_offset),
+                              uenv._get_offset_body_position(uenv.right_toe_body_index, uenv.right_toe_body_offset, uenv.has_right_toe_body_offset)], dim=1)
+            contact = fz[..., 2] < 0.006
+            fv = d.body_lin_vel_w.torch[:, feet_ids]
+            slip = torch.linalg.norm(fv[..., :2], dim=-1) * 1000
+            for fi in range(2):
+                add(kind, "slip", slip[:, fi], m & contact[:, fi])
+                td = contact[:, fi] & ~prev_contact[:, fi]
+                add_events(kind, "impact", -prev_vz[:, fi] * 1000, m & td & (swing_t[:, fi] >= 3 * dt))
+                add_events(kind, "swing_h", swing_h[:, fi] * 1000, m & td & (swing_t[:, fi] >= 3 * dt))
+                add_events(kind, "swing_t_" + "LR"[fi], swing_t[:, fi], m & td & (swing_t[:, fi] >= 3 * dt))
+                add(kind, "lift", (~contact[:, fi] & prev_contact[:, fi]).float(), m)
+            swing_t = torch.where(contact, torch.zeros_like(swing_t), swing_t + dt)
+            swing_h = torch.where(contact, torch.zeros_like(swing_h), torch.maximum(swing_h, fz[..., 2]))
+            prev_contact, prev_vz = contact, fv[..., 2].clone()
+            lr = fz[:, 0] - fz[:, 1]
+            add(kind, "width", (-torch.sin(yaw) * lr[:, 0] + torch.cos(yaw) * lr[:, 1]) * 1000, m)
+            add(kind, "air", (~contact).float().mean(-1), m)
+
+    def mean(kind, name, rms=False):
+        s, c = acc[(kind, name)]
+        ok = c > 0
+        if not bool(ok.any()):
+            return float("nan")
+        v = (s[ok] / c[ok])
+        return v.sqrt().mean().item() if rms else v.mean().item()
+
+    def ev(kind, name, q=None):
+        x = events.get((kind, name), [])
+        if not x:
+            return float("nan")
+        return float(np.mean(x)) if q is None else float(np.quantile(x, q))
+
+    fell = fall_t >= 0
+    total = seg_steps * len(PLAY_SEQUENCE) * dt
+    alive_t = torch.where(fell, fall_t, torch.full_like(fall_t, total))
+    print(f"[SCORE] checkpoint={args_cli.checkpoint} physics={args_cli.physics} envs={n} train_step={args_cli.train_step} "
+          f"(balance support {'as in training' if args_cli.train_step else 'off'})")
+    print(f"[SCORE] stability  falls {int(fell.sum())}/{n} | mean time up {alive_t.mean().item():.1f}/{total:.0f} s | "
+          f"falls per env-minute {fell.sum().item() / (alive_t.sum().item() / 60.0):.2f}")
+    for kind in ("walk", "stand"):
+        if (kind, "roll_sq") not in acc:
+            continue
+        cot = mean(kind, "cot_num") / max(mean(kind, "cot_den"), 1e-9)
+        tl, tr = ev(kind, "swing_t_L"), ev(kind, "swing_t_R")
+        print(f"[SCORE] {kind:5s} stability   roll rms {mean(kind, 'roll_sq', True):.2f} pitch rms {mean(kind, 'pitch_sq', True):.2f} deg | "
+              f"roll-rate rms {mean(kind, 'rollrate_sq', True):.1f} pitch-rate rms {mean(kind, 'pitchrate_sq', True):.1f} deg/s")
+        print(f"[SCORE] {kind:5s} tracking    err rms x {mean(kind, 'err_x_sq', True):.1f} y {mean(kind, 'err_y_sq', True):.1f} mm/s "
+              f"yaw {mean(kind, 'err_yaw_sq', True):.2f} deg/s (segment mean vs command) | lateral sway vel rms {mean(kind, 'sway_sq', True):.0f} mm/s")
+        print(f"[SCORE] {kind:5s} smoothness  action rate rms {mean(kind, 'action_rate_sq', True):.4f} jerk rms {mean(kind, 'action_jerk_sq', True):.4f} | "
+              f"joint acc rms {mean(kind, 'joint_acc_sq', True):.1f} rad/s2 | pelvis acc rms y {mean(kind, 'pelvis_acc_y_sq', True):.2f} "
+              f"z {mean(kind, 'pelvis_acc_z_sq', True):.2f} m/s2")
+        print(f"[SCORE] {kind:5s} feet        touchdown speed mean {ev(kind, 'impact'):.0f} p95 {ev(kind, 'impact', 0.95):.0f} mm/s | "
+              f"stance slip {mean(kind, 'slip'):.1f} mm/s | swing height {ev(kind, 'swing_h'):.1f} mm | "
+              f"swing time L {tl:.3f} R {tr:.3f} s (sym {min(tl, tr) / max(tl, tr):.2f}) | lifts/s {mean(kind, 'lift') * 2 / dt:.2f} | "
+              f"air {mean(kind, 'air'):.2f} | width {mean(kind, 'width'):.1f} mm")
+        print(f"[SCORE] {kind:5s} effort      torque rms {mean(kind, 'torque_sq', True):.3f} Nm | power {mean(kind, 'power'):.2f} W"
+              + (f" | CoT {cot:.1f}" if kind == "walk" else ""))
 
 
 def main():
@@ -600,6 +756,8 @@ def main():
             over = t > avail
             print(f"[DXL] {jn:24s} time > no-load speed {100*(v > motor['no_load_speed']).float().mean():5.2f}%"
                   f"  outside T-w line {100*over.float().mean():5.2f}%  worst excess {(t - avail).max():5.2f} Nm")
+    if args_cli.mode == "score":
+        run_score(env, uenv, obs)
     if args_cli.mode == "standpush":
         policy = load_policy(args_cli.checkpoint, uenv.device)
         n = uenv.num_envs

@@ -328,3 +328,11 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   (A median ~2.1 s, B ~2.0 s, was ~1 s at 95k); fwd-walk sole width A 93 / B 109 mm (narrowing when stumbling), standing ~129 / 132-146 mm
   (B standing hip_roll noisier, roll range up to 25 deg in some segs). Standpush fell .2/.3/.4/.5: A 0/8, 2/8, 4/8, 6/8; B 0/8, 1/7, 4/8,
   6/8 (B caught up; still ~baseline). Videos skipped (OOM with both trainings). No changes.
+- New eval_gait.py --mode score (walking scorecard over the 8-segment play sequence, metrics only before each env's
+  first fall, walk/stand separate): stability (falls, time up, roll/pitch and rate rms), tracking (segment-mean velocity
+  error), sway, smoothness (action rate/jerk, joint acc, pelvis acc), feet (touchdown speed, stance slip, swing height /
+  time / symmetry, width), effort (torque, power, CoT). --train_step N evaluates with the balance support of step N.
+  A/B 235k, support as trained (0.81): both 0/32 fell; walk roll rms 3.5/3.5, pitch .88/1.32 deg; track err x 11.9/14.2
+  y 18.9/19.9 mm/s; action rate .091/.089, joint acc 25.0/25.4; touchdown 202/210 mm/s, slip 43/51 mm/s, swing sym
+  .92/.95, power 9.2/9.5 W; stand roll .41/.63 pitch .73/.99 deg. Support off: 32/32 fell both (time up 3.1 / 2.0 s).
+  (logs/tuning/score_{A,B}_235k_{sup,off}.log)
