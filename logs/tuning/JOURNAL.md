@@ -336,3 +336,10 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   y 18.9/19.9 mm/s; action rate .091/.089, joint acc 25.0/25.4; touchdown 202/210 mm/s, slip 43/51 mm/s, swing sym
   .92/.95, power 9.2/9.5 W; stand roll .41/.63 pitch .73/.99 deg. Support off: 32/32 fell both (time up 3.1 / 2.0 s).
   (logs/tuning/score_{A,B}_235k_{sup,off}.log)
+- A/B check at 350k (A ckpt 350k, B 365k latest; support 0.55/0.52). check.sh A/B: roll 1.2/3.0 deg, foot tilt 2.6/6.7 deg
+  (B tilt jumped ~3 -> 7.7 at 276k), ep len 893/774 (B down from 898 since ~184k), width 128.7/127.0 mm. Score @350k
+  support off: falls 14/32 both (was 32/32 at 235k), time up 30.0/30.6 s; walk roll rms 2.6/2.9, pitch 1.2/2.0 deg; track
+  err x 17/17 y 14/17 mm/s; joint acc 24.3/25.3; touchdown 257/192 mm/s, slip 30/41 mm/s, swing h 19/17 mm, sym .91/.94,
+  power 9.1/11.4 W (CoT 1.0/1.2); stand roll 1.1/2.2 pitch 4.0/4.2 deg, sway 30/50 mm/s. Support as trained: 0/32 both.
+  Standpush .2/.3/.4/.5: A 0/8,1/8,3/8,6/8; B 0/8,1/8,3/8,6/8 (both a bit better than the old baseline 0,1,4,7).
+  Sequence: A fell 19/32, B 26/32. Videos skipped (OOM). No changes.
