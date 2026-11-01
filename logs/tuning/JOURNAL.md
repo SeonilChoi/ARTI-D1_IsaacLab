@@ -269,3 +269,6 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   neutral 4 deg. Stopped 20-07-37 at 2125k; FRESH 11-01_11-03-31 (habits do not unlearn at floor std).
   Not modelled yet: the soft pad (rigid sole edge in sim). If the sim foot rocks on its inner edge, try a wedge/compliant
   sole collision next (A/B with compare_backends).
+- 11-01_11-03-31 agent_10000 (12k, support 1.0): width .135 (ref .137), tilt from neutral 3.7, roll 3.6, swing height .99,
+  reward +1.33, ep 899. Support-off eval reference only: Newton 32/32 and PhysX 32/32 fell in 1-4.7 s (expected this early).
+  Video auto_n10k.mp4 0 blank. Continue.
