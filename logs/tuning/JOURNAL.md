@@ -285,3 +285,8 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   tilt 3.66 -> 3.20, min sole z 1.3 -> 2.8 mm; Newton spin 11.0 -> 7.7, tilt 3.45 -> 3.15, min sole 1.05 -> 1.21 mm;
   hip_yaw torque gap unchanged (.66 vs .19). Logs cmp_{pad,nopad}_*.log. Warm start 495k -> 14-16-37.
   Note: git show of base.usda gives the LFS pointer; use `git show HEAD:<f> | git lfs smudge`.
+- 14-16-37 agent_120000 (cum 615k, support 0): width .134, tilt 2.8, roll 1.3, joint_acc 61, style .29, train ep 616 (the
+  ep drop started before the pad: 11-03-31 899 -> 582 as support went .5 -> .23). Eval Newton 0/32, PhysX 0/32 (330k no
+  pad: 0 / 5); forward roll range 5.7/5.6 deg (PhysX was 14.4), lateral osc 161/154 mm/s (194/172), hip_roll p-p 9-11 deg
+  (17), knee 23 (30), feet 29-32 mm; PhysX stand roll .25 deg, no foot lifting (was ~10 mm). Torque rms all 1.24 vs 1.75
+  (hip_yaw .24 vs .83). hip_roll mean -.038/+.044, width 131/133 mm. Video auto_p120k.mp4 0 blank. Continue.
