@@ -427,8 +427,13 @@ class ArtiD1AmpEnvCfg(DirectRLEnvCfg):
     # frame); the sole edge above it is a ~10 mm fillet out to x +-0.0525, y +-0.0295.
     foot_sole_half_length = 0.040
     foot_sole_half_width = 0.0173
-    # -scale * sum_feet sin^2(sole tilt). Reference swing and stance soles are flat.
+    # -scale * sum_feet sin^2(sole tilt from the neutral sole below).
     foot_flat_reward_scale = -30.0
+    # Neutral sole roll (rad, inward): the leg has no ankle roll and the hip_roll frame is built 0.15 rad inward, so at
+    # the reference stance (hip_roll -/+0.0247) the soles are rolled 10.0 deg (pinocchio FK; reference clips 5-17 deg
+    # mid-gait). The real robot walks this way: its soft sole pad conforms and lands flat (USER). Measured from a flat
+    # sole instead (-30 * sin^2(10 deg) = -0.9 per foot), the policy rolled the hips ~0.15 out -> vertical legs, 185 mm.
+    foot_neutral_roll = 0.15 + 0.0247
     # -scale * sum over feet off the ground of (roll rate^2 + pitch rate^2) (rad/s).
     swing_foot_ang_vel_reward_scale = -0.05
     # Knee = shin link origin. Reference knee lift (swing peak - stance) is 26.6 / 27.9 mm (28 mm swing, 10 deg hip_roll stance)

@@ -931,9 +931,15 @@ class ArtiD1AmpEnv(DirectRLEnv):
             + quat_apply(flat_quat, flat_corners).view(self.num_envs, 2, 4, 3)[..., 2]
         )
         sole_height = corner_z.min(dim=-1).values
+        # Tilt is measured from the reference stance sole (rolled foot_neutral_roll inward), not from a flat sole.
+        roll = self.cfg.foot_neutral_roll
+        neutral_up = torch.tensor(
+            [[0.0, -math.sin(roll), math.cos(roll)], [0.0, math.sin(roll), math.cos(roll)]],
+            dtype=torch.float32,
+            device=self.device,
+        )
         up_z = quat_apply(
-            feet_quat.reshape(-1, 4),
-            torch.tensor([[0.0, 0.0, 1.0]], dtype=torch.float32, device=self.device).expand(self.num_envs * 2, -1),
+            feet_quat.reshape(-1, 4), neutral_up.unsqueeze(0).expand(self.num_envs, -1, -1).reshape(-1, 3)
         )[:, 2].view(self.num_envs, 2)
         self._foot_flat_reward = torch.sum(1.0 - torch.square(up_z), dim=-1) * self.cfg.foot_flat_reward_scale
         # USER (run10 50k video): both soles rotate briefly while the leg lifts; the reference swing sole stays level.
