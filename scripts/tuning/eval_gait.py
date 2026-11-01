@@ -18,7 +18,7 @@ import sys
 from isaaclab.app import AppLauncher
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--mode", choices=["reference", "policy", "sequence"], required=True)
+parser.add_argument("--mode", choices=["reference", "policy", "sequence", "standpush"], required=True)
 parser.add_argument("--checkpoint", type=str, default=None)
 parser.add_argument("--num_envs", type=int, default=96)
 parser.add_argument("--seconds", type=float, default=14.0)
@@ -73,6 +73,13 @@ PLAY_SEQUENCE = [
     ("turn_left", (0.0, 0.0, 0.095)),
     ("stand", (0.0, 0.0, 0.0)),
 ]
+
+
+# --mode standpush: env e is pushed once, STANDPUSH_SETTLE_S after a standstill start under a zero command, with
+# speed STANDPUSH_SPEEDS[(e // 8) % 4] (m/s, planar root velocity added) toward heading 45 deg x (e % 8) (0 = forward).
+STANDPUSH_SPEEDS = (0.20, 0.30, 0.40, 0.50)
+STANDPUSH_SETTLE_S = 3.0
+STANDPUSH_OBSERVE_S = 4.0
 
 
 class StepMeter:
@@ -212,6 +219,12 @@ def make_env():
             # rsi (the old default, eval logs before 10-31 11:30): random clip times whose motion often disagrees with
             # the forced eval command, so most "falls" happened 0.4-0.9 s after the reset.
             cfg.reset_standstill_probability = 1.0 if args_cli.reset == "standstill" else 0.0
+    elif args_cli.mode == "standpush":
+        # Standstill start, zero command, one planar push per env from the eval itself (no random pushes).
+        cfg.events.push_robot = None
+        cfg.stand_push_velocity = (0.0, 0.0)
+        cfg.reset_standstill_probability = 1.0
+        cfg.episode_length_s = STANDPUSH_SETTLE_S + STANDPUSH_OBSERVE_S + 2.0
     else:
         cfg.events.push_robot = None
         cfg.reset_strategy = "random_start" if args_cli.mode == "policy" else "default"
@@ -587,6 +600,67 @@ def main():
             over = t > avail
             print(f"[DXL] {jn:24s} time > no-load speed {100*(v > motor['no_load_speed']).float().mean():5.2f}%"
                   f"  outside T-w line {100*over.float().mean():5.2f}%  worst excess {(t - avail).max():5.2f} Nm")
+    if args_cli.mode == "standpush":
+        policy = load_policy(args_cli.checkpoint, uenv.device)
+        n = uenv.num_envs
+        ids = torch.arange(n, device=uenv.device)
+        speed = torch.tensor(STANDPUSH_SPEEDS, device=uenv.device)[(ids // 8) % len(STANDPUSH_SPEEDS)]
+        heading = (ids % 8).float() * (math.pi / 4.0)
+        settle, total = int(STANDPUSH_SETTLE_S / dt), int((STANDPUSH_SETTLE_S + STANDPUSH_OBSERVE_S) / dt)
+        meter = StepMeter(uenv)
+        fell_before = torch.zeros(n, dtype=torch.bool, device=uenv.device)
+        lifts = torch.zeros(n, device=uenv.device)
+        settle_t = torch.full((n,), -1.0, device=uenv.device)  # time after the push when both soles are down for good
+        start_xy = None
+        max_disp = torch.zeros(n, device=uenv.device)
+        prev_up = None
+        zero = torch.zeros((n, 3), device=uenv.device)
+        with torch.inference_mode():
+            for k in range(total):
+                uenv.commands[:] = zero
+                pobs = obs["policy"].clone()
+                pobs[:, -3:] = 0.0
+                obs, _, _, _, _ = env.step(torch.clamp(policy(pobs), -1.0, 1.0))
+                min_h = torch.minimum(min_h, trunk_height(uenv))
+                if k == settle - 1:
+                    fell_before = min_h < 0.2
+                    yaw_q = uenv.robot.data.body_quat_w.torch[:, uenv.ref_body_index]
+                    x, y, z, w = yaw_q.unbind(-1)
+                    yaw = torch.atan2(2 * (w * z + x * y), 1 - 2 * (y * y + z * z))
+                    vel = uenv.robot.data.root_vel_w.torch.clone()
+                    vel[:, 0] += speed * torch.cos(yaw + heading)
+                    vel[:, 1] += speed * torch.sin(yaw + heading)
+                    uenv.robot.write_root_velocity_to_sim_index(root_velocity=vel, env_ids=ids)
+                    start_xy = uenv.robot.data.body_pos_w.torch[:, uenv.ref_body_index, :2].clone()
+                    if os.environ.get("EVAL_PUSH_DEBUG"):
+                        print(f"[PUSH-DBG] written {vel[31, :3].tolist()} read back {uenv.robot.data.root_vel_w.torch[31, :3].tolist()}")
+                if os.environ.get("EVAL_PUSH_DEBUG") and settle <= k < settle + 5:
+                    print(f"[PUSH-DBG] k {k - settle} root vel {[round(v, 3) for v in uenv.robot.data.root_vel_w.torch[31, :3].tolist()]}")
+                if k >= settle:
+                    up = meter.feet()[..., 2] > 0.008
+                    if prev_up is not None:
+                        lifts += (up & ~prev_up).float().sum(-1)
+                    prev_up = up
+                    down = ~up.any(-1)
+                    t = (k - settle) * dt
+                    settle_t = torch.where(down & (settle_t < 0), torch.full_like(settle_t, t), settle_t)
+                    settle_t = torch.where(~down, torch.full_like(settle_t, -1.0), settle_t)
+                    disp = torch.linalg.norm(uenv.robot.data.body_pos_w.torch[:, uenv.ref_body_index, :2] - start_xy, dim=-1)
+                    max_disp = torch.maximum(max_disp, disp)
+        fell = (min_h < 0.2) & ~fell_before
+        print(f"[EVAL-PUSH] checkpoint={args_cli.checkpoint} envs={n} fell before the push={int(fell_before.sum())}")
+        names = ["fwd", "fwd-left", "left", "back-left", "back", "back-right", "right", "fwd-right"]
+        for i, v in enumerate(STANDPUSH_SPEEDS):
+            m = (speed == v) & ~fell_before
+            if not bool(m.any()):
+                continue
+            ok = m & ~fell
+            dirs = ",".join(names[int(e) % 8] for e in torch.nonzero(m & fell).flatten().tolist())
+            print(f"[EVAL-PUSH] push {v:.2f} m/s: fell {int((m & fell).sum())}/{int(m.sum())} ({dirs or '-'}) | survivors: "
+                  f"foot lifts {lifts[ok].mean().item() if bool(ok.any()) else float('nan'):.1f}, "
+                  f"settled after {torch.where(settle_t < 0, torch.full_like(settle_t, STANDPUSH_OBSERVE_S), settle_t)[ok].mean().item() if bool(ok.any()) else float('nan'):.2f} s, "
+                  f"max drift {max_disp[ok].mean().item() * 1000 if bool(ok.any()) else float('nan'):.0f} mm")
+        print(f"[EVAL-PUSH] total fell {int(fell.sum())}/{int((~fell_before).sum())}")
     env.close()
 
 

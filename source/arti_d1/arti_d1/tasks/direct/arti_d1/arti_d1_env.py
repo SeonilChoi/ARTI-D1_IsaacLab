@@ -153,6 +153,7 @@ class ArtiD1AmpEnv(DirectRLEnv):
         )
         self.average_velocity_steps = max(1, int(round(self.cfg.average_velocity_window_s / self.step_dt)))
         self.command_resample_timer = torch.zeros(self.num_envs, dtype=torch.float32, device=self.device)
+        self.stand_push_timer = torch.zeros(self.num_envs, dtype=torch.float32, device=self.device)
         self.feet_air_time = torch.zeros((self.num_envs, 2), dtype=torch.float32, device=self.device)
         self.feet_last_contact = torch.ones((self.num_envs, 2), dtype=torch.bool, device=self.device)
         self.feet_contact_ema = torch.ones((self.num_envs, 2), dtype=torch.float32, device=self.device)
@@ -340,6 +341,7 @@ class ArtiD1AmpEnv(DirectRLEnv):
         self.previous_actions.copy_(self.actions)
         self.actions = actions.clone()
         self._resample_commands_mid_episode()
+        self._push_standing()
         self.gait_phase = self._advance_gait_phase(self.gait_phase)
 
     def _standing_command(self) -> torch.Tensor:
@@ -371,6 +373,31 @@ class ArtiD1AmpEnv(DirectRLEnv):
             return
         self._sample_commands(env_ids)
         self._reset_command_resample_timer(env_ids)
+
+    def _push_standing(self):
+        """Planar root velocity kick in a random direction on envs under a zero command, every
+        cfg.stand_push_interval_s, so standing balance (and recovery steps) against pushes is trained."""
+        low, high = self.cfg.stand_push_velocity
+        if high <= 0.0:
+            return
+        self.stand_push_timer -= self.step_dt
+        due = self.stand_push_timer <= 0.0
+        env_ids = torch.nonzero(due & self._standing_command()).flatten()
+        self._reset_stand_push_timer(torch.nonzero(due).flatten())
+        if len(env_ids) == 0:
+            return
+        speed = torch.empty(len(env_ids), device=self.device).uniform_(low, high)
+        heading = torch.empty(len(env_ids), device=self.device).uniform_(-math.pi, math.pi)
+        vel = self.robot.data.root_vel_w.torch[env_ids].clone()
+        vel[:, 0] += speed * torch.cos(heading)
+        vel[:, 1] += speed * torch.sin(heading)
+        self.robot.write_root_velocity_to_sim_index(root_velocity=vel, env_ids=env_ids)
+
+    def _reset_stand_push_timer(self, env_ids: torch.Tensor):
+        low, high = self.cfg.stand_push_interval_s
+        self.stand_push_timer[env_ids] = torch.empty(len(env_ids), dtype=torch.float32, device=self.device).uniform_(
+            low, high
+        )
 
     def _reset_command_resample_timer(self, env_ids: torch.Tensor):
         low, high = self.cfg.command_resample_interval_s
@@ -845,6 +872,7 @@ class ArtiD1AmpEnv(DirectRLEnv):
             "Gait/foot_tilt_deg": self._foot_tilt_deg.mean(),
             "Gait/foot_stagger_abs": torch.abs(self.foot_stagger_ema).mean(),
             "Gait/stance_width": self.stance_width_ema.mean(),
+            "Gait/standing_fraction": self._standing_command().float().mean(),
             "Reward/stance_width": self._stance_width_reward.mean(),
             "Gait/air_ratio_left": 1.0 - feet_contact[:, 0].float().mean(),
             "Gait/air_ratio_right": 1.0 - feet_contact[:, 1].float().mean(),
@@ -1170,6 +1198,7 @@ class ArtiD1AmpEnv(DirectRLEnv):
                 device=self.device,
             )
             self.commands[env_ids] = torch.clamp(commands, lower, upper)
+            self._zero_standing_commands(env_ids)
             return
 
         self.commands[env_ids, 0] = torch.empty(len(env_ids), dtype=torch.float32, device=self.device).uniform_(
@@ -1184,6 +1213,14 @@ class ArtiD1AmpEnv(DirectRLEnv):
             self.cfg.command_yaw_range[0],
             self.cfg.command_yaw_range[1],
         )
+        self._zero_standing_commands(env_ids)
+
+    def _zero_standing_commands(self, env_ids: torch.Tensor):
+        """Turn a cfg.stand_command_probability share of the sampled commands into standing (zero) commands."""
+        if self.cfg.stand_command_probability <= 0.0:
+            return
+        stand = torch.rand(len(env_ids), device=self.device) < self.cfg.stand_command_probability
+        self.commands[env_ids[stand]] = 0.0
 
     def _get_gait_phase_observations(self) -> torch.Tensor:
         angle = 2.0 * math.pi * self.gait_phase
@@ -1301,6 +1338,7 @@ class ArtiD1AmpEnv(DirectRLEnv):
 
         self._sample_commands(env_ids, motion_ids=motion_ids)
         self._reset_command_resample_timer(env_ids)
+        self._reset_stand_push_timer(env_ids)
         self.gait_phase[env_ids] = torch.as_tensor(
             self.motion_loader.get_gait_phase(np.asarray(motion_ids), np.asarray(times)),
             dtype=torch.float32,

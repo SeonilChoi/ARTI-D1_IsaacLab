@@ -394,6 +394,14 @@ class ArtiD1AmpEnvCfg(DirectRLEnvCfg):
     # again from there with the next moving command. Empty = the clock always runs (stepping in place at zero command).
     gait_rest_phases = (0.4572, 0.9572)
     stand_command_threshold = 0.003
+    # Share of sampled commands (reset and mid-episode) turned into a zero (standing) command. Only 1 of the 1001
+    # reference clips stands, so standing was ~0.1 % of training before (USER: learn to resist pushes while standing).
+    stand_command_probability = 0.2
+    # Under a zero command: planar root velocity kick, random direction, speed uniform in stand_push_velocity (m/s), every
+    # stand_push_interval_s. Walking pushes stay in events.push_robot (+-0.05 m/s every 10-15 s). The AMP policy
+    # 14-16-37 agent_440000 (PhysX, eval --mode standpush) held 0.2 m/s without a step, fell at 0.3 1/8, 0.4 4/8, 0.5 7/8.
+    stand_push_velocity = (0.10, 0.40)
+    stand_push_interval_s = (2.0, 4.0)
     # Standing (zero command) rewards: both soles down, and -scale * sum(joint_vel^2).
     stand_feet_contact_reward_scale = 0.5
     stand_joint_vel_reward_scale = 0.01
