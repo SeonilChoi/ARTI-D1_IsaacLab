@@ -317,3 +317,9 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   2-4 s, eval --mode standpush (push .2/.3/.4/.5 m/s x 8 directions at 3 s). Baseline AMP 14-16-37 agent_440000 PhysX:
   0/8, 1/8, 4/8, 7/8 fell, no recovery step (logs/tuning/eval_standpush_p440k_physx.log). Restarted A and B fresh
   (17-53-46 / 17-54-36), cron f936f757 adds the standpush eval.
+- A/B check 95k (support still on, support-off evals are reference only). check.sh A/B: width 130.5/131.6 mm, roll 4.2/4.9 deg,
+  foot tilt 3.1/3.1 deg, standing_fraction 0.32/0.32, air ratio .19/.20 / .18/.21, ep len 899/883, AMP style 0.30/0.23.
+  PhysX sequence (eval_{A,B}_95k.log): both fell 32/32 within 0.6-2.0 s (A median ~1.25 s, B ~0.82 s), sole width A 126-141 / B 126-128 mm.
+  Standpush (standpush_{A,B}_95k.log), fell at .2/.3/.4/.5 m/s: A 0/8, 1/7, 4/8, 7/8 (= old baseline, survivors take
+  0.3-1.0 foot lifts); B 2/8, 3/6, 4/5, 5/7 (6 fell before the push). Videos skipped: OOM with both trainings running
+  (Kit and newton_gl both need >3.5 GB free). No changes.
