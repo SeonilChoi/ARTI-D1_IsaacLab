@@ -60,8 +60,9 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
 | 2026-10-31_17-12-09 | A/B fresh 25k, extra_liftoff 0 (kd 500) | done: same 11 deg foot tilt -> penalty not the cause |
 | 2026-10-31_17-21-04 | A/B fresh 25k, kd 1100 | done: tilt 3.4, roll 2.8, reward +1.1 (healthy) |
 | 2026-10-31_17-30-17 | Newton kd 500 -> 1100 (884ea2f), continue 17-21-04 agent_25000, offset 25000 (= fresh lineage) | stopped at 430k (cum 455k): legs splayed (hip_roll ~0.15 out) |
-| 2026-10-31_20-07-37 | + stance width reward -10 x |width - 0.137| (d020a9a), warm start 17-30-17 agent_430000, offset 455000 | running in parallel (log train_newton_width.log); width 184 -> 179 mm in 155k |
+| 2026-10-31_20-07-37 | + stance width reward -10 x |width - 0.137| (d020a9a), warm start 17-30-17 agent_430000, offset 455000 | stopped at 2125k (cum 2.58M): plateau, width .180 (foot_flat vs 10 deg reference sole roll) |
 | 2026-10-31_21-13-01 | FRESH (no ckpt) with stance width reward (d020a9a), kd 1100; parallel A/B vs warm start 20-07-37 | stopped at 230k: width .183 like the warm start (hip_roll ~ +-0.15 is foot-flat geometry, see Log) |
+| 2026-11-01_11-03-31 | FRESH: foot tilt measured from the 10 deg reference sole roll (3432243), stance width -10 kept, kd 1100 | running (log train_newton_neutralroll.log) |
 
 - ea6c5cb voltage saturation: PD drive kp*(target-q) capped at the stall torque; with kd = stall/no-load this caps joint
   speed at the no-load speed on every backend. A/B (standstill nominal gait): above-no-load samples Newton .774 % -> .024 %
@@ -261,3 +262,10 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
 - 20-07-37 agent_1835000 (cum 2.29M): plateau (width .180, tilt 2.9, roll 1.1, ep 881, style .25). Eval Newton 0/32,
   PhysX 3/32 (3.1, 26.7, 31.2 s); Newton width 185 mm; torque rms all 1.06 vs 1.66 Nm (hip_yaw .19 vs .70). Video
   auto_w1835k.mp4 0 blank. No change: waiting for the user's foot-geometry answer.
+- USER: the real robot walks like the demo (legs inward, sole rolled ~10 deg); its sole pad is slightly soft and lands
+  flat. -> 3432243: foot_flat / foot_tilt measured from the neutral sole up vector R_x(-/+0.1747) z (pinocchio FK at the
+  reference stance) instead of world z. The old term charged the reference pose -30 sin^2(10 deg) = -0.9 per foot, far
+  above the width term (-0.45), hence the outward hips. Smoke 64 env fresh (run dir 11-01_10-58-07): width .13, tilt from
+  neutral 4 deg. Stopped 20-07-37 at 2125k; FRESH 11-01_11-03-31 (habits do not unlearn at floor std).
+  Not modelled yet: the soft pad (rigid sole edge in sim). If the sim foot rocks on its inner edge, try a wedge/compliant
+  sole collision next (A/B with compare_backends).
