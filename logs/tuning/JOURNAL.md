@@ -343,3 +343,10 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   power 9.1/11.4 W (CoT 1.0/1.2); stand roll 1.1/2.2 pitch 4.0/4.2 deg, sway 30/50 mm/s. Support as trained: 0/32 both.
   Standpush .2/.3/.4/.5: A 0/8,1/8,3/8,6/8; B 0/8,1/8,3/8,6/8 (both a bit better than the old baseline 0,1,4,7).
   Sequence: A fell 19/32, B 26/32. Videos skipped (OOM). No changes.
+- A/B check at 475k (support 0.28/0.24). check.sh A/B: roll 1.1/0.9, foot tilt 2.5/2.5 (B recovered from 6-7), width 133/129 mm,
+  air .10/.11, ep len 711/804 (A down from 897 at 358k). Score support off: falls 20/32 / 18/32 (350k: 14/14), time up 27.9/30.4 s;
+  walk roll rms 1.5/1.4, pitch 1.4/1.7 deg, sway 142/156 mm/s, joint acc 23.6/23.6, touchdown 307/319 mm/s, slip 24/26 mm/s,
+  swing h 27/27 mm, sym .87/.97, power 7.9/8.8 W; stand pitch rms 5.8/7.1 deg. Support as trained (0.28): falls 2/32 / 6/32.
+  Standpush A 0,2,3,6/8, B 0,1,3,6/8. Sequence fell 17/17; falls binned by segment: A 475k all 17 in stand segments,
+  B 12/17 in stand (350k: A 17/19, B 23/26 in stand). => walking is mostly stable; the failure is stopping (walk -> zero
+  command), the pitch rms in stand (5.8-7 deg) shows it. Standpush from a standstill is fine. No changes (comparison).
