@@ -143,6 +143,9 @@ class ArtiD1AmpEnv(DirectRLEnv):
             self.action_negative_scale = torch.maximum(self.action_negative_scale, floor)
             self.action_positive_scale = torch.maximum(self.action_positive_scale, floor)
         self.joint_effort_limit = self._make_joint_scale_tensor(self.cfg.joint_effort_limit)
+        self.reference_pose_weights = self._make_joint_scale_tensor(
+            {n: self.cfg.reference_pose_joint_weights[n.removeprefix("left_").removeprefix("right_")] for n in self.robot.data.joint_names}
+        )
         self.reference_joint_vel_rms = self._reference_joint_vel_rms(self.cfg.joint_vel_rms_floor)
         self.left_joint_indices, self.right_joint_indices = self._make_leg_pair_indices()
         self.symmetry_ema_alpha = min(1.0, self.step_dt / max(self.cfg.symmetry_window_s, self.step_dt))
@@ -299,12 +302,13 @@ class ArtiD1AmpEnv(DirectRLEnv):
         print(f"[INFO] reference joint vel rms (rad/s, floored): {np.round(rms, 3).tolist()}", flush=True)
         return torch.tensor(rms, dtype=torch.float32, device=self.device).unsqueeze(0)
 
-    def _nominal_gait_offset(self) -> torch.Tensor:
-        bins = self.nominal_gait_table.shape[0]
+    def _nominal_gait_offset(self, table: torch.Tensor | None = None) -> torch.Tensor:
+        table = self.nominal_gait_table if table is None else table
+        bins = table.shape[0]
         x = self.gait_phase * bins
         i0 = torch.floor(x).long() % bins
         w = (x - torch.floor(x)).unsqueeze(-1)
-        return torch.lerp(self.nominal_gait_table[i0], self.nominal_gait_table[(i0 + 1) % bins], w)
+        return torch.lerp(table[i0], table[(i0 + 1) % bins], w)
 
     def _make_joint_scale_tensor(self, values: dict[str, float]) -> torch.Tensor:
         return torch.tensor(
@@ -827,6 +831,7 @@ class ArtiD1AmpEnv(DirectRLEnv):
             + self._knee_lift_reward
             + self._extra_liftoff_reward
             + self._touchdown_speed_reward
+            + self._reference_pose_reward
             + base_flat_reward
             + base_ang_vel_reward
             + base_sway_reward
@@ -868,6 +873,8 @@ class ArtiD1AmpEnv(DirectRLEnv):
             "Reward/knee_lift": self._knee_lift_reward.mean(),
             "Reward/extra_liftoff": self._extra_liftoff_reward.mean(),
             "Reward/touchdown_speed": self._touchdown_speed_reward.mean(),
+            "Reward/reference_pose": self._reference_pose_reward.mean(),
+            "Gait/reference_pose_err_deg": self._reference_pose_err_deg.mean(),
             "Reward/base_flat": base_flat_reward.mean(),
             "Reward/base_ang_vel": base_ang_vel_reward.mean(),
             "Reward/base_sway": base_sway_reward.mean(),
@@ -1144,6 +1151,16 @@ class ArtiD1AmpEnv(DirectRLEnv):
 
         contact_match = torch.where(expected_swing, ~contact, contact).float().mean(dim=-1)
         self._gait_contact_reward = contact_match * moving_command.float() * self.cfg.gait_contact_reward_scale
+        # Demo joint trajectory at the current clock phase (cfg.reference_pose_*).
+        q_ref = self.robot.data.default_joint_pos.torch + self._nominal_gait_offset(self.nominal_gait_reference)
+        pose_err = torch.square(self.robot.data.joint_pos.torch - q_ref)
+        pose_mse = torch.sum(pose_err * self.reference_pose_weights, dim=-1) / self.reference_pose_weights.sum()
+        self._reference_pose_err_deg = torch.rad2deg(torch.sqrt(pose_mse))
+        self._reference_pose_reward = (
+            torch.exp(-pose_mse / self.cfg.reference_pose_sigma**2)
+            * moving_command.float()
+            * self.cfg.reference_pose_reward_scale
+        )
         standing = (~moving_command).float()
         self._stand_reward = standing * (
             contact.all(dim=-1).float() * self.cfg.stand_feet_contact_reward_scale

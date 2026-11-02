@@ -473,7 +473,19 @@ class ArtiD1AmpEnvCfg(DirectRLEnvCfg):
     # (17-54-36) stamped harder over training: eval touchdown speed 192 (350k) -> 319 (475k) -> 363 mm/s (920k).
     # 5.0 (-0.65 per touchdown at 0.36 m/s, ~2 % of the return) left touchdown at 360 mm/s for 465k steps; 15.0 (USER
     # 11-02): -1.9 per touchdown at 0.36 m/s, above the ~1.25 air-time payout of a 0.27 s swing. Watch swing height.
-    foot_touchdown_speed_reward_scale = -15.0
+    # Off (USER 11-02): -15 left touchdown at 361 mm/s and made mid-swing RSI starts fall within 1 s (9/64 vs 2/64).
+    foot_touchdown_speed_reward_scale = 0.0
+    # Demo joint trajectory: scale * exp(-weighted mean_j (q_j - q_ref_j(clock phase))^2 / sigma^2) under moving commands,
+    # q_ref = default + nominal_gait_reference (mean reference clip pose per phase bin, before the ILC command table).
+    # USER 11-02: B walks stiffly. B uses 1/3-2/3 of the demo joint range (forward knee 18-20 vs 29 deg, ankle 11 vs 28,
+    # hip_pitch 8-11 vs 29, hip_roll 7.5 vs 15) and drops each foot at 360 mm/s (demo 21): the residual cancels part of
+    # the nominal stepping (command table knee ~45 deg p-p).
+    reference_pose_reward_scale = 0.5
+    reference_pose_sigma = 0.11  # rad
+    reference_pose_joint_weights = {
+        "hip_yaw": 0.0, "hip_roll": 1.0, "hip_pitch": 0.5, "knee": 1.0, "ankle": 1.0,
+        "arm_m8": 0.0, "arm_m8crank_plate": 0.0,
+    }
     # Sum over stance feet of |v_xy|^2 at the sole (skating penalty).
     foot_slip_reward_scale = -8.0
 

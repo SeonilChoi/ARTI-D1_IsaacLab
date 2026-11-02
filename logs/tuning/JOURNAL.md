@@ -402,3 +402,14 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   0.98 s). Video auto_B_td15_1690k.mp4 (+ _sheet.png): env 0 walks the whole 33 s, no visible problem (its start
   state happens to be benign). Likely cause: mid-swing RSI starts now brake the descending foot instead of planting it.
   Asked the user: revert to 1.52M (term off) vs keep vs reference-based swing descent shaping. Training left running.
+- 2026-11-02 15:38 USER: B walks too stiffly ("the demo motion is smooth"). Demo forward clips (22, per 1.625 s cycle):
+  ROM hip_roll 15.3, hip_pitch 28.7, knee 29.4, ankle 28.4, arm 20.8 deg; touchdown vz 21 mm/s (p95 35); swing ~0.57 s.
+  B 1.69M forward: hip_roll 7.5, hip_pitch 8-11, knee 18-20, ankle 11-12, arm 4-8; touchdown 361; swing 0.27 s.
+  A 920k is as small (knee 21-22, ankle 13) -> AMP alone did not fix it. The ILC command table moves the knee ~45 deg
+  p-p, so the residual policy cancels part of the nominal stepping.
+  Change (USER approved): touchdown term off (0.0), new reference_pose reward 0.5 * exp(-wmse(q - q_ref(phase))/0.11^2),
+  q_ref = default + nominal_gait_reference (raw demo mean per phase), weights hip_roll/knee/ankle 1, hip_pitch .5,
+  moving commands only (TB Reward/reference_pose, Gait/reference_pose_err_deg). -15 run 13-22-49 stopped at 245k.
+  Warm start 08-34-40 agent_540000 (1.52M, best RSI starts), offset 1520000 -> run 2026-11-02_15-38-20, log
+  logs/train/train_physx_pureRL_refpose.log. First TB: reference_pose .17/step (kernel ~.53 on moving steps), err 4.9 deg.
+  Watch: forward ROM toward demo, touchdown speed, swing time, RSI falls (1.52M: 2/64).
