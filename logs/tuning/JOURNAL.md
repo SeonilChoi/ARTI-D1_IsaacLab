@@ -468,3 +468,10 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   swing h 28.7, swing time .28/.29, roll rms 1.68, power 6.4 W. Forward ROM: hip_roll 9.0/8.0, hip_pitch 8.4/10.0,
   knee 20.6/19.2, ankle 12.2/10.7, arm 4.1/11.5 -> unchanged. Video auto_B_ref_3060k_sheet: no fall, same look.
   Plateau continues; best stability checkpoints 1080k (2.60M) / 1310k (2.83M). Still waiting on the user.
+- 2026-11-03 07:13 check, refpose run 15-38-20 at 1765k (cum 3.285M). TB: another ep-len dip 886 -> 711-727 in the
+  last ~75k (tilt 2.2 -> 2.6), pose err 4.1-4.3 deg, air ratio .106/.113, roll 1.03-1.13.
+  Evals 1765k: score falls 1/32, RSI 64 fell 20/64 (8 at 0.38-0.47 s, 10 at 0.6-1.1 s: start failure again),
+  standpush 0,0,0,4/8. Walk touchdown 391 p95 484, swing h 26.2, swing time .27/.25, roll rms 1.49, power 6.7 W.
+  Forward ROM: hip_roll 8.5/8.4, hip_pitch 10.0/8.7, knee 18.6/21.7, ankle 10.9/11.8, arm 4.7/11.3 -> unchanged.
+  Video auto_B_ref_3285k_sheet: env 0 no fall, same look. Run oscillates (collapse/recover cycles ~600k, ~1650k);
+  1310k (2.83M) remains the best checkpoint. Still waiting on the user.
