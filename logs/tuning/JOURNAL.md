@@ -498,5 +498,5 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
 - 2026-11-03 USER chose "add it now": new pelvis_shift reward 1.0 * exp(-(shift - shift_ref(phase))^2 / 0.015^2), shift =
   pelvis lateral offset from the soles' midpoint (heading frame), shift_ref = demo mean per clock phase (+-27.6 mm),
   moving commands only (TB Reward/pelvis_shift, Gait/pelvis_shift_err_mm). reference_pose stays 2.0.
-  refpose2 run 07-58-16 stopped (~1 h, ~60k steps, never evaluated). Warm start 15-38-20 agent_1310000 (cum 2.83M),
+  refpose2 run 07-58-16 stopped (~30 min, last ckpt agent_30000, never evaluated). Warm start 15-38-20 agent_1310000 (cum 2.83M),
   offset 2830000, log logs/train/train_physx_pureRL_shift.log, PID 471586.
