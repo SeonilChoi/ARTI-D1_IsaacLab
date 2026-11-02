@@ -483,6 +483,9 @@ class ArtiD1AmpEnvCfg(DirectRLEnvCfg):
     # 0.5 (15-38-20 run, 1.52M->3.29M) never moved the gait ROM and the run oscillated; USER 11-03 approved 2.0.
     reference_pose_reward_scale = 2.0
     reference_pose_sigma = 0.11  # rad
+    # Demo weight shift onto the stance foot (pelvis lateral offset from the soles' midpoint per clock phase; USER 11-03).
+    pelvis_shift_reward_scale = 1.0
+    pelvis_shift_sigma = 0.015  # m
     reference_pose_joint_weights = {
         "hip_yaw": 0.0, "hip_roll": 1.0, "hip_pitch": 0.5, "knee": 1.0, "ankle": 1.0,
         "arm_m8": 0.0, "arm_m8crank_plate": 0.0,

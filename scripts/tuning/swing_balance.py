@@ -105,7 +105,11 @@ for path in glob.glob(os.path.join(motion_dir, "*.json")):
     c, s = np.cos(yaw), np.sin(yaw)
     v = F("world_linear_velocity"); vy = -s * v[:, 0] + c * v[:, 1]
     av = F("world_angular_velocity"); rr = np.rad2deg(c * av[:, 0] + s * av[:, 1])
-    feet = np.stack((F("left_toe_position"), F("right_toe_position")), 1)
+    # toe positions are stored relative to the root in the heading frame -> world
+    loc = np.stack((F("left_toe_position"), F("right_toe_position")), 1)
+    rp = F("root_position")
+    feet = np.stack((rp[:, None, 0] + c[:, None] * loc[..., 0] - s[:, None] * loc[..., 1],
+                     rp[:, None, 1] + s[:, None] * loc[..., 0] + c[:, None] * loc[..., 1], rp[:, None, 2] + loc[..., 2]), -1)
     fvz = np.stack((F("left_toe_linear_velocity")[:, 2], F("right_toe_linear_velocity")[:, 2]), 1)
     contact = F("foot_contacts") > 0.5
     sl = np.nonzero(valid)[0]

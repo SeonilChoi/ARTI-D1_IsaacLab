@@ -46,6 +46,7 @@ class ArtiD1AmpEnv(DirectRLEnv):
         )
 
         self.nominal_gait_reference = self._build_nominal_gait_table(self.cfg.nominal_gait_bins)
+        self.pelvis_shift_reference = self._build_pelvis_shift_table(self.cfg.nominal_gait_bins)
         # Command table actually added to the PD target: the reference table plus the offline sag/lag compensation
         # from scripts/tuning/ilc_nominal.py when available.
         self.nominal_gait_table = self.nominal_gait_reference.clone()
@@ -289,6 +290,28 @@ class ArtiD1AmpEnv(DirectRLEnv):
         mean = total / np.maximum(count, 1.0)[:, None]
         default = self.robot.data.default_joint_pos.torch[0].cpu().numpy()
         return torch.tensor(mean - default, dtype=torch.float32, device=self.device)
+
+    def _build_pelvis_shift_table(self, bins: int) -> torch.Tensor:
+        """Demo lateral pelvis position relative to the midpoint of the two soles (heading frame, + = toward the left
+        foot) per gait-clock phase bin, over all walking clips. 2026-11-03: the policy kept its pelvis near the
+        midpoint (11 mm shift onto the stance foot vs demo 39 mm), tipped toward the swing foot and had to catch
+        itself (swing 0.28 vs 0.65 s, touchdown 421 vs 22 mm/s; scripts/tuning/swing_balance.py)."""
+        ml = self.motion_loader
+        o, z = ml._frame_offsets, ml._frame_sizes
+        total = np.zeros(bins); count = np.zeros(bins)
+        for motion in ml._data:
+            f = np.asarray(motion["frames"], dtype=np.float64)
+            g = lambda n: f[:, o[n]: o[n] + z[n]]
+            valid = g("periodic_valid")[:, 0] > 0.5 if "periodic_valid" in o else np.ones(len(f), bool)
+            if not valid.any():
+                continue
+            # toe positions are stored relative to the root in the heading frame (reference_stats.py)
+            lat = -0.5 * (g("left_toe_position")[:, 1] + g("right_toe_position")[:, 1])
+            b = np.clip((np.mod(g("gait_phase")[valid, 0], 1.0) * bins).astype(int), 0, bins - 1)
+            np.add.at(total, b, lat[valid]); np.add.at(count, b, 1.0)
+        table = total / np.maximum(count, 1.0)
+        print(f"[INFO] demo pelvis shift per phase (mm): {np.round(table * 1000, 1).tolist()}", flush=True)
+        return torch.tensor(table, dtype=torch.float32, device=self.device)
 
     def _reference_joint_vel_rms(self, floor: float) -> torch.Tensor:
         ml = self.motion_loader
@@ -832,6 +855,7 @@ class ArtiD1AmpEnv(DirectRLEnv):
             + self._extra_liftoff_reward
             + self._touchdown_speed_reward
             + self._reference_pose_reward
+            + self._pelvis_shift_reward
             + base_flat_reward
             + base_ang_vel_reward
             + base_sway_reward
@@ -875,6 +899,8 @@ class ArtiD1AmpEnv(DirectRLEnv):
             "Reward/touchdown_speed": self._touchdown_speed_reward.mean(),
             "Reward/reference_pose": self._reference_pose_reward.mean(),
             "Gait/reference_pose_err_deg": self._reference_pose_err_deg.mean(),
+            "Reward/pelvis_shift": self._pelvis_shift_reward.mean(),
+            "Gait/pelvis_shift_err_mm": self._pelvis_shift_err_mm.mean(),
             "Reward/base_flat": base_flat_reward.mean(),
             "Reward/base_ang_vel": base_ang_vel_reward.mean(),
             "Reward/base_sway": base_sway_reward.mean(),
@@ -1160,6 +1186,18 @@ class ArtiD1AmpEnv(DirectRLEnv):
             torch.exp(-pose_mse / self.cfg.reference_pose_sigma**2)
             * moving_command.float()
             * self.cfg.reference_pose_reward_scale
+        )
+        # Demo weight shift: pelvis lateral position over the soles' midpoint at the current clock phase.
+        table = self.pelvis_shift_reference
+        xb = self.gait_phase * table.shape[0]
+        i0 = torch.floor(xb).long() % table.shape[0]
+        shift_ref = torch.lerp(table[i0], table[(i0 + 1) % table.shape[0]], xb - torch.floor(xb))
+        shift = -0.5 * (local_feet[:, 0, 1] + local_feet[:, 1, 1])  # pelvis minus soles' midpoint, heading frame
+        self._pelvis_shift_err_mm = torch.abs(shift - shift_ref) * 1000.0
+        self._pelvis_shift_reward = (
+            torch.exp(-torch.square(shift - shift_ref) / self.cfg.pelvis_shift_sigma**2)
+            * moving_command.float()
+            * self.cfg.pelvis_shift_reward_scale
         )
         standing = (~moving_command).float()
         self._stand_reward = standing * (
