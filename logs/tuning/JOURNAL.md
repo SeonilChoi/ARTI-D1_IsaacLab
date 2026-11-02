@@ -384,3 +384,9 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   swing h 26.7 mm, air .18, roll rms 1.90 pitch .96, sway 150, track err x 22.3 y 12.8, power 6.4 W (7.7); stand pitch
   rms 1.33. RSI sequence fell 1/32 (920k 3/32). Standpush 0,0,1,1/8 (920k 0,0,1,3/8). Stability a bit better, gait
   unchanged: the -5 term is ~-7 per episode (~2 % of return), too weak. Asked the user before raising the scale.
+- 2026-11-02 12:43 check, touchdown run 08-34-40 at 465k (cum 1.445M). TB: touchdown_speed -.0082 (flat since 235k),
+  air ratio .108/.112 (up slightly), feet_air_time .0189, foot tilt 2.2, roll 1.1, ep len ~880.
+  Score: falls 2/32; walk touchdown 360 mm/s p95 434 (same as 1.215M), swing h 27.4 mm, air .18, sym 1.00, roll rms 1.79
+  pitch .91, sway 150, track err x 23.2 y 12.4, power 6.8 W; stand pitch rms 1.23. RSI sequence fell 3/32 (20.8, 21.5,
+  34.7 s; 1.215M 1/32). Standpush 0,0,1,3/8 (1.215M 0,0,1,1). Plateau: the -5 touchdown term still has no effect;
+  scale decision still pending with the user (proposed -15). No changes.
