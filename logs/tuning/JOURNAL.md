@@ -462,3 +462,9 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   399 p95 479, swing h 27.5, swing time .27/.26, roll rms 1.71, power 6.9 W. Forward ROM: hip_roll 8.8/7.7, hip_pitch
   9.3/9.5, knee 20.5/20.0, ankle 10.8/9.8, arm 3.7/9.9 -> unchanged. Video auto_B_ref_2830k_sheet: no fall, same look.
   Plateau: stability ~= 2.60M, gait unchanged for 1.3M steps at scale 0.5. Still waiting on the user (2.0 recommended).
+- 2026-11-03 05:13 check, refpose run 15-38-20 at 1540k (cum 3.06M). TB: ep len 813-886, pose err 3.94-4.08 deg,
+  air ratio .109/.111, tilt 2.25, roll 1.05 (flat).
+  Evals 1540k: score falls 2/32, RSI 64 fell 3/64 (0.75, 0.87, 25.5 s), standpush 0,0,0,3/8. Walk touchdown 416 p95 491,
+  swing h 28.7, swing time .28/.29, roll rms 1.68, power 6.4 W. Forward ROM: hip_roll 9.0/8.0, hip_pitch 8.4/10.0,
+  knee 20.6/19.2, ankle 12.2/10.7, arm 4.1/11.5 -> unchanged. Video auto_B_ref_3060k_sheet: no fall, same look.
+  Plateau continues; best stability checkpoints 1080k (2.60M) / 1310k (2.83M). Still waiting on the user.
