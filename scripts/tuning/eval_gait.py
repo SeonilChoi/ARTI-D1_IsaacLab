@@ -33,6 +33,7 @@ parser.add_argument("--hip_roll_limit", type=float, default=None, help="hard +-l
 parser.add_argument("--reset", choices=("standstill", "rsi"), default="standstill", help="sequence mode start state")
 parser.add_argument("--train_step", type=int, default=0,
                     help="score mode: evaluate as at this training step (balance support / curriculum fractions); 0 = support off")
+parser.add_argument("--dump", type=str, default=None, help="score mode: save per-step pelvis/feet traces (first 32 envs) to this .npz")
 parser.add_argument("--physics", type=str, default="isaacsim_physx", help="physics preset: isaacsim_physx | newton_mjwarp")
 AppLauncher.add_app_launcher_args(parser)
 args_cli = parser.parse_args()
@@ -403,6 +404,7 @@ def run_score(env, uenv, obs):
     swing_t = torch.zeros((n, 2), device=dev); swing_h = torch.zeros((n, 2), device=dev)
     up_w = torch.tensor([[0.0, 0.0, 1.0]], device=dev).expand(n, -1)
     seg_hv = torch.zeros((n, 3), device=dev); seg_c = torch.zeros(n, device=dev)
+    dump = {}
     with torch.inference_mode():
         for k in range(seg_steps * len(PLAY_SEQUENCE)):
             j = k // seg_steps
@@ -471,6 +473,19 @@ def run_score(env, uenv, obs):
             lr = fz[:, 0] - fz[:, 1]
             add(kind, "width", (-torch.sin(yaw) * lr[:, 0] + torch.cos(yaw) * lr[:, 1]) * 1000, m)
             add(kind, "air", (~contact).float().mean(-1), m)
+            if args_cli.dump:
+                E = min(n, 32)
+                dump.setdefault("seg", []).append(j)
+                for key, val in (("root", d.body_pos_w.torch[:E, uenv.ref_body_index] - uenv.scene.env_origins[:E]),
+                                 ("feet", fz[:E] - uenv.scene.env_origins[:E].unsqueeze(1)), ("feet_v", fv[:E]),
+                                 ("v_h", v_h[:E]), ("w_h", w_h[:E]), ("roll", roll[:E]), ("pitch", pitch[:E]),
+                                 ("yaw", yaw[:E]), ("contact", contact[:E]), ("alive", alive[:E])):
+                    dump.setdefault(key, []).append(val.detach().cpu().numpy().copy())
+
+    if args_cli.dump:
+        np.savez_compressed(args_cli.dump, dt=dt, seq=np.array([nm for nm, _ in PLAY_SEQUENCE]),
+                            **{k: np.asarray(v) for k, v in dump.items()})
+        print(f"[SCORE] traces saved to {args_cli.dump}")
 
     def mean(kind, name, rms=False):
         s, c = acc[(kind, name)]

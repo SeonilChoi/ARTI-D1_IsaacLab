@@ -479,3 +479,14 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   0.5 -> 2.0 (cfg default). Warm start 15-38-20 agent_1310000 (cum 2.83M; RSI 2/64, score 0/32, push 0,0,0,2/8),
   offset 2830000, log logs/train/train_physx_pureRL_refpose2.log. Watch: forward ROM toward demo (knee 29, ankle 28,
   hip_pitch 29, hip_roll 15), pose err < 3.9 deg, touchdown, and RSI start falls / collapse cycles.
+- 2026-11-03 08:xx USER question: "can't it hold one leg, so the body tips and the foot comes down fast?" New tools:
+  eval_gait --mode score --dump <npz> (per-step pelvis/feet traces), scripts/tuning/swing_balance.py (per-swing
+  pelvis/XCoM offset from the stance foot, roll rate to the swing side; pelvis as CoM proxy for both). 2.83M (15-38-20
+  agent_1310000) forward vs demo forward clips:
+    swing 0.28 vs 0.65 s, touchdown 421 vs 22 mm/s
+    pelvis offset from stance foot toward swing side: mean +56 vs +28 mm (B barely shifts its weight onto the stance foot)
+    XCoM (y + vy/w0) mid-swing +65 vs +18 mm (sole half width 17 mm), at touchdown +121 vs +65 mm
+    roll rate toward the swing side: late swing +23, at touchdown +46 deg/s vs 0 (demo trunk held level)
+  => USER is right: B never gets its CoM over the stance foot, tips toward the swing side and must catch itself, hence
+  the short swing and the hard landing. Lower foot height would not fix it. Candidate fix: reward tracking the demo's
+  lateral pelvis-over-stance-foot shift (and/or level trunk roll) per gait phase.
