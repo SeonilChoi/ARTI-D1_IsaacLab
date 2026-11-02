@@ -378,3 +378,9 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   logs/train/train_physx_pureRL_touchdown.log. First TB: touchdown_speed -0.0086/step vs feet_air_time +0.018.
   Watch: eval touchdown speed (target < 250 mm/s), air ratio / swing height not collapsing, falls (920k: score 3/32,
   rsi 3/32, standpush 0,0,1,3/8). Warm start can hide side effects: if the swing shrinks, check with a short fresh A/B.
+- 2026-11-02 10:43 check, touchdown run 08-34-40 at 235k (cum 1.215M). TB 0->235k: Reward/touchdown_speed -.0084 -> -.0079
+  (only -6 %), air ratio .101/.104 -> .106/.107, foot tilt 2.0, roll 1.05 deg, width 131 mm, ep len ~875.
+  Score (support off): falls 2/32 (920k: 3/32); walk touchdown 360 mm/s p95 434 (920k 363/453) -> NO real effect;
+  swing h 26.7 mm, air .18, roll rms 1.90 pitch .96, sway 150, track err x 22.3 y 12.8, power 6.4 W (7.7); stand pitch
+  rms 1.33. RSI sequence fell 1/32 (920k 3/32). Standpush 0,0,1,1/8 (920k 0,0,1,3/8). Stability a bit better, gait
+  unchanged: the -5 term is ~-7 per episode (~2 % of return), too weak. Asked the user before raising the scale.
