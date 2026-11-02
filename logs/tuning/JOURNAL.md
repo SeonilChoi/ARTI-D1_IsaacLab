@@ -413,3 +413,11 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   Warm start 08-34-40 agent_540000 (1.52M, best RSI starts), offset 1520000 -> run 2026-11-02_15-38-20, log
   logs/train/train_physx_pureRL_refpose.log. First TB: reference_pose .17/step (kernel ~.53 on moving steps), err 4.9 deg.
   Watch: forward ROM toward demo, touchdown speed, swing time, RSI falls (1.52M: 2/64).
+- 2026-11-02 17:13 check, refpose run 15-38-20 at 175k (cum 1.695M). TB: reference_pose .169 -> .198/step, pose err
+  5.0 -> 4.1-4.4 deg (flat since ~119k), air ratio .101/.108, tilt 2.1, roll 1.07, ep len 887.
+  Score: falls 0/32 (best so far), walk touchdown 377 p95 464 mm/s, swing h 26.9, swing time .26/.27 s, air .17, roll
+  rms 1.71, sway 144, power 6.1 W. RSI 64: 2/64 (20.9, 36.6 s; = 1.52M). Standpush 0,0,0,3/8.
+  Forward ROM L/R: hip_roll 8.4/7.6, hip_pitch 10.3/7.9, knee 22.0/17.9, ankle 11.5/12.5, arm 2.9/6.2 -> UNCHANGED vs
+  1.52M (7.0/8.1, 9.8/8.9, 19.2/20.0, 11.4/12.0); demo 15/29/29/28. The "knee lift" lines vary 12-41 mm between
+  evals of similar gaits: not usable for comparison. Video auto_B_ref_1695k(.mp4/_sheet.png): no fall in 33 s, same
+  look as before. => 0.5 is too weak to move the warm-started gait (max gain ~+.2/step). Asked the user (raise to 2.0).
