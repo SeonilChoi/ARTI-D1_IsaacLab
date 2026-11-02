@@ -456,3 +456,9 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   gait still unchanged vs 1.52M (demo 15/29/29/28/21). Video auto_B_ref_2600k_sheet: no fall in 33 s, same stiff look.
   Lesson: a mid-run collapse can recover on its own; 2 h is too short to call it. Best stability checkpoint now
   1080k. Gait smoothness goal not met by 0.5; still waiting on the user (raise to 2.0 from 1080k recommended).
+- 2026-11-03 03:13 check, refpose run 15-38-20 at 1310k (cum 2.83M). TB stable: ep len ~870-890 (one dip to 753 ~100k
+  ago, recovered), pose err 4.0-4.2 deg (flat since ~400k), air ratio .108/.110, tilt 2.2, roll 1.05.
+  Evals 1310k: score falls 0/32, RSI 64 fell 2/64 (5.8, 10.9 s; no early falls), standpush 0,0,0,2/8. Walk touchdown
+  399 p95 479, swing h 27.5, swing time .27/.26, roll rms 1.71, power 6.9 W. Forward ROM: hip_roll 8.8/7.7, hip_pitch
+  9.3/9.5, knee 20.5/20.0, ankle 10.8/9.8, arm 3.7/9.9 -> unchanged. Video auto_B_ref_2830k_sheet: no fall, same look.
+  Plateau: stability ~= 2.60M, gait unchanged for 1.3M steps at scale 0.5. Still waiting on the user (2.0 recommended).
