@@ -440,3 +440,11 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   (demo 15/29/29/28/21). Video auto_B_ref_2150k(.mp4/_sheet.png): env 0 (standstill-ish start) no fall in 33 s, same
   look. One eval segfaulted (exit 139) when two ran in parallel next to training; rerun alone was fine.
   Asked the user: stop and keep 560k as the best refpose checkpoint vs let it run. Scale 0.5 -> 2.0 still pending.
+- 2026-11-02 23:13 check, refpose run 15-38-20 at 855k (cum 2.375M): COLLAPSED. TB ep len 887 (~550k) -> 449 -> 213
+  (last 25 logs), pose err 3.9 -> 5.2 deg, roll 1.05 -> 2.4 deg, tilt 2.2 -> 2.8, reference_pose .215 -> .174.
+  Evals 855k: score falls 19/32 (time up 16.5/40 s), RSI 64 fell 53/64 (almost all 0.37-0.45 s), standpush 17/32 fell
+  before the push. Walk touchdown 363 p95 472, swing .26/.24 s. Forward ROM unchanged (hip_roll 8.0/7.2, hip_pitch
+  9.0/9.5, knee 19.2/21.3, ankle 11.4/11.6, arm 4.3/6.7). Video auto_B_ref_2375k_sheet: env 0 tumbles at 1.0-1.5 s,
+  episode reset at ~2 s, then stands/steps for the rest.
+  Best refpose checkpoint stays 560k (cum 2.08M, RSI 2/64). Training NOT stopped (user approval pending); recommended
+  stop + restart from 560k with reference_pose 2.0 (or keep 560k as final).
