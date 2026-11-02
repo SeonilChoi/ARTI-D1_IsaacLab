@@ -480,7 +480,8 @@ class ArtiD1AmpEnvCfg(DirectRLEnvCfg):
     # USER 11-02: B walks stiffly. B uses 1/3-2/3 of the demo joint range (forward knee 18-20 vs 29 deg, ankle 11 vs 28,
     # hip_pitch 8-11 vs 29, hip_roll 7.5 vs 15) and drops each foot at 360 mm/s (demo 21): the residual cancels part of
     # the nominal stepping (command table knee ~45 deg p-p).
-    reference_pose_reward_scale = 0.5
+    # 0.5 (15-38-20 run, 1.52M->3.29M) never moved the gait ROM and the run oscillated; USER 11-03 approved 2.0.
+    reference_pose_reward_scale = 2.0
     reference_pose_sigma = 0.11  # rad
     reference_pose_joint_weights = {
         "hip_yaw": 0.0, "hip_roll": 1.0, "hip_pitch": 0.5, "knee": 1.0, "ankle": 1.0,

@@ -475,3 +475,7 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   Forward ROM: hip_roll 8.5/8.4, hip_pitch 10.0/8.7, knee 18.6/21.7, ankle 10.9/11.8, arm 4.7/11.3 -> unchanged.
   Video auto_B_ref_3285k_sheet: env 0 no fall, same look. Run oscillates (collapse/recover cycles ~600k, ~1650k);
   1310k (2.83M) remains the best checkpoint. Still waiting on the user.
+- 2026-11-03 07:3x USER approved: stopped run 15-38-20 (PID 398967) at ~1.79M of its own steps. reference_pose_reward_scale
+  0.5 -> 2.0 (cfg default). Warm start 15-38-20 agent_1310000 (cum 2.83M; RSI 2/64, score 0/32, push 0,0,0,2/8),
+  offset 2830000, log logs/train/train_physx_pureRL_refpose2.log. Watch: forward ROM toward demo (knee 29, ankle 28,
+  hip_pitch 29, hip_roll 15), pose err < 3.9 deg, touchdown, and RSI start falls / collapse cycles.
