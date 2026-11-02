@@ -428,3 +428,15 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   0,0,0,1/8 (best so far). Forward ROM L/R: hip_roll 8.0/7.8, hip_pitch 9.4/9.0, knee 22.4/20.1, ankle 12.5/11.3,
   arm 2.4/6.5 -> still ~unchanged (demo 15/29/29/28/21). Video auto_B_ref_1920k: no fall in 33 s, same look.
   Scale 0.5 -> 2.0 decision still pending with the user. No changes.
+- 2026-11-02 21:13 check, refpose run 15-38-20 at 630k (cum 2.15M). TB: reference_pose .205/step, pose err 4.07 deg
+  (flat ~3.9-4.1 since 400k), air ratio .105/.111, tilt 2.15, roll 1.09. EP LEN DROP: mean ~888 until ~580k, then
+  834 -> 755 in the last ~50k steps.
+  RSI 64 REGRESSED: 630k fell 24/64, 22 of them at 0.37-0.50 s (the A-type start failure). Bisect: 560k (cum 2.08M)
+  2/64 (1.7, 35.7 s) = good; 600k (cum 2.12M) 8/64 (5 at 0.40-0.42 s). So the collapse started between 560k and 600k.
+  Score (96 envs this time; earlier checks used 32): falls 1/96, walk touchdown 387 p95 482 mm/s, swing h 27.3, swing
+  time .27/.25 s, lifts/s 1.52, air .17, roll rms 1.55, sway 143, power 6.3 W. Standpush (96 envs, 24/level):
+  0,0,0,5/24 (~ same rate as 1/8 at 1.92M).
+  Forward ROM L/R: hip_roll 7.3/7.9, hip_pitch 10.5/8.6, knee 21.9/19.4, ankle 10.2/10.0, arm 3.1/6.0 -> unchanged
+  (demo 15/29/29/28/21). Video auto_B_ref_2150k(.mp4/_sheet.png): env 0 (standstill-ish start) no fall in 33 s, same
+  look. One eval segfaulted (exit 139) when two ran in parallel next to training; rerun alone was fine.
+  Asked the user: stop and keep 560k as the best refpose checkpoint vs let it run. Scale 0.5 -> 2.0 still pending.
