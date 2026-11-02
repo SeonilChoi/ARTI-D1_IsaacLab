@@ -390,3 +390,7 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   pitch .91, sway 150, track err x 23.2 y 12.4, power 6.8 W; stand pitch rms 1.23. RSI sequence fell 3/32 (20.8, 21.5,
   34.7 s; 1.215M 1/32). Standpush 0,0,1,3/8 (1.215M 0,0,1,1). Plateau: the -5 touchdown term still has no effect;
   scale decision still pending with the user (proposed -15). No changes.
+- 2026-11-02 13:22 touchdown scale -5 -> -15 (USER approved after two flat checks). Run 08-34-40 stopped (SIGINT) at
+  agent_540000 (cum 1.52M); warm start from it, offset 1520000, same overrides, 2048 envs -> run 2026-11-02_13-22-49, log
+  logs/train/train_physx_pureRL_touchdown15.log. First TB: touchdown_speed -.0236/step (3x), feet_air_time .0188.
+  Watch: touchdown < 250 mm/s; swing h (27 mm) and air ratio (.108/.112 TB, .18 eval) must not drop.
