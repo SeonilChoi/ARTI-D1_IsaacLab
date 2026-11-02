@@ -394,3 +394,11 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   agent_540000 (cum 1.52M); warm start from it, offset 1520000, same overrides, 2048 envs -> run 2026-11-02_13-22-49, log
   logs/train/train_physx_pureRL_touchdown15.log. First TB: touchdown_speed -.0236/step (3x), feet_air_time .0188.
   Watch: touchdown < 250 mm/s; swing h (27 mm) and air ratio (.108/.112 TB, .18 eval) must not drop.
+- 2026-11-02 14:53 check, -15 run 13-22-49 at 170k (cum 1.69M). TB: touchdown_speed -.024 -> -.022 (barely moves),
+  air_time .0186 -> .0175, air ratio .097/.109, ep len ~780 (prev run ~860). Score: falls 1/32, walk touchdown 361
+  p95 432 mm/s (NO effect even at -15), swing h 27.1, air .17, lifts/s 1.43, roll 1.80, sway 140, track x 25.1.
+  Standpush 0,0,0,3/8. RSI sequence REGRESSED: 10/32 fell, 7 within 0.5-1.0 s of reset (the A-type start failure).
+  Confirmed with 64 envs: -15 1.69M fell 9/64 (7 at 0.48-0.83 s) vs -5 1.52M (08-34-40 agent_540000) 2/64 (one at
+  0.98 s). Video auto_B_td15_1690k.mp4 (+ _sheet.png): env 0 walks the whole 33 s, no visible problem (its start
+  state happens to be benign). Likely cause: mid-swing RSI starts now brake the descending foot instead of planting it.
+  Asked the user: revert to 1.52M (term off) vs keep vs reference-based swing descent shaping. Training left running.
