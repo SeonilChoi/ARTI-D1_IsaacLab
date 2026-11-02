@@ -421,3 +421,10 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   1.52M (7.0/8.1, 9.8/8.9, 19.2/20.0, 11.4/12.0); demo 15/29/29/28. The "knee lift" lines vary 12-41 mm between
   evals of similar gaits: not usable for comparison. Video auto_B_ref_1695k(.mp4/_sheet.png): no fall in 33 s, same
   look as before. => 0.5 is too weak to move the warm-started gait (max gain ~+.2/step). Asked the user (raise to 2.0).
+- 2026-11-02 19:13 check, refpose run 15-38-20 at 400k (cum 1.92M). TB: reference_pose .211/step, pose err 3.94 deg
+  (4.4 at 175k; slow), air ratio .110/.112 (up from .101/.108), tilt 2.3, roll 1.07, ep len 889.
+  Score: falls 1/32; walk touchdown 409 p95 489 mm/s (WORSE: 377 at 1.695M, 360 at 1.52M), swing h 29.3, swing time
+  .28/.28 s, lifts/s 1.38, air .18, roll rms 1.75, sway 149, power 6.4 W. RSI 64: 2/64 (6.2, 25.8 s). Standpush
+  0,0,0,1/8 (best so far). Forward ROM L/R: hip_roll 8.0/7.8, hip_pitch 9.4/9.0, knee 22.4/20.1, ankle 12.5/11.3,
+  arm 2.4/6.5 -> still ~unchanged (demo 15/29/29/28/21). Video auto_B_ref_1920k: no fall in 33 s, same look.
+  Scale 0.5 -> 2.0 decision still pending with the user. No changes.
