@@ -448,3 +448,11 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   episode reset at ~2 s, then stands/steps for the rest.
   Best refpose checkpoint stays 560k (cum 2.08M, RSI 2/64). Training NOT stopped (user approval pending); recommended
   stop + restart from 560k with reference_pose 2.0 (or keep 560k as final).
+- 2026-11-03 01:13 check, refpose run 15-38-20 at 1080k (cum 2.60M): RECOVERED from the 600k-900k collapse. TB ep len
+  213 -> 889/871-884 (last 125 logs), pose err 3.95 deg, roll 1.09, tilt 2.11, air ratio .107/.111, reference_pose .211.
+  Evals 1080k: score falls 0/32 (40.0/40 s), RSI 64 fell 3/64 (0.68-0.78 s), standpush 0,0,0,0/8 (best so far; 0.5 m/s
+  drift 93 mm, 3.6 lifts). Walk touchdown 409 p95 480, swing h 27.4, swing time .27/.27 (sym .99), roll rms 1.63,
+  power 6.4 W. Forward ROM: hip_roll 8.2/8.0, hip_pitch 10.6/8.8, knee 21.8/20.1, ankle 11.1/11.4, arm 2.8/11.2 ->
+  gait still unchanged vs 1.52M (demo 15/29/29/28/21). Video auto_B_ref_2600k_sheet: no fall in 33 s, same stiff look.
+  Lesson: a mid-run collapse can recover on its own; 2 h is too short to call it. Best stability checkpoint now
+  1080k. Gait smoothness goal not met by 0.5; still waiting on the user (raise to 2.0 from 1080k recommended).
