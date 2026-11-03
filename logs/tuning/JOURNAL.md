@@ -539,3 +539,15 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
 - drag (same inline script for all; double-support slide of planted foot): 2.83M 6.5/12.0, 2.895M 6.9/19.6, 3.300M 6.8/23.5 mm;
   double support 0.48 s. drag.py: 10.0/15.3, 16.8/26.0, 12.3/25.3 mm. -> -30 slip penalty has not reduced drag in 165k.
 - Video auto_B_slip_3300k: main robot upright 6.7 s, sideways trunk lean in single support persists.
+
+## 2026-11-03 15:13 check — foot_slip -30 run (11-17-17, agent_375000 = cum 3.510M)
+- Alive (~4 h). TB 168k->375k: foot_slip -0.33 -> -0.30, ep len 651 -> 794 (recovered), foot tilt 3.6 -> 3.3, roll 1.53 -> 1.42,
+  refpose err 2.6, pelvis_shift err 3.0 -> 3.3, foot_height err ~4.0.
+- score: falls 1/32 (3.300M 5/32), touchdown 381 p95 546, stance slip 24.6, swing L 0.27 R 0.30 (sym 0.90), lifts/s 1.61.
+- RSI 64: 12/64 (7 within 0.38-0.53 s, 5 after 20 s). standpush 0,0,0,3/8, none before the push.
+- ROM fwd: hip_roll 17.5/18.6, hip_pitch 11.1/10.7, knee 24.0/23.5, ankle 13.8/13.3 (slowly up).
+- swing_balance: swing 0.32, td 489, off +44.4, XCoM +54/+108, roll late +27 td +52.
+- landing: 1.48 td/s, bounce 5%, roll peak 37, impact 467/536.
+- drag (ds_slide inline): median 11.3 p90 17.2 mm (3.300M 6.8/23.5, 2.83M 6.5/12.0), double support 0.50 s; drag.py 15.4/21.5.
+- Video auto_B_slip_3510k: all robots upright 6.7 s; sideways trunk lean in single support persists.
+- Deploy side (same day): humanoid_controller origin/arti-d1-2830k = 2.83M ONNX + real servo zero offsets / axis flips.
