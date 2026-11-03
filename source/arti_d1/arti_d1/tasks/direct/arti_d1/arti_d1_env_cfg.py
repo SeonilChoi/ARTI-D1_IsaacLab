@@ -496,7 +496,8 @@ class ArtiD1AmpEnvCfg(DirectRLEnvCfg):
         "arm_m8": 0.0, "arm_m8crank_plate": 0.0,
     }
     # Sum over stance feet of |v_xy|^2 at the sole (skating penalty).
-    foot_slip_reward_scale = -8.0
+    # -8 -> -30 (USER 11-03): the planted foot skidded 10 mm median (p90 21) when the other foot landed (pelvis_shift run).
+    foot_slip_reward_scale = -30.0
 
     early_termination = True
     # Trunk frame height (reference 0.255 m).

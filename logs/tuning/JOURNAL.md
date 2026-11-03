@@ -520,3 +520,10 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   (demo z(phase) + 3.4 mm sim stance offset), ev = sole vz - demo vz(phase); moving only (TB Reward/foot_height,
   Gait/foot_height_err_mm). pelvis_shift run 08-18-13 stopped at agent_260000 (unevaluated past 65k). Warm start
   08-18-13 agent_260000, offset 3090000, log logs/train/train_physx_pureRL_foot.log, PID 490208.
+- 2026-11-03 11:1x USER: "when a foot lands, the other foot drags". Measured on traces (world xy slide of the planted
+  foot B from A's touchdown until B leaves contact): 2.83M median 6.2 / p90 11.4 mm, pelvis_shift 65k 9.7 / 20.8 mm;
+  double support ~0.50 s (demo: trailing foot lifts ~0.26 s after the other's touchdown); stance slip 22 -> 28 mm/s.
+  Swing sole tilt ~8 deg, edge-drag 0. scripts/tuning/drag.py added (its demo slide number uses root-relative toe
+  velocities -> not comparable; use the world-position slide above).
+  Change (USER approved): foot_slip_reward_scale -8 -> -30. foot_height run 10-52-36 stopped at agent_45000 (25 min).
+  Warm start 10-52-36 agent_45000, offset 3135000, log logs/train/train_physx_pureRL_slip.log, PID 493233.
