@@ -38,3 +38,15 @@ gym.register(
         "skrl_cfg_entry_point": f"{agents.__name__}:skrl_ppo_cfg.yaml",
     },
 )
+
+# Velocity-tracking walk after pollen-robotics/microduck_rl (no reference motion): arti_d1_vel_env.py
+gym.register(
+    id="Template-Arti-D1-Vel-Direct-v0",
+    entry_point=f"{__name__}.arti_d1_vel_env:ArtiD1VelEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": f"{__name__}.arti_d1_vel_env_cfg:ArtiD1VelEnvCfg",
+        "default_agent": "skrl",
+        "skrl_cfg_entry_point": f"{agents.__name__}:skrl_vel_ppo_cfg.yaml",
+    },
+)
