@@ -15,7 +15,9 @@ LOCK=logs/tuning/videos/.record.lock
 for _ in $(seq 360); do mkdir "$LOCK" 2>/dev/null && break; sleep 10; done
 trap 'rmdir "$LOCK" 2>/dev/null' EXIT
 rm -rf "$RUN_DIR/videos/play"
-$PY -u scripts/skrl/play.py --task Template-Arti-D1-Amp-Direct-v0 --algorithm AMP --checkpoint "$CKPT" \
+# TASK / ALGO select another task (vel walk: TASK=Template-Arti-D1-Vel-Direct-v0 ALGO=PPO)
+TASK=${TASK:-Template-Arti-D1-Amp-Direct-v0}; ALGO=${ALGO:-AMP}
+$PY -u scripts/skrl/play.py --task "$TASK" --algorithm "$ALGO" --checkpoint "$CKPT" \
     --num_envs 4 --video "$VIDEO_SOURCE" --video_length 2400 --video_width 1280 --video_height 720 \
     physics="$PHYSICS" "$@" \
     > "logs/tuning/video_$NAME.log" 2>&1

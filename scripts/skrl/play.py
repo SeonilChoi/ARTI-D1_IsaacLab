@@ -123,17 +123,18 @@ def _apply_play_command_sequence(env, obs):
     if not all(hasattr(env, attr) for attr in required_attrs):
         return obs
 
+    sequence = getattr(env, "play_command_sequence", PLAY_COMMAND_SEQUENCE)  # a task can bring its own (vel task)
     command_values = torch.tensor(
-        [command for _, command in PLAY_COMMAND_SEQUENCE],
+        [command for _, command in sequence],
         dtype=torch.float32,
         device=env.device,
     )
     episode_progress = env.episode_length_buf.float() / max(float(env.max_episode_length), 1.0)
-    command_ids = torch.clamp((episode_progress * len(PLAY_COMMAND_SEQUENCE)).long(), max=len(PLAY_COMMAND_SEQUENCE) - 1)
+    command_ids = torch.clamp((episode_progress * len(sequence)).long(), max=len(sequence) - 1)
     env.commands[:] = command_values.index_select(0, command_ids)
     current_command_id = int(command_ids[0].item())
     if getattr(env, "_last_play_command_id", None) != current_command_id:
-        command_name, command = PLAY_COMMAND_SEQUENCE[current_command_id]
+        command_name, command = sequence[current_command_id]
         print(
             f"[INFO] Current command: {command_name} "
             f"(x={command[0]:.4f}, y={command[1]:.4f}, yaw={command[2]:.4f})",

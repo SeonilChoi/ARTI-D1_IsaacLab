@@ -99,6 +99,18 @@ class ArtiD1VelEnv(DirectRLEnv):
         self.prev_imu = torch.zeros(n, 6, device=dev)
         self.prev_joint_vel = torch.zeros(n, nj, device=dev)
 
+        # scripts/skrl/play.py: it writes commands * command_scale into the last 3 obs and plays this sequence (5 s each)
+        self.command_scale = torch.ones(3, device=dev)
+        self.play_command_sequence = (
+            ("forward", (0.12, 0.0, 0.0)),
+            ("stand", (0.0, 0.0, 0.0)),
+            ("side_left", (0.0, 0.06, 0.0)),
+            ("backward", (-0.10, 0.0, 0.0)),
+            ("stand", (0.0, 0.0, 0.0)),
+            ("diagonal_right", (0.10, -0.05, 0.0)),
+            ("turn_left", (0.0, 0.0, 0.3)),
+            ("stand", (0.0, 0.0, 0.0)),
+        )
         self._log: dict[str, torch.Tensor] = {}
         print(f"[ARTI-D1 VEL] {n} envs, policy obs {self.cfg.observation_space}, critic {self.cfg.state_space}, "
               f"action scale {self.cfg.action_scale}, arms held {self.cfg.arm_hold_target is not None}", flush=True)
