@@ -645,3 +645,18 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   Verdict: start-up (RSI) robustness swings ckpt to ckpt (18/14/7/2/1/15) -> not a trend; drag median ~6-9 mm, p90 12-13,
   lat-vel err plateau 110 mm/s. Scale 1.0 has converged; further drag gain needs the user-pending scale 2-3 change.
   Best this run: 4.34M agent_605000 (drag p90 12.0, RSI 2) / 4.55M agent_815000 (RSI 1, push 0).
+
+- 11-04 05:13 check, run 17-26-22 agent_1235000 = cum 4.970M. PID 532287 alive (11h47m).
+  TB (twelfths): lat_vel err plateau 110 mm/s (rew .28); ref_pose err back to 2.87; pelvis_shift err up 2.9 -> 3.39 mm;
+  foot_height err 4.2; roll 1.53; tilt 3.86; air .11/.12; ep len 677/716 (noisy, below the 883 peak).
+  EVAL: score 0/32; RSI 26/64 - 24 start-up falls 0.38-1.17 s + 11.8 s + 39.3 s (4.76M 15, 4.55M 1, 4.34M 2) -> second
+  worse ckpt in a row; standpush 0,0,0,1/8. Walk touchdown 375/527, lifts/s 1.63, td 1.52/s vs clock 1.23 (extra steps up),
+  swing sym 0.82. swing_balance td 469, XCoM +55/+105, roll td +52. landing 456/509, roll peak after td 38/61.
+  DRAG: ds_slide 8.5 / p90 16.6 (4.76M 6.4/13.2, 4.34M 7.1/12.0, 3.715M 10.3/17.2); drag.py 12.3/19.2; td_latvel 259 / p90 335
+  (back at the 3.715M level 257); trailing slide 0.17 s +6.7 / p90 +13.7. Lift delay 0.40.
+  ROM fwd hip_roll 16/17, hip_pitch 10/10, knee 24/22, ankle 13/13 (demo 15/29/29/28).
+  VIDEO auto_B_latvel_4970k: 0 blank; main robot upright whole clip; right background robot tumbles at 0.5 s (start-up fall,
+  matches RSI) and is reset by 1.0 s.
+  Verdict: past its best - RSI start-up robustness 1 -> 15 -> 26 and drag back near the 3.715M level. The run is drifting
+  with scale 1.0. Keep agent_605000 (4.34M, best drag) and agent_815000 (4.55M, best stability). Training left running
+  (stop/restart = user decision); asked the user: stop + restart from agent_815000 with pelvis_lat_vel scale 2-3?
