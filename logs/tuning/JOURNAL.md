@@ -561,3 +561,13 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
 - drag (ds_slide): 10.3/17.2 mm, double support 0.52 s (3.510M 11.3/17.2; 2.83M 6.5/12.0). drag.py 14.7/21.7.
 - Video auto_B_slip_3715k: upright 6.7 s; trunk lean to the stance side in single support persists.
 - Verdict: foot_slip -30 has not reduced drag in 580k; stability fine (score 0/32, push best), RSI start transient high.
+
+## 2026-11-03 17:26 — drag analysis -> pelvis lateral sway velocity reward (USER "분석해서 끌리지 않게 해")
+- trace B_slip_3715k: the planted (trailing) foot slides 9.6 mm in the FIRST third of double support (2nd 0.1, last 1.6),
+  toward the landing foot (+10.2 mm lateral, fwd -1.9). Correlated 0.71 with the pelvis lateral velocity toward the
+  landing foot at touchdown (policy 263 mm/s, demo 126) and 0.66 with landing speed (484 mm/s). Demo trail foot lifts
+  0.17 s after touchdown (policy 0.50 s). foot_slip -8 -> -30 punished the effect, not the cause: no change in 580k.
+- New pelvis_lat_vel reward (scale 1.0, sigma 0.08 m/s): exp(-(v_lat_heading - cmd_y - demo_sway(phase))^2/sigma^2),
+  demo table = per-clip heading lateral velocity minus clip mean, by gait phase (sinusoid +-131 mm/s).
+  TB: Reward/pelvis_lat_vel, Gait/pelvis_lat_vel_err_mm_s.
+- Run 2026-11-03_17-26-22 (log train_physx_pureRL_latvel.log, PID 532287), warm start 11-17-17 agent_600000, offset 3735000.

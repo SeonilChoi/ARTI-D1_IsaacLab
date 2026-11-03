@@ -48,6 +48,7 @@ class ArtiD1AmpEnv(DirectRLEnv):
         self.nominal_gait_reference = self._build_nominal_gait_table(self.cfg.nominal_gait_bins)
         self.pelvis_shift_reference = self._build_pelvis_shift_table(self.cfg.nominal_gait_bins)
         self.foot_height_reference = self._build_foot_height_table(self.cfg.nominal_gait_bins)
+        self.pelvis_lat_vel_reference = self._build_pelvis_lat_vel_table(self.cfg.nominal_gait_bins)
         # Command table actually added to the PD target: the reference table plus the offline sag/lag compensation
         # from scripts/tuning/ilc_nominal.py when available.
         self.nominal_gait_table = self.nominal_gait_reference.clone()
@@ -312,6 +313,32 @@ class ArtiD1AmpEnv(DirectRLEnv):
             np.add.at(total, b, lat[valid]); np.add.at(count, b, 1.0)
         table = total / np.maximum(count, 1.0)
         print(f"[INFO] demo pelvis shift per phase (mm): {np.round(table * 1000, 1).tolist()}", flush=True)
+        return torch.tensor(table, dtype=torch.float32, device=self.device)
+
+    def _build_pelvis_lat_vel_table(self, bins: int) -> torch.Tensor:
+        """Demo pelvis lateral sway velocity (heading frame, + = left, minus the clip's mean lateral velocity = its
+        command) per gait-clock phase bin, over all walking clips. 2026-11-03 drag analysis (trace B_slip_3715k): the
+        planted foot slides ~10 mm toward the landing foot in the first 0.17 s after touchdown, correlated 0.71 with
+        the pelvis lateral velocity toward the landing foot at touchdown (policy 263 mm/s, demo 126 mm/s); the
+        foot_slip penalty (-8 -> -30) did not change it in 580k steps."""
+        ml = self.motion_loader
+        o, z = ml._frame_offsets, ml._frame_sizes
+        total = np.zeros(bins); count = np.zeros(bins)
+        for motion in ml._data:
+            f = np.asarray(motion["frames"], dtype=np.float64)
+            g = lambda n: f[:, o[n]: o[n] + z[n]]
+            valid = g("periodic_valid")[:, 0] > 0.5 if "periodic_valid" in o else np.ones(len(f), bool)
+            if not valid.any():
+                continue
+            x, y, qz, w = g("root_orientation_quat").T  # x y z w
+            yaw = np.arctan2(2.0 * (w * qz + x * y), 1.0 - 2.0 * (y * y + qz * qz))
+            v = g("world_linear_velocity")
+            vy = -np.sin(yaw) * v[:, 0] + np.cos(yaw) * v[:, 1]
+            sway = vy - vy[valid].mean()
+            b = np.clip((np.mod(g("gait_phase")[valid, 0], 1.0) * bins).astype(int), 0, bins - 1)
+            np.add.at(total, b, sway[valid]); np.add.at(count, b, 1.0)
+        table = total / np.maximum(count, 1.0)
+        print(f"[INFO] demo pelvis lateral sway velocity per phase (mm/s): {np.round(table * 1000, 0).tolist()}", flush=True)
         return torch.tensor(table, dtype=torch.float32, device=self.device)
 
     def _build_foot_height_table(self, bins: int) -> torch.Tensor:
@@ -821,6 +848,22 @@ class ArtiD1AmpEnv(DirectRLEnv):
             torch.zeros_like(world_linear_velocity),
         )
         base_sway_reward = torch.square(sway_velocity[:, 1]) * self.cfg.base_lateral_sway_reward_scale
+        # Demo lateral sway velocity at the current clock phase (instantaneous heading-frame lateral velocity minus
+        # the lateral command), so the body does not fall toward the landing foot and drag the planted one.
+        _, inst_velocity_h, _ = self.motion_loader.normalize_heading_observation(
+            root_orientation_quat_xyzw, world_linear_velocity, torch.zeros_like(world_linear_velocity)
+        )
+        lv = self.pelvis_lat_vel_reference
+        xb = self.gait_phase * lv.shape[0]
+        k0 = torch.floor(xb).long() % lv.shape[0]
+        lat_ref = torch.lerp(lv[k0], lv[(k0 + 1) % lv.shape[0]], xb - torch.floor(xb))
+        lat_err = inst_velocity_h[:, 1] - self.commands[:, 1] - lat_ref
+        self._pelvis_lat_vel_err_mm_s = torch.abs(lat_err) * 1000.0
+        self._pelvis_lat_vel_reward = (
+            torch.exp(-torch.square(lat_err) / self.cfg.pelvis_lat_vel_sigma**2)
+            * (~self._standing_command()).float()
+            * self.cfg.pelvis_lat_vel_reward_scale
+        )
 
         # Fine-tuning regularizers (added one by one on warm-started policies in the previous campaign) are
         # ramped in, so a fresh policy first learns to step with the gait clock (run2: all on from step 0 ->
@@ -879,6 +922,7 @@ class ArtiD1AmpEnv(DirectRLEnv):
             + self._touchdown_speed_reward
             + self._reference_pose_reward
             + self._pelvis_shift_reward
+            + self._pelvis_lat_vel_reward
             + self._foot_height_reward
             + base_flat_reward
             + base_ang_vel_reward
@@ -925,6 +969,8 @@ class ArtiD1AmpEnv(DirectRLEnv):
             "Gait/reference_pose_err_deg": self._reference_pose_err_deg.mean(),
             "Reward/pelvis_shift": self._pelvis_shift_reward.mean(),
             "Gait/pelvis_shift_err_mm": self._pelvis_shift_err_mm.mean(),
+            "Reward/pelvis_lat_vel": self._pelvis_lat_vel_reward.mean(),
+            "Gait/pelvis_lat_vel_err_mm_s": self._pelvis_lat_vel_err_mm_s.mean(),
             "Reward/foot_height": self._foot_height_reward.mean(),
             "Gait/foot_height_err_mm": self._foot_height_err_mm.mean(),
             "Reward/base_flat": base_flat_reward.mean(),
