@@ -511,3 +511,12 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   (11 at 0.32-0.5 s; 2.83M 2/64). Standpush 0,0,0,2/8. Forward ROM: hip_roll 17.5/18.2, hip_pitch 7.4/8.5, knee
   22.1/21.4, ankle 12.4/13.2, arm 5.5/10.5. Video auto_B_shift_2895k_sheet: no fall, visible sideways trunk lean.
   Early (37 min); no changes. Candidate if it persists: level-trunk-roll term (demo roll rate 0) / XCoM-based target.
+- 2026-11-03 10:5x USER: "landing stability is insufficient". New scripts/tuning/landing.py (per touchdown from a --dump
+  trace): 2.83M touchdowns 1.44/s (clock 1.23/s -> extra corrective steps), bounce 1%, roll-rate peak after td 35 deg/s,
+  impact 408 (p90 456); pelvis_shift 65k: 1.70/s, bounce 5%, roll 31, impact 360 (p90 532).
+  Demo left sole per phase: stance 0-0.46, lift 0.50 (64 -> 153 mm/s), 28 mm at 0.65-0.69, decelerated descent
+  (-158 mm/s at 0.81 -> -12 at 0.88), touchdown ~0.88 (0.62 s swing).
+  Change (USER approved): foot_height reward 1.0 * exp(-sum_f ez^2/0.012^2 - sum_f ev^2/0.15^2), ez = sole z -
+  (demo z(phase) + 3.4 mm sim stance offset), ev = sole vz - demo vz(phase); moving only (TB Reward/foot_height,
+  Gait/foot_height_err_mm). pelvis_shift run 08-18-13 stopped at agent_260000 (unevaluated past 65k). Warm start
+  08-18-13 agent_260000, offset 3090000, log logs/train/train_physx_pureRL_foot.log, PID 490208.

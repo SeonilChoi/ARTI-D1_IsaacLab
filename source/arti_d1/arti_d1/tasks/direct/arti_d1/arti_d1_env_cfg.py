@@ -486,6 +486,11 @@ class ArtiD1AmpEnvCfg(DirectRLEnvCfg):
     # Demo weight shift onto the stance foot (pelvis lateral offset from the soles' midpoint per clock phase; USER 11-03).
     pelvis_shift_reward_scale = 1.0
     pelvis_shift_sigma = 0.015  # m
+    # Demo swing-foot height / vertical speed per clock phase (soft, decelerated landing; USER 11-03 "landing unstable").
+    foot_height_reward_scale = 1.0
+    foot_height_sigma = 0.012  # m, summed over both feet
+    foot_vz_sigma = 0.15  # m/s, summed over both feet
+    foot_height_stance_offset = 0.0034  # m, sim sole-centre height on flat ground (demo stance z = 0)
     reference_pose_joint_weights = {
         "hip_yaw": 0.0, "hip_roll": 1.0, "hip_pitch": 0.5, "knee": 1.0, "ankle": 1.0,
         "arm_m8": 0.0, "arm_m8crank_plate": 0.0,

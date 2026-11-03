@@ -47,6 +47,7 @@ class ArtiD1AmpEnv(DirectRLEnv):
 
         self.nominal_gait_reference = self._build_nominal_gait_table(self.cfg.nominal_gait_bins)
         self.pelvis_shift_reference = self._build_pelvis_shift_table(self.cfg.nominal_gait_bins)
+        self.foot_height_reference = self._build_foot_height_table(self.cfg.nominal_gait_bins)
         # Command table actually added to the PD target: the reference table plus the offline sag/lag compensation
         # from scripts/tuning/ilc_nominal.py when available.
         self.nominal_gait_table = self.nominal_gait_reference.clone()
@@ -311,6 +312,28 @@ class ArtiD1AmpEnv(DirectRLEnv):
             np.add.at(total, b, lat[valid]); np.add.at(count, b, 1.0)
         table = total / np.maximum(count, 1.0)
         print(f"[INFO] demo pelvis shift per phase (mm): {np.round(table * 1000, 1).tolist()}", flush=True)
+        return torch.tensor(table, dtype=torch.float32, device=self.device)
+
+    def _build_foot_height_table(self, bins: int) -> torch.Tensor:
+        """Demo sole height and vertical speed per gait-clock phase bin (bins x 2 feet x [z, vz]), all walking clips.
+        Demo swing: 0.62 s, 28 mm, lift-off ~150 mm/s and a decelerated descent to ~0 at touchdown. 2026-11-03 USER:
+        landing not stable enough (policy: 0.28-0.30 s swing, 360-470 mm/s impact, extra corrective steps)."""
+        ml = self.motion_loader
+        o, z = ml._frame_offsets, ml._frame_sizes
+        total = np.zeros((bins, 2, 2)); count = np.zeros(bins)
+        for motion in ml._data:
+            f = np.asarray(motion["frames"], dtype=np.float64)
+            g = lambda n: f[:, o[n]: o[n] + z[n]]
+            valid = g("periodic_valid")[:, 0] > 0.5 if "periodic_valid" in o else np.ones(len(f), bool)
+            if not valid.any():
+                continue
+            # toe z is root-relative (heading frame); world z = root z + local z
+            zz = np.stack([g("root_position")[:, 2] + g(k + "_toe_position")[:, 2] for k in ("left", "right")], 1)
+            vz = np.stack([g(k + "_toe_linear_velocity")[:, 2] for k in ("left", "right")], 1)
+            b = np.clip((np.mod(g("gait_phase")[valid, 0], 1.0) * bins).astype(int), 0, bins - 1)
+            np.add.at(total, b, np.stack((zz, vz), -1)[valid]); np.add.at(count, b, 1.0)
+        table = total / np.maximum(count, 1.0)[:, None, None]
+        print(f"[INFO] demo left sole z per phase (mm): {np.round(table[:, 0, 0] * 1000, 1).tolist()}", flush=True)
         return torch.tensor(table, dtype=torch.float32, device=self.device)
 
     def _reference_joint_vel_rms(self, floor: float) -> torch.Tensor:
@@ -856,6 +879,7 @@ class ArtiD1AmpEnv(DirectRLEnv):
             + self._touchdown_speed_reward
             + self._reference_pose_reward
             + self._pelvis_shift_reward
+            + self._foot_height_reward
             + base_flat_reward
             + base_ang_vel_reward
             + base_sway_reward
@@ -901,6 +925,8 @@ class ArtiD1AmpEnv(DirectRLEnv):
             "Gait/reference_pose_err_deg": self._reference_pose_err_deg.mean(),
             "Reward/pelvis_shift": self._pelvis_shift_reward.mean(),
             "Gait/pelvis_shift_err_mm": self._pelvis_shift_err_mm.mean(),
+            "Reward/foot_height": self._foot_height_reward.mean(),
+            "Gait/foot_height_err_mm": self._foot_height_err_mm.mean(),
             "Reward/base_flat": base_flat_reward.mean(),
             "Reward/base_ang_vel": base_ang_vel_reward.mean(),
             "Reward/base_sway": base_sway_reward.mean(),
@@ -1198,6 +1224,20 @@ class ArtiD1AmpEnv(DirectRLEnv):
             torch.exp(-torch.square(shift - shift_ref) / self.cfg.pelvis_shift_sigma**2)
             * moving_command.float()
             * self.cfg.pelvis_shift_reward_scale
+        )
+        # Demo swing-foot trajectory: sole height and vertical speed at the current clock phase (both feet).
+        ft = self.foot_height_reference
+        xb = self.gait_phase * ft.shape[0]
+        j0 = torch.floor(xb).long() % ft.shape[0]
+        ref = torch.lerp(ft[j0], ft[(j0 + 1) % ft.shape[0]], (xb - torch.floor(xb))[:, None, None])
+        ez = feet_position[..., 2] - (ref[..., 0] + self.cfg.foot_height_stance_offset)
+        ev = feet_velocity[..., 2] - ref[..., 1]
+        self._foot_height_err_mm = torch.sqrt(torch.mean(torch.square(ez), dim=-1)) * 1000.0
+        self._foot_height_reward = (
+            torch.exp(-torch.sum(torch.square(ez), dim=-1) / self.cfg.foot_height_sigma**2
+                      - torch.sum(torch.square(ev), dim=-1) / self.cfg.foot_vz_sigma**2)
+            * moving_command.float()
+            * self.cfg.foot_height_reward_scale
         )
         standing = (~moving_command).float()
         self._stand_reward = standing * (
