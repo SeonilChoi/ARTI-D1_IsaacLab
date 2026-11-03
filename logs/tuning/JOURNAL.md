@@ -685,3 +685,20 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   Run 2026-11-04_05-51-37_ppo_torch, 4096 envs, PID 575406, log logs/train/train_vel_microduck.log (~2.5 h).
   agent_6000 (250 iters) smoke eval: 0/32 falls, not tracking yet, flailing legs (expected this early).
   Cron f8dee69e removed, new hourly check 677ad9dd.
+
+- 11-04 06:19 check, vel run 05-51-37 agent_36000 (1500 iters of 10000). PID 575406 alive (28 min).
+  TB (sixths): track_lin .115->.192 (of 2.0), track_yaw .010->.022 (of 2.0!), upright 1.86, pose .72->.66, air_time 1.35->1.72
+  ->1.47, action_rate -.59->-.74 (weight ramp -.1->-.96), penalties all <= 0 OK. Gait/lin_vel_err .24 m/s flat, yaw_rate_err
+  1.0-1.2 rad/s, air ratio .51/.50, peak height 27 mm, slip 252->136 mm/s, roll 2.2 deg, ep len 1185 (= max, no falls).
+  Policy std 1.35 -> 2.25: per joint legs .18-.24 but the 4 IGNORED arm outputs 7.4 (entropy bonus with no reward signal).
+  LR ~3e-4 (KL adaptive).
+  EVAL score 64: 0/64 falls but no tracking: forward .12 -> .037, backward -.10 -> -.079, side .06 -> -.004, turn .3 ->
+  -.23; constant yaw drift -.23..-.26 rad/s in EVERY segment incl. stand; touchdowns 2.2/s, swing .42 s, peak 29.7 mm,
+  touchdown 506/609 mm/s, stance slip 98 mm/s, double support only 0.02 s (DS slide n/a), stand foot lifts 2.5/s,
+  ROM ~41 deg on every leg joint (thrashing). standpush 0,1,2,3/8 = 6/32.
+  VIDEO: Kit RTX out of GPU memory next to the 4096-env run (blank); newton_gl recording OK (VIDEO_SOURCE=newton_gl):
+  upright, marching/hopping in place with big leg swings, turning; no falls.
+  Port bugs found: (1) ignored arm outputs keep a policy dim each -> std 7.4, pollutes entropy/KL; fix = 10 leg actions.
+  (2) lin vel tracked at the pelvis LINK origin, which on this USD sits at foot level (z 4.5 mm), so body roll/yaw
+  wobble x 0.25 m lever is in the tracked velocity; mjlab tracks root_link_lin_vel_b of a trunk-level root -> track CoM
+  (or trunk frame) velocity. Asked user before restarting.
