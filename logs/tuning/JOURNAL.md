@@ -665,3 +665,23 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   1.0 -> 2.0 (sigma 0.08 kept, everything else unchanged). New run 2026-11-04_05-43-10 from 17-26-22 agent_815000
   (4.55M, best stability), env.curriculum_step_offset=4550000, log logs/train/train_physx_pureRL_latvel2.log, PID 573730.
   Iterating, demo sway table printed.
+
+- 11-04 05:50 user: "microduck 코드를 참고해서 아예 새로운 학습" (choices: Isaac Lab port, stop the latvel2 run, no demo motion).
+  Stopped run 05-43-10 (PID 573730, verified train.py) after ~7 min. Read pollen-robotics/microduck_rl (mjlab 1.3.0, rsl_rl
+  PPO, AGENTS.md playbook) + mjlab v1.3.0 velocity base. New task Template-Arti-D1-Vel-Direct-v0
+  (arti_d1_vel_env.py / _cfg.py, agents/skrl_vel_ppo_cfg.yaml), commits 8392100, 946020b:
+  * no reference motion / clock / nominal table; reward stack = mjlab velocity + microduck overrides: track lin vel 2.0
+    (std 0.08 m/s, rescaled from 0.32 for +-0.4), track yaw 2.0 (std 0.28), upright 2.0 (std^2 .05), variable posture 1.0
+    (microduck stds, hip_roll walking 0.05 -> 0.1), body ang vel -0.05, dof limits -1, action rate -0.1 -> -1.0 by iter 1500,
+    air time 3.0 in [0.15, 0.45] s (microduck [0.125, 0.3]), foot clearance -2.0 / swing height -0.25 at 30 mm (microduck
+    20 mm), foot slip -0.1; all x step_dt. Commands x -0.12..0.15, y +-0.08, yaw +-0.4, resample 3-8 s, 15 % turn in place,
+    standing fraction .02 -> .25 by iter 2000. Obs actor 51 = ang vel, gravity, q rel, qd, last action, command (noise
+    .03/.01/.001/.25, IMU 6 deg misalignment, 0-1 step IMU lag, qd one step old, encoder bias +-.015); critic 60 adds lin
+    vel, sole heights, air time, contact. DR: foot friction .7-1.3, mass x.95-1.05, pelvis CoM +-5 mm, armature / Coulomb
+    x.9-1.1, Dynamixel delay/stiction/voltage model kept; pushes +-0.15 m/s every 3-6 s. Arms held at 0 (as deployed).
+    PPO 512-256-128 elu, std 1, lr 1e-3 KL .01, entropy .01, 5 epochs x 4 mb, 24 rollouts, 10000 iters.
+  * stand check (scripts/vel/stand_check.py): zero action 3 s, 0/64 fell, tilt <= 5.6 deg, stance contact detected.
+  * scripts/vel/eval_vel.py (score / standpush), record_video.sh TASK/ALGO, play.py play_command_sequence.
+  Run 2026-11-04_05-51-37_ppo_torch, 4096 envs, PID 575406, log logs/train/train_vel_microduck.log (~2.5 h).
+  agent_6000 (250 iters) smoke eval: 0/32 falls, not tracking yet, flailing legs (expected this early).
+  Cron f8dee69e removed, new hourly check 677ad9dd.
