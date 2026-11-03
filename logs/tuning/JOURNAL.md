@@ -600,3 +600,18 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   (start-up, matches RSI fall times) and is reset by 1.0 s.
   Verdict: drag gain from 3.92M partly given back; the lat-vel error itself is not being learned (116 -> 114 mm/s in 395k).
   err 114 mm/s = 1.4 sigma, near the steepest part of the kernel, so the weight (1.0 vs ref_pose 2.0) is the likelier limit. No change made (needs user OK); option to propose: scale 2-3.
+
+- 11-03 23:13 check, run 17-26-22 agent_605000 = cum 4.340M. PID 532287 alive (5h47m).
+  TB (sixths): pelvis_lat_vel rew .255->.276, err 114.3/113.6/115.2/113.7/111.4/110.5 mm/s (slow but now falling);
+  foot_slip -.29/-.30/-.31/-.34/-.31/-.28; ref_pose err 2.9-3.1; pelvis_shift err 2.9; foot_height err 4.0; roll 1.46 (the
+  4.13M bump 1.67 went back); tilt 3.8; air .11/.12; ep len 747/752/709/658/758/879 (the 4.13M dip recovered -> was noise).
+  EVAL: score 1/32; RSI 2/64 (fall times 5.8, 25.8 s; no start-up falls) (4.13M 7, 3.92M 14, 3.715M 18); standpush
+  0,0,0,2/8 (0.5 m/s, back). Walk: touchdown mean 399 p95 548, lifts/s 1.47, touchdowns 1.30/s vs clock 1.23 (extra steps of
+  4.13M gone), bounce 1 %, swing sym 0.98.
+  swing_balance td 473, XCoM +54/+103, roll td +49. landing impact 464/523, roll-rate peak after td 27/49 (4.13M 32/62).
+  DRAG: ds_slide 7.1 / p90 12.0 mm (= 2.83M 6.5/12.0; 3.715M 10.3/17.2); drag.py 10.2/15.3; td_latvel 236 / p90 316 mm/s
+  (lowest so far; 3.715M 257, demo 126); trailing slide 0.17 s after td +5.0 / p90 +8.9 mm (3.715M +9.2/+14.6). Lift delay 0.40.
+  ROM fwd hip_roll 18/18, hip_pitch 10/10, knee 22/23, ankle 13/13 (demo 15/29/29/28).
+  VIDEO auto_B_latvel_4340k: 0 blank, every robot upright the whole clip (no start-up tumble this time), alternating steps.
+  Verdict: best checkpoint of this run (RSI 2/64, drag p90 back to the 2.83M level, slide 0.17 s +5.0). Lat-vel error is
+  finally falling -> keep scale 1.0 running; the scale 2-3 proposal from 21:13 is still open for the user.
