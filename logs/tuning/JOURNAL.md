@@ -585,3 +585,18 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   ROM forward: hip_roll 17/18, hip_pitch 10/9, knee 23/22, ankle 14/14 (demo 15/29/29/28) - hip_pitch/ankle still small.
   VIDEO auto_B_latvel_3920k: 0 blank, upright whole clip, alternating steps, no fall; wide lateral sway visible.
   Verdict: drag down ~40 % early in the run while the lat-vel error itself barely moved -> keep running, no change.
+
+- 11-03 21:13 check, run 17-26-22 agent_395000 = cum 4.130M. PID 532287 alive (3h47m).
+  TB (first/mid/last tenth): pelvis_lat_vel rew .246/.259/.269, err 116/115/114 mm/s (barely moving); foot_slip -.30/-.32/-.34;
+  ref_pose err 2.89/2.94/3.16 deg (up); pelvis_shift err 3.2/3.3/2.6 mm; foot_height err 4.0/4.1/4.4; roll 1.47/1.49/1.77 deg (up);
+  tilt 3.7/3.8/3.9; air .11; ep len 714/709/668 (down) -> watch, not one drop.
+  EVAL: score 0/32; RSI 7/64 (3.92M 14, 3.715M 18; fall times .42-1.03 s = start-up); standpush 0,0,0,1/8 (back).
+  Walk: touchdown mean 333 p95 550, lifts/s 1.88 (3.92M 1.56) and touchdowns 1.73/s per env vs clock 1.23 -> more extra steps.
+  swing_balance td 473, XCoM +55/+104, roll td +49. landing impact 408/526, bounce 7 %.
+  DRAG: ds_slide 7.3 / p90 15.8 mm (3.92M 6.9/12.9, 3.715M 10.3/17.2); drag.py 13.1/20.8; td_latvel 256 / p90 340 mm/s
+  (3.92M 243, 3.715M 257, demo 126); trailing slide 0.17 s after td +6.6 / p90 +15.1 (3.92M +5.2/+10.7, 3.715M +9.2/+14.6).
+  Lift delay still 0.40 s. ROM fwd hip_roll 19/19, hip_pitch 12/8, knee 25/22, ankle 14/14 (demo 15/29/29/28).
+  VIDEO auto_B_latvel_4130k: 0 blank; main robot upright, alternating steps whole clip; one background env tumbles at 0.5 s
+  (start-up, matches RSI fall times) and is reset by 1.0 s.
+  Verdict: drag gain from 3.92M partly given back; the lat-vel error itself is not being learned (116 -> 114 mm/s in 395k).
+  err 114 mm/s = 1.4 sigma, near the steepest part of the kernel, so the weight (1.0 vs ref_pose 2.0) is the likelier limit. No change made (needs user OK); option to propose: scale 2-3.
