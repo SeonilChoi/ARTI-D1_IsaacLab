@@ -718,3 +718,19 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   eval_vel.py fixes: ROM indexed the env axis with the joint id (all ~45 deg before, wrong); DS slide window was 0 for
   1-step DS; added contact both-down / both-up fractions.
   VIDEO (newton_gl) auto: all upright whole clip, crouched knees, short steps, visible limp (one leg does most stepping).
+
+- 11-04 08:19 check: vel run 05-51-37 FINISHED (240000 steps = 10000 iters, 1h51m). Final agent_240000.
+  TB (eighths): plateau since ~iter 5000: track_lin .73, track_yaw 1.42, upright 1.98, pose .80, slip 38 mm/s, roll .78 deg,
+  lin err .18 m/s (pelvis-link point), yaw err .086, peak height 20 -> 23.6 mm, ep len 1196 (max). Penalties all <= 0.
+  EVAL score 64: 0/64 falls; forward .12 -> .081 (68 %), backward -.10 -> -.041, side .06 -> -.011 (none),
+  diagonal (.10,-.05) -> (.069, -.008), turn .30 -> .298, stand drift 0, stand foot lifts 0/s.
+  touchdowns 2.07/s, swing .42 s, peak 24.9 / p10 20.7 mm (target 30), touchdown 460/505 mm/s (AMP 3.715M 490),
+  stance slip 54 mm/s, both feet down only 3 % of walking time; DS trailing slide 0.4 / p90 1.6 mm (AMP best 6.5/12.0).
+  ROM fwd L/R hip_roll 19/17, hip_yaw 7/19, hip_pitch 14/13, knee 24/34, ankle 25/20 (demo 15/29/29/28; L/R asymmetric).
+  standpush 0,0,4,6/8 = 10/32.
+  VIDEO vel_mduck_240000 (Kit, GPU free now): 0 blank; all robots upright the whole clip, crouched alternating steps,
+  no fall, no visible foot drag.
+  Verdict: microduck recipe gives a stable gait with almost no drag on the first try, but lateral walking is not learned,
+  backward/forward are under-tracked, swing 25 mm < 30 and the gait is L/R asymmetric. Port bugs 1 (arm outputs, std 7.4)
+  and 2 (pelvis-link velocity point) still in; awaiting user decision on a fixed rerun. Hourly cron 677ad9dd removed
+  (nothing left to check).
