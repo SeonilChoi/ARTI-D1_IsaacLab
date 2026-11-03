@@ -615,3 +615,18 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   VIDEO auto_B_latvel_4340k: 0 blank, every robot upright the whole clip (no start-up tumble this time), alternating steps.
   Verdict: best checkpoint of this run (RSI 2/64, drag p90 back to the 2.83M level, slide 0.17 s +5.0). Lat-vel error is
   finally falling -> keep scale 1.0 running; the scale 2-3 proposal from 21:13 is still open for the user.
+
+- 11-04 01:13 check, run 17-26-22 agent_815000 = cum 4.550M. PID 532287 alive (7h47m).
+  TB (eighths): pelvis_lat_vel rew .255->.282, err 114/114/115/113/111/110/109/110 mm/s (slow, flattening); foot_slip -.27;
+  ref_pose err 2.88 -> 3.30 deg (slow creep up, watch); pelvis_shift err 2.9; foot_height err 4.1; roll 1.46-1.60;
+  tilt 3.7 -> 4.05 (creep up); air .11/.12; ep len 882/825/775 (noisy).
+  EVAL: score 0/32; RSI 1/64 (6.1 s) - best so far; standpush 0,0,0,0/8 - best. Walk touchdown mean 378 p95 543, lifts/s 1.55,
+  touchdowns 1.34/s vs clock 1.23, bounce 1 %; swing time L .240 R .319 (sym 0.75, 4.34M 0.98) - asymmetric this ckpt.
+  swing_balance td 481, XCoM +56/+104, roll td +52. landing impact 460/535.
+  DRAG: ds_slide 8.6 / p90 13.3 mm (4.34M 7.1/12.0, 3.715M 10.3/17.2); drag.py 11.9/17.7; td_latvel 233 / p90 315 mm/s
+  (3.715M 257, demo 126); trailing slide 0.17 s after td +7.2 / p90 +11.6 (4.34M +5.0/+8.9, 3.715M +9.2/+14.6). Lift delay 0.40.
+  ROM fwd hip_roll 19/18, hip_pitch 10/11, knee 23/24, ankle 13/14 (demo 15/29/29/28).
+  VIDEO auto_B_latvel_4550k: 0 blank, all robots upright the whole clip, alternating steps, no visible fall.
+  Verdict: stability keeps improving (RSI 1/64, push 0/32) but drag stopped improving - 4.34M stays the best drag ckpt
+  (keep agent_605000). Lat-vel err plateaus ~110 mm/s (demo match would need ~0) at scale 1.0. No change (user OK pending
+  on scale 2-3).
