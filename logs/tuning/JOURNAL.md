@@ -527,3 +527,15 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   velocities -> not comparable; use the world-position slide above).
   Change (USER approved): foot_slip_reward_scale -8 -> -30. foot_height run 10-52-36 stopped at agent_45000 (25 min).
   Warm start 10-52-36 agent_45000, offset 3135000, log logs/train/train_physx_pureRL_slip.log, PID 493233.
+
+## 2026-11-03 13:13 check — foot_slip -30 run (11-17-17, agent_165000 = cum 3.300M)
+- Alive (PID 493233, ~31 it/s). TB: foot_slip reward -0.37 -> -0.33 (barely moved), foot_height err 3.8 -> 4.5 mm, pelvis_shift err ~3.0 mm,
+  refpose err 3.3 -> 2.6 deg, foot tilt 3.6, roll 1.5, ep len mean 811 (85k) -> 651 (168k).
+- score: falls 5/32 (2.895M 1/32, 2.83M 0/32), touchdown 356 p95 581, stance slip 23.5 mm/s (28), swing L 0.22 R 0.28, lifts/s 1.81.
+- RSI 64: fell 25/64 (22 within 0.38-0.83 s start transient; 3 later). standpush: 2 fell before push, 0,0,0,2/8.
+- ROM fwd: hip_roll 17.5/18.1, hip_pitch 10.4/10.6, knee 23.0/24.2, ankle 12.5/14.7 (slightly up vs 2.895M).
+- swing_balance: swing 0.27, td 463, off +44.1, XCoM +56/+97, roll late +25 td +48 (2.895M +30/+52).
+- landing: 1.57 td/s, bounce 4%, roll peak 31, impact 412/541.
+- drag (same inline script for all; double-support slide of planted foot): 2.83M 6.5/12.0, 2.895M 6.9/19.6, 3.300M 6.8/23.5 mm;
+  double support 0.48 s. drag.py: 10.0/15.3, 16.8/26.0, 12.3/25.3 mm. -> -30 slip penalty has not reduced drag in 165k.
+- Video auto_B_slip_3300k: main robot upright 6.7 s, sideways trunk lean in single support persists.
