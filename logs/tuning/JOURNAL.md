@@ -500,3 +500,14 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   moving commands only (TB Reward/pelvis_shift, Gait/pelvis_shift_err_mm). reference_pose stays 2.0.
   refpose2 run 07-58-16 stopped (~30 min, last ckpt agent_30000, never evaluated). Warm start 15-38-20 agent_1310000 (cum 2.83M),
   offset 2830000, log logs/train/train_physx_pureRL_shift.log, PID 471586.
+- 2026-11-03 08:55 check, pelvis_shift run 08-18-13 at 65k (cum 2.895M, 37 min). TB: pelvis_shift err 8.3 -> 2.8 mm,
+  reward .40 -> .62, reference_pose err 3.7 -> 2.9-3.1 deg, foot tilt 2.4 -> 3.4-3.6 (worse), roll 1.06 -> 1.40,
+  ep len 663 -> 881 -> dip 701-736 in the last logs.
+  swing_balance: pelvis off stance +44.6 mm (2.83M +56, demo +46) -> weight shift reached; but XCoM mid +56 / end +107
+  (demo +40 / +75), roll rate to swing side late +30, td +52 deg/s (2.83M +23/+46), swing 0.30 s, touchdown 467.
+  => it now shifts the pelvis by hip roll (ROM 17.5/18.2, demo 15) with too much lateral speed / trunk roll, still
+  tips toward the swing foot.
+  Evals: score falls 1/32, roll rms 2.19 (1.71), touchdown 374 p95 553, swing .27/.26, lifts/s 1.76. RSI 64: 13/64
+  (11 at 0.32-0.5 s; 2.83M 2/64). Standpush 0,0,0,2/8. Forward ROM: hip_roll 17.5/18.2, hip_pitch 7.4/8.5, knee
+  22.1/21.4, ankle 12.4/13.2, arm 5.5/10.5. Video auto_B_shift_2895k_sheet: no fall, visible sideways trunk lean.
+  Early (37 min); no changes. Candidate if it persists: level-trunk-roll term (demo roll rate 0) / XCoM-based target.
