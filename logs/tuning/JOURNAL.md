@@ -571,3 +571,17 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   demo table = per-clip heading lateral velocity minus clip mean, by gait phase (sinusoid +-131 mm/s).
   TB: Reward/pelvis_lat_vel, Gait/pelvis_lat_vel_err_mm_s.
 - Run 2026-11-03_17-26-22 (log train_physx_pureRL_latvel.log, PID 532287), warm start 11-17-17 agent_600000, offset 3735000.
+
+- 11-03 19:13 check, run 17-26-22 (pelvis_lat_vel 1.0) agent_185000 = cum 3.920M (185k steps after the change). PID 532287 alive.
+  TB (first->last fifth): pelvis_lat_vel rew .246->.267, err 116->113 mm/s (slow); foot_slip -.30 flat; ref_pose err 2.9 deg;
+  pelvis_shift err 3.1 mm; foot_height err 4.0 mm; roll 1.5 deg; air ratio .11/.12; ep len 712->749.
+  EVAL: score falls 1/32 (3.715M 0/32); RSI 14/64 (18); standpush 0,0,0,0/8 (0,0,0,1). Walk: touchdown 376 mean / p95 534,
+  stance slip 22 mm/s, swing 0.26/0.30 s, lateral sway vel rms 145 mm/s.
+  swing_balance: touchdown 463 (490), XCoM +54/+102 (+55/+109), roll td +53 (same). landing impact 448/514 (476/532).
+  DRAG (the target): ds_slide 6.9 / p90 12.9 mm (3.715M 10.3/17.2; 2.83M 6.5/12.0); drag.py slide before lift 11.7/17.9;
+  new td_latvel.py (scratchpad): pelvis lat vel toward landing foot at td 243 / p90 317 mm/s (same script on 3.715M trace:
+  257/332; demo 126); trailing lateral slide 0.17 s after td +5.2 / p90 +10.7 mm (3.715M same script +9.2/+14.6).
+  Trailing lift delay still 0.40 s (demo 0.17).
+  ROM forward: hip_roll 17/18, hip_pitch 10/9, knee 23/22, ankle 14/14 (demo 15/29/29/28) - hip_pitch/ankle still small.
+  VIDEO auto_B_latvel_3920k: 0 blank, upright whole clip, alternating steps, no fall; wide lateral sway visible.
+  Verdict: drag down ~40 % early in the run while the lat-vel error itself barely moved -> keep running, no change.
