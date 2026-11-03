@@ -660,3 +660,8 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   Verdict: past its best - RSI start-up robustness 1 -> 15 -> 26 and drag back near the 3.715M level. The run is drifting
   with scale 1.0. Keep agent_605000 (4.34M, best drag) and agent_815000 (4.55M, best stability). Training left running
   (stop/restart = user decision); asked the user: stop + restart from agent_815000 with pelvis_lat_vel scale 2-3?
+
+- 11-04 05:43 user OK: stopped run 17-26-22 (PID 532287, verified train.py) at agent_1235000. pelvis_lat_vel_reward_scale
+  1.0 -> 2.0 (sigma 0.08 kept, everything else unchanged). New run 2026-11-04_05-43-10 from 17-26-22 agent_815000
+  (4.55M, best stability), env.curriculum_step_offset=4550000, log logs/train/train_physx_pureRL_latvel2.log, PID 573730.
+  Iterating, demo sway table printed.

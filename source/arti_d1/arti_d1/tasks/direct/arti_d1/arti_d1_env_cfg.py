@@ -488,7 +488,7 @@ class ArtiD1AmpEnvCfg(DirectRLEnvCfg):
     pelvis_shift_sigma = 0.015  # m
     # Demo pelvis lateral sway velocity per clock phase (USER 11-03 "make the trailing foot not drag": the planted foot
     # was dragged toward the landing foot by a 263 mm/s lateral body velocity at touchdown, demo 126 mm/s).
-    pelvis_lat_vel_reward_scale = 1.0
+    pelvis_lat_vel_reward_scale = 2.0
     pelvis_lat_vel_sigma = 0.08  # m/s
     # Demo swing-foot height / vertical speed per clock phase (soft, decelerated landing; USER 11-03 "landing unstable").
     foot_height_reward_scale = 1.0
