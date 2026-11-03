@@ -702,3 +702,19 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   (2) lin vel tracked at the pelvis LINK origin, which on this USD sits at foot level (z 4.5 mm), so body roll/yaw
   wobble x 0.25 m lever is in the tracked velocity; mjlab tracks root_link_lin_vel_b of a trunk-level root -> track CoM
   (or trunk frame) velocity. Asked user before restarting.
+
+- 11-04 07:19 check, vel run agent_180000 (7500 iters). PID 575406 alive (1h28m). No user answer on the 06:19 restart
+  question yet -> run left as is.
+  TB (sixths): a jump in the 4th sixth (~iter 4000): track_yaw .05 -> 1.41 (of 2.0), track_lin .23 -> .73, upright 1.98,
+  pose .81, body_ang_vel -.002, action_rate -.08 (weight -1.0), slip 127 -> 40 mm/s, roll 2.1 -> 0.7 deg, yaw err .87 ->
+  .08 rad/s, lin err .24 -> .18 m/s (pelvis link origin, see port bug 2), air ratio .35/.35, peak height 20 mm, ep len 1196.
+  Penalties all <= 0. Arm std still 7.4 (bug 1).
+  EVAL score 64: 0/64 falls; forward .12 -> .054, backward -.10 -> -.060, side .06 -> -.002 (none), diagonal (.10,-.05) ->
+  (.036, +.014), turn .30 -> .294, stand: drift 0, foot lifts 0/s. touchdowns 1.93/s, swing .42 s, peak 19 mm (target 30),
+  touchdown 476/550 mm/s, stance slip 51 mm/s; contact both-down only 10 % of walking time (DS median 0.02 s);
+  DS trailing-foot slide 0.4 / p90 1.9 mm (AMP best 6.5/12.0). ROM fwd L/R: hip_roll 18/18, hip_yaw 6/10, hip_pitch 14/8,
+  knee 18/31, ankle 26/12 (asymmetric).
+  standpush 0,0,5,8/8 = 13/32 (weak at 0.4-0.5 m/s; trained pushes only +-0.15).
+  eval_vel.py fixes: ROM indexed the env axis with the joint id (all ~45 deg before, wrong); DS slide window was 0 for
+  1-step DS; added contact both-down / both-up fractions.
+  VIDEO (newton_gl) auto: all upright whole clip, crouched knees, short steps, visible limp (one leg does most stepping).

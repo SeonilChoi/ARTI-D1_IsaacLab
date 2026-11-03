@@ -181,7 +181,7 @@ def run_score(env, u, policy):
                 while j < len(seg) and both[j]:
                     j += 1
                 if j < len(seg) and ok[j - 1]:
-                    ds_slide.append(np.linalg.norm(P[j - 1, e, trail, :2] - P[k, e, trail, :2]) * 1000)
+                    ds_slide.append(np.linalg.norm(P[j - 1, e, trail, :2] - P[k - 1, e, trail, :2]) * 1000)
                     lift_delay.append((j - k) * dt)
                 k = j
             k += 1
@@ -197,6 +197,12 @@ def run_score(env, u, policy):
           f"speed median {q(td_speed, 50):.0f} p90 {q(td_speed, 90):.0f} mm/s | stance slip mean {np.mean(slip):.1f} mm/s")
     print(f"[VEL-SCORE] drag: double-support trailing-foot slide median {q(ds_slide, 50):.1f} p90 {q(ds_slide, 90):.1f} mm "
           f"(n={len(ds_slide)}) | double support median {q(lift_delay, 50):.2f} s")
+    wk = al & (tseg >= SKIP_S)[:, None] & walk[:, None]
+    both_frac = (C[..., 0] & C[..., 1])[wk].mean() if wk.any() else float("nan")
+    none_frac = (~C[..., 0] & ~C[..., 1])[wk].mean() if wk.any() else float("nan")
+    flips = np.abs(np.diff(C.astype(int), axis=0)).sum(-1)[wk[1:]].mean() / dt
+    print(f"[VEL-SCORE] contact while walking: both down {both_frac:.2f}, both up {none_frac:.2f} of the time, "
+          f"contact changes {flips:.1f}/s per env")
     print(f"[VEL-SCORE] stand: foot lifts {stand_lifts / max(stand_time, 1e-6):.2f}/s per env")
     names = list(u.robot.data.joint_names)
     m = (seg == 0) & (tseg >= SKIP_S)
@@ -207,7 +213,7 @@ def run_score(env, u, policy):
         vals = []
         for side in ("left", "right"):
             ji = names.index(f"{side}_{jt}")
-            rom = [np.ptp(Q[A[:, e], ji]) for e in range(n) if A[:, e].sum() > 10]
+            rom = [np.ptp(Q[A[:, e], e, ji]) for e in range(n) if A[:, e].sum() > 10]
             vals.append(math.degrees(np.median(rom)) if rom else float("nan"))
         parts.append(f"{jt} {vals[0]:.1f}/{vals[1]:.1f}")
     print("[VEL-SCORE] ROM p-p deg L/R forward: " + " | ".join(parts))
