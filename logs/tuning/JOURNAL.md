@@ -551,3 +551,13 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
 - drag (ds_slide inline): median 11.3 p90 17.2 mm (3.300M 6.8/23.5, 2.83M 6.5/12.0), double support 0.50 s; drag.py 15.4/21.5.
 - Video auto_B_slip_3510k: all robots upright 6.7 s; sideways trunk lean in single support persists.
 - Deploy side (same day): humanoid_controller origin/arti-d1-2830k = 2.83M ONNX + real servo zero offsets / axis flips.
+
+## 2026-11-03 17:13 check — foot_slip -30 run (11-17-17, agent_580000 = cum 3.715M)
+- Alive (~6 h). TB 375k->580k: flat (foot_slip -0.30..-0.32, foot tilt 3.3->3.5, roll 1.42->1.59, ep len ~770-800).
+- score: falls 0/32, touchdown 421 p95 556, stance slip 23.2, swing L 0.28 R 0.28 (sym 0.98), lifts/s 1.35, swing height 28.6.
+- RSI 64: 18/64 (13 within 0.4-0.8 s start transient). standpush 0,0,0,1/8 (best so far).
+- ROM fwd: hip_roll 16.8/17.9, hip_pitch 12.2/8.3, knee 24.4/21.8, ankle 13.3/13.7.
+- swing_balance: swing 0.30, td 490, off +46.2, XCoM +55/+109, roll late +29 td +53. landing: 1.25 td/s (= clock), bounce 3%, roll 31, impact 476/532.
+- drag (ds_slide): 10.3/17.2 mm, double support 0.52 s (3.510M 11.3/17.2; 2.83M 6.5/12.0). drag.py 14.7/21.7.
+- Video auto_B_slip_3715k: upright 6.7 s; trunk lean to the stance side in single support persists.
+- Verdict: foot_slip -30 has not reduced drag in 580k; stability fine (score 0/32, push best), RSI start transient high.
