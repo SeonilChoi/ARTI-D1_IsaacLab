@@ -742,3 +742,12 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   (2) lateral_fraction 0.15 pure sideways commands (|vy| 0.032-0.08), push_velocity 0.15 -> 0.25 m/s.
   Stand check: 0/64 fell, tilt <= 5.6 deg. Run 2026-11-05_07-18-50_ppo_torch, 4096 envs, PID 659962,
   log logs/train/train_vel_microduck_v2.log, ~1h50m, 38 it/s.
+
+- 11-05 08:34 check, v2 run 07-18-50 (seed 42) at iter ~7800: COLLAPSED. Never learned to stand: ep len 78 -> 43-60 steps,
+  policy std 1 -> 7.39 (clamp) on all 10 leg outputs by iter 800, action_rate -25000/ep, value loss -> 1e-6, upright .18.
+  (v1 at iter 60 already had ep len 584.) Falling early is a local optimum here (no alive bonus, per-step penalties).
+  Debug run A (same code, seed 7, 250 iters, logs/skrl/arti_d1_vel_debug): ep len 1140 by iter 110, std .45 -> healthy,
+  so seed-dependent, not a code bug. Added cfg lin_vel_at_trunk toggle (default True, unchanged behaviour) for A/B.
+  Stopped 07-18-50 (PID 659962 verified train.py) at 197k steps; no eval/video (unusable policy).
+  New run 2026-11-05_08-41-26_ppo_torch, agent.seed=7, everything else as v2, PID 664689,
+  log logs/train/train_vel_microduck_v2s7.log; first 210 iters identical to debug run A (deterministic). ETA ~1h35m.

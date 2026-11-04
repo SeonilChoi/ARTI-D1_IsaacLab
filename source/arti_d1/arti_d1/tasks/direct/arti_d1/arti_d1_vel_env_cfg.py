@@ -173,5 +173,6 @@ class ArtiD1VelEnvCfg(DirectRLEnvCfg):
     # trunk frame (pelvis + ARTI_D1_TRUNK_OFFSET_FROM_PELVIS, 0.2585 m when standing) below this = fallen
     trunk_offset = (0.00964957, 0.0, 0.254045)
     min_trunk_height = 0.15
+    lin_vel_at_trunk = True  # False = pelvis link origin (v1 behaviour)
 
     curriculum_step_offset = 0

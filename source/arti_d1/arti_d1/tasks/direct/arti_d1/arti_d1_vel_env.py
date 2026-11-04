@@ -222,7 +222,9 @@ class ArtiD1VelEnv(DirectRLEnv):
         # leg swing / body roll add velocity the trunk does not have). microduck: trunk_base site.
         quat = self.robot.data.body_quat_w.torch[:, self.pelvis_id]
         ang_w = self.robot.data.body_ang_vel_w.torch[:, self.pelvis_id]
-        lin_w = self.robot.data.body_lin_vel_w.torch[:, self.pelvis_id] + torch.cross(ang_w, quat_apply(quat, self.trunk_offset), dim=-1)
+        lin_w = self.robot.data.body_lin_vel_w.torch[:, self.pelvis_id]
+        if self.cfg.lin_vel_at_trunk:
+            lin_w = lin_w + torch.cross(ang_w, quat_apply(quat, self.trunk_offset), dim=-1)
         lin_b = quat_apply_inverse(quat, lin_w)
         ang_b = quat_apply_inverse(quat, ang_w)
         grav_b = quat_apply_inverse(quat, self.gravity_w)
