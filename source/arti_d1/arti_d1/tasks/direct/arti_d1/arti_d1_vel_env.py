@@ -39,12 +39,13 @@ class ArtiD1VelEnv(DirectRLEnv):
         self.default_joint_pos = self.robot.data.default_joint_pos.torch.clone()
         self.leg_mask = torch.tensor([_joint_type(j) in LEG_TYPES for j in names], device=dev)
         self.leg_ids = torch.nonzero(self.leg_mask).flatten()
-        self.arm_hold = None
-        if self.cfg.arm_hold_target is not None:
-            self.arm_ids = torch.tensor([names.index(j) for j in self.cfg.arm_hold_target], device=dev, dtype=torch.long)
-            self.arm_hold = torch.tensor(list(self.cfg.arm_hold_target.values()), device=dev, dtype=torch.float32)
-            # the arms rest at the hold target: pose / joint obs are relative to it
-            self.default_joint_pos[:, self.arm_ids] = self.arm_hold
+        nl = len(self.leg_ids)
+        if self.cfg.action_space != nl:
+            raise RuntimeError(f"action_space {self.cfg.action_space} != {nl} leg joints")
+        # arms: no policy output, held at the hold target
+        self.arm_ids = torch.tensor([names.index(j) for j in self.cfg.arm_hold_target], device=dev, dtype=torch.long)
+        self.arm_hold = torch.tensor(list(self.cfg.arm_hold_target.values()), device=dev, dtype=torch.float32)
+        self.default_joint_pos[:, self.arm_ids] = self.arm_hold
         limits = self.robot.data.soft_joint_pos_limits.torch
         self.q_lower, self.q_upper = limits[..., 0], limits[..., 1]
 
@@ -80,8 +81,8 @@ class ArtiD1VelEnv(DirectRLEnv):
         self.gravity_w = torch.tensor([0.0, 0.0, -1.0], device=dev).expand(n, 3)
         self.up_b = torch.tensor([0.0, 0.0, 1.0], device=dev).expand(n, 3)
 
-        self.actions = torch.zeros(n, nj, device=dev)
-        self.prev_actions = torch.zeros(n, nj, device=dev)
+        self.actions = torch.zeros(n, nl, device=dev)
+        self.prev_actions = torch.zeros(n, nl, device=dev)
         self.commands = torch.zeros(n, 3, device=dev)
         self.cmd_timer = torch.zeros(n, device=dev)
         self.push_timer = torch.zeros(n, device=dev)
@@ -91,13 +92,13 @@ class ArtiD1VelEnv(DirectRLEnv):
         self.peak_height = torch.zeros(n, 2, device=dev)
 
         # observation corruption state (actor only)
-        self.encoder_bias = torch.empty(n, nj, device=dev).uniform_(-self.cfg.encoder_bias_range, self.cfg.encoder_bias_range)
+        self.encoder_bias = torch.empty(n, nl, device=dev).uniform_(-self.cfg.encoder_bias_range, self.cfg.encoder_bias_range)
         axis = torch.nn.functional.normalize(torch.randn(n, 3, device=dev), dim=-1)
         angle = torch.empty(n, device=dev).uniform_(0.0, math.radians(self.cfg.imu_misalign_deg))
         self.imu_misalign = quat_from_angle_axis(angle, axis)
         self.imu_lag = torch.zeros(n, dtype=torch.long, device=dev)
         self.prev_imu = torch.zeros(n, 6, device=dev)
-        self.prev_joint_vel = torch.zeros(n, nj, device=dev)
+        self.prev_joint_vel = torch.zeros(n, nl, device=dev)
 
         # scripts/skrl/play.py: it writes commands * command_scale into the last 3 obs and plays this sequence (5 s each)
         self.command_scale = torch.ones(3, device=dev)
@@ -113,7 +114,7 @@ class ArtiD1VelEnv(DirectRLEnv):
         )
         self._log: dict[str, torch.Tensor] = {}
         print(f"[ARTI-D1 VEL] {n} envs, policy obs {self.cfg.observation_space}, critic {self.cfg.state_space}, "
-              f"action scale {self.cfg.action_scale}, arms held {self.cfg.arm_hold_target is not None}", flush=True)
+              f"{nl} leg actions, scale {self.cfg.action_scale}, arms held at {self.cfg.arm_hold_target}", flush=True)
 
     # ------------------------------------------------------------------ scene / actions
     def _setup_scene(self):
@@ -133,8 +134,6 @@ class ArtiD1VelEnv(DirectRLEnv):
     def _pre_physics_step(self, actions: torch.Tensor):
         self.prev_actions.copy_(self.actions)
         self.actions = actions.clone()
-        if self.arm_hold is not None:
-            self.actions[:, self.arm_ids] = 0.0  # ignored outputs: keep them out of the obs and the target
         self.cmd_timer -= self.step_dt
         ids = torch.nonzero(self.cmd_timer <= 0.0).flatten()
         if len(ids):
@@ -146,9 +145,8 @@ class ArtiD1VelEnv(DirectRLEnv):
             vel[:, :2] += torch.empty(len(ids), 2, device=self.device).uniform_(-self.cfg.push_velocity, self.cfg.push_velocity)
             self.robot.write_root_velocity_to_sim_index(root_velocity=vel, env_ids=ids)
             self.push_timer[ids] = torch.empty(len(ids), device=self.device).uniform_(*self.cfg.push_interval_s)
-        target = self.default_joint_pos + self.cfg.action_scale * self.actions
-        if self.arm_hold is not None:
-            target[:, self.arm_ids] = self.arm_hold
+        target = self.default_joint_pos.clone()
+        target[:, self.leg_ids] += self.cfg.action_scale * self.actions
         self.joint_target = torch.clamp(target, self.q_lower, self.q_upper)
 
     def _apply_action(self):
@@ -186,6 +184,14 @@ class ArtiD1VelEnv(DirectRLEnv):
         spin = torch.empty(k, device=dev).uniform_(0.4 * ymax, ymax) * torch.where(torch.rand(k, device=dev) < 0.5, -1.0, 1.0)
         cmd[turn, :2] = 0.0
         cmd[turn, 2] = spin[turn]
+        # pure sideways bucket (microduck has none; ARTI-D1 did not learn lin y from the uniform draw)
+        lo = stand_frac + self.cfg.turn_in_place_fraction
+        side = (r >= lo) & (r < lo + self.cfg.lateral_fraction)
+        ymax_l = max(abs(self.cfg.command_lin_y_range[0]), abs(self.cfg.command_lin_y_range[1]))
+        sway = torch.empty(k, device=dev).uniform_(0.4 * ymax_l, ymax_l) * torch.where(torch.rand(k, device=dev) < 0.5, -1.0, 1.0)
+        cmd[side, 0] = 0.0
+        cmd[side, 1] = sway[side]
+        cmd[side, 2] = 0.0
         cmd[r < stand_frac] = 0.0
         self.commands[ids] = cmd
         self.cmd_timer[ids] = torch.empty(k, device=dev).uniform_(*self.cfg.command_resample_s)
@@ -212,9 +218,13 @@ class ArtiD1VelEnv(DirectRLEnv):
         return sole, vel, height
 
     def _base(self):
+        # linear velocity of the trunk point (pelvis + trunk_offset; the pelvis link origin sits at foot level, where
+        # leg swing / body roll add velocity the trunk does not have). microduck: trunk_base site.
         quat = self.robot.data.body_quat_w.torch[:, self.pelvis_id]
-        lin_b = quat_apply_inverse(quat, self.robot.data.body_lin_vel_w.torch[:, self.pelvis_id])
-        ang_b = quat_apply_inverse(quat, self.robot.data.body_ang_vel_w.torch[:, self.pelvis_id])
+        ang_w = self.robot.data.body_ang_vel_w.torch[:, self.pelvis_id]
+        lin_w = self.robot.data.body_lin_vel_w.torch[:, self.pelvis_id] + torch.cross(ang_w, quat_apply(quat, self.trunk_offset), dim=-1)
+        lin_b = quat_apply_inverse(quat, lin_w)
+        ang_b = quat_apply_inverse(quat, ang_w)
         grav_b = quat_apply_inverse(quat, self.gravity_w)
         return quat, lin_b, ang_b, grav_b
 
@@ -223,7 +233,8 @@ class ArtiD1VelEnv(DirectRLEnv):
         _, lin_b, ang_b, grav_b = self._base()
         q = self.robot.data.joint_pos.torch
         qd = self.robot.data.joint_vel.torch
-        q_rel = q - self.default_joint_pos
+        q_rel = (q - self.default_joint_pos)[:, self.leg_ids]
+        qd = qd[:, self.leg_ids]
         dev = self.device
 
         # actor: IMU misalignment, 0..1 step lag, noise; encoder bias; joint vel one step old; noise
@@ -283,7 +294,7 @@ class ArtiD1VelEnv(DirectRLEnv):
         c_lim = torch.sum(
             (self.q_lower - q).clamp_min(0.0)[:, self.leg_ids] + (q - self.q_upper).clamp_min(0.0)[:, self.leg_ids], dim=1
         )
-        c_rate = torch.sum(torch.square(self.actions - self.prev_actions)[:, self.leg_ids], dim=1)
+        c_rate = torch.sum(torch.square(self.actions - self.prev_actions), dim=1)
 
         in_range = (self.air_time > cfg.air_time_min) & (self.air_time < cfg.air_time_max)
         r_air = torch.sum(in_range.float(), dim=1) * moving

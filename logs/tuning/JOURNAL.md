@@ -734,3 +734,11 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   backward/forward are under-tracked, swing 25 mm < 30 and the gait is L/R asymmetric. Port bugs 1 (arm outputs, std 7.4)
   and 2 (pelvis-link velocity point) still in; awaiting user decision on a fixed rerun. Hourly cron 677ad9dd removed
   (nothing left to check).
+
+- 11-05 07:18 user: "1, 2 둘 다 반영해서 다시 학습 시작해". Vel task changes (previous run 05-51-37 finished, agent_240000 kept):
+  (1) port bugs: 10 leg-only actions (arms no policy output, held at 0); actor obs leg joints only -> policy obs 39
+  (ang vel 3, gravity 3, leg q rel 10, leg qd 10, last action 10, command 3), critic 48. Linear velocity (tracking reward,
+  critic obs, eval) taken at the trunk point (pelvis + trunk_offset, lin + w x r) instead of the foot-level pelvis origin.
+  (2) lateral_fraction 0.15 pure sideways commands (|vy| 0.032-0.08), push_velocity 0.15 -> 0.25 m/s.
+  Stand check: 0/64 fell, tilt <= 5.6 deg. Run 2026-11-05_07-18-50_ppo_torch, 4096 envs, PID 659962,
+  log logs/train/train_vel_microduck_v2.log, ~1h50m, 38 it/s.

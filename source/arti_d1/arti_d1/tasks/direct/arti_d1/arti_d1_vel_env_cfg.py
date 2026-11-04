@@ -7,8 +7,9 @@ Coulomb friction with stiction, voltage saturation) that stands in for microduck
 
 Rescaled for ARTI-D1 (microduck is 25 cm / 0.8 kg with XL330s; ARTI-D1 is ~0.5 m / 5.8 kg with XH540s at 3.14 rad/s):
 command ranges, tracking stds, swing height targets, air-time window and push size. Every rescaled value says from what.
-Arms: held at 0 (the deployed controller fixes them at 0, humanoid_controller robot.yaml fixed_joints); the policy keeps
-14 outputs in Dynamixel order, the arm outputs are ignored.
+Arms: held at 0 (the deployed controller fixes them at 0, humanoid_controller robot.yaml fixed_joints); the policy has
+10 leg outputs and sees only the leg joints (Dynamixel order with the arms removed).
+Linear velocity (command tracking, critic obs) is taken at the trunk point, not the pelvis link origin (foot level).
 """
 
 import math
@@ -23,9 +24,9 @@ import isaaclab.envs.mdp as mdp
 
 from .arti_d1_env_cfg import ARTI_D1_ACTUATOR_ARMATURE, ARTI_D1_JOINT_EFFORT_LIMIT, ArtiD1PhysicsCfg, ArtiD1SceneCfg
 
-ARTI_D1_VEL_NUM_JOINTS = 14
-# actor: base ang vel (3) + projected gravity (3) + joint pos rel (14) + joint vel (14) + last action (14) + command (3)
-ARTI_D1_VEL_POLICY_OBS = 3 + 3 + 14 + 14 + 14 + 3
+ARTI_D1_VEL_NUM_JOINTS = 10  # leg joints
+# actor: base ang vel (3) + projected gravity (3) + leg joint pos rel (10) + leg joint vel (10) + last action (10) + command (3)
+ARTI_D1_VEL_POLICY_OBS = 3 + 3 + 10 + 10 + 10 + 3
 # critic: actor terms without noise / delay / bias + base lin vel (3) + foot height (2) + air time (2) + contact (2)
 ARTI_D1_VEL_CRITIC_OBS = ARTI_D1_VEL_POLICY_OBS + 3 + 2 + 2 + 2
 
@@ -87,7 +88,7 @@ class ArtiD1VelEnvCfg(DirectRLEnvCfg):
     # ---- actions: target = default + scale * a (mjlab JointPositionAction, use_default_offset). microduck scale 1.0 on
     # low-kp XL330s; ARTI-D1 XH540 kp ~49 Nm/rad tracks closely, 0.5 = mjlab's humanoid default.
     action_scale = 0.5
-    # Arms held at this target (rad), outputs ignored; None = policy drives them like the legs.
+    # Arms held at this target (rad); no policy output.
     arm_hold_target = {"left_arm_m8": 0.0, "right_arm_m8": 0.0, "left_arm_m8crank_plate": 0.0, "right_arm_m8crank_plate": 0.0}
 
     # ---- Dynamixel joint model, every physics step (same as ArtiD1AmpEnvCfg; BAM stand-in)
@@ -111,6 +112,7 @@ class ArtiD1VelEnvCfg(DirectRLEnvCfg):
     command_yaw_range = (-0.4, 0.4)
     command_resample_s = (3.0, 8.0)
     turn_in_place_fraction = 0.15
+    lateral_fraction = 0.15  # pure sideways commands, |vy| in [0.4, 1] x range max
     # standing (exactly zero command) env fraction by env step (microduck standing_envs curriculum, iter x 24)
     standing_stages = ((0, 0.02), (500 * 24, 0.05), (750 * 24, 0.1), (1000 * 24, 0.15), (1500 * 24, 0.2), (2000 * 24, 0.25))
     command_threshold = 0.01  # microduck command_threshold for gait terms / pose walking_threshold
@@ -164,7 +166,7 @@ class ArtiD1VelEnvCfg(DirectRLEnvCfg):
     # pelvis origin z with the soles on the ground (ARTI_D1_CFG init pos; the USD pelvis frame sits at foot level) + 5 mm drop
     reset_height = 0.00445 + 0.005
     push_interval_s = (3.0, 6.0)
-    push_velocity = 0.15  # m/s; microduck +-0.3 = 0.75 x its max speed
+    push_velocity = 0.25  # m/s; microduck +-0.3 = 0.75 x its max speed (0.15 run: stand-push failed at 0.4 m/s)
 
     # ---- terminations
     fell_over_angle = math.radians(70.0)
