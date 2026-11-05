@@ -154,6 +154,7 @@ def run_score(env, u, policy):
     walk = np.array([np.abs(np.array(SEQUENCE[s][1])).sum() > 0 for s in seg])
     td_speed, swing_t, peak, slip, ds_slide, lift_delay = [], [], [], [], [], []
     n_td, walk_time, stand_lifts, stand_time = 0, 0.0, 0, 0.0
+    per_foot = {f: {"swing": [], "peak": [], "td": [], "vmax": [], "reach": []} for f in (0, 1)}
     C, H, FV, P = R["contact"], R["h"], R["fv"], R["sole"]
     for e in range(n):
         ok = al[:, e] & (tseg >= SKIP_S)
@@ -168,6 +169,12 @@ def run_score(env, u, policy):
                         swing_t.append((j - k) * dt)
                         peak.append(H[k:j, e, f].max() * 1000)
                         td_speed.append(-FV[j - 1, e, f, 2] * 1000)
+                        pf = per_foot[f]
+                        pf["swing"].append((j - k) * dt)
+                        pf["peak"].append(H[k:j, e, f].max() * 1000)
+                        pf["td"].append(-FV[j - 1, e, f, 2] * 1000)
+                        pf["vmax"].append(np.linalg.norm(FV[k:j, e, f, :2], axis=-1).max() * 1000)
+                        pf["reach"].append(np.linalg.norm(P[j - 1, e, f, :2] - P[k - 1, e, f, :2]) * 1000)
                         n_td += 1
                     k = j
                 k += 1
@@ -195,6 +202,11 @@ def run_score(env, u, policy):
     print(f"[VEL-SCORE] walk feet: touchdowns {n_td / max(walk_time, 1e-6):.2f}/s per env | swing time median "
           f"{q(swing_t, 50):.2f} s | swing peak height median {q(peak, 50):.1f} p10 {q(peak, 10):.1f} mm | touchdown "
           f"speed median {q(td_speed, 50):.0f} p90 {q(td_speed, 90):.0f} mm/s | stance slip mean {np.mean(slip):.1f} mm/s")
+    for f, side in ((0, "L"), (1, "R")):
+        pf = per_foot[f]
+        print(f"[VEL-SCORE] foot {side}: swings {len(pf['swing'])} | swing {q(pf['swing'], 50):.2f} s | peak {q(pf['peak'], 50):.1f} mm"
+              f" | touchdown {q(pf['td'], 50):.0f} p90 {q(pf['td'], 90):.0f} mm/s | swing max xy speed {q(pf['vmax'], 50):.0f}"
+              f" p90 {q(pf['vmax'], 90):.0f} mm/s | step length {q(pf['reach'], 50):.1f} mm")
     print(f"[VEL-SCORE] drag: double-support trailing-foot slide median {q(ds_slide, 50):.1f} p90 {q(ds_slide, 90):.1f} mm "
           f"(n={len(ds_slide)}) | double support median {q(lift_delay, 50):.2f} s")
     wk = al & (tseg >= SKIP_S)[:, None] & walk[:, None]

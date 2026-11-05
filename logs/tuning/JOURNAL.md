@@ -801,3 +801,20 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   Decision: plateau -> no further continuation (pre-approved rule). Cron 625147a6 deleted.
   Candidates: v2s7 08-41-26 agent_240000 (best forward .064, push 0/32) vs cont1 agent_144000 (best backward -.060, symmetric,
   push 1/32) vs cont1 agent_240000 (softest touchdown). Lateral walking not learned in any (policy std ~.03).
+
+- 11-05 20:1x user: "1, 2 반영해서 다시 학습" + mid-turn: right-foot kick unlike left -> chose "both" (symmetry + kick penalty).
+  Measured on cont1 agent_240000 (new per-foot lines in eval_vel.py): swing max xy speed R 1519 / L 810 mm/s, step length
+  32.5 / 30.0 mm, peak 34 / 25 mm, touchdown 385 / 508 mm/s -> right foot flicks out and back.
+  v4 changes (all in arti_d1_vel_env*.py, skrl_vel_ppo_cfg.yaml, scripts/skrl/train.py):
+  * lateral: extra track_lat_vel term 1.0, std 0.03 m/s on vy; track_lin_vel std 0.08 -> 0.06.
+  * exploration: policy std floor 0.1 (min_log_std -2.3026), cap 1.5 (max_log_std 0.405; was 7.39).
+  * seed robustness: alive 1.0/s + one-off termination -10.
+  * kick: swing_speed penalty -5 x sum over airborne feet of (xy speed - 0.5 m/s)+^2.
+  * symmetry: PPO mirror loss 0.5 x mse(mean(mirror obs), mirror(mean obs).detach()) added to every mini-batch backward
+    (train.py hook on policy.act / scaler.scale; mirror = swap L/R, negate hip_yaw/hip_roll, wx, wz, gy, cmd vy, wz).
+  * kick + symmetry start at iter 500 (symmetry_kick_start_step).
+  Short tests (4096 envs): v3 (lateral/std floor/alive) seed 42 stands by iter 110. v4 from iter 0: seeds 42 and 123
+  collapsed (std to the cap, ep len < 80), seed 7 OK; nosym / nokick alone OK on 42. With the iter-500 start: seeds 42
+  and 123 both stable through 800 iters (std .36, ep len 1187, sym loss .005).
+  Stopped v3 full run 20:2x (PID 695994 verified, 6 min in).
+  Run 2026-11-05_21-09-49_ppo_torch (seed 42), PID 703207, log logs/train/train_vel_microduck_v4.log, ~1h40m.

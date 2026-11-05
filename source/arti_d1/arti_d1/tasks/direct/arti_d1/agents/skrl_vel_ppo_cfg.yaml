@@ -9,8 +9,8 @@ models:
     class: GaussianMixin
     clip_actions: False
     clip_log_std: True
-    min_log_std: -20.0
-    max_log_std: 2.0
+    min_log_std: -2.3026  # std floor 0.1 (v2 collapsed to 0.03 and stopped exploring)
+    max_log_std: 0.405  # std cap 1.5 (v2 seed 42 / v4 test exploded to the old cap 7.39)
     initial_log_std: 0.0
     network:
       - name: net

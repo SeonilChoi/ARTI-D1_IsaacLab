@@ -113,6 +113,30 @@ class ArtiD1VelEnv(DirectRLEnv):
             ("stand", (0.0, 0.0, 0.0)),
         )
         self._log: dict[str, torch.Tensor] = {}
+
+        # left/right mirror of the policy obs / actions (scripts/skrl/train.py symmetry loss). Leg order is Dynamixel order
+        # without the arms: (L,R) hip_yaw, hip_roll, hip_pitch, knee, ankle. Mirror = swap L/R, negate yaw and roll
+        # (same-signed joint motion moves both feet the same world direction, sysid expect_positive).
+        leg_names = [names[i] for i in self.leg_ids.tolist()]
+        perm, sign = [], []
+        for j in leg_names:
+            other = j.replace("left_", "@").replace("right_", "left_").replace("@", "right_")
+            perm.append(leg_names.index(other))
+            sign.append(-1.0 if _joint_type(j) in ("hip_yaw", "hip_roll") else 1.0)
+        nl_perm = torch.tensor(perm, device=dev)
+        nl_sign = torch.tensor(sign, device=dev)
+        o_perm = list(range(6))
+        o_sign = [-1.0, 1.0, -1.0, 1.0, -1.0, 1.0]  # ang vel (wx, wy, wz) -> (-wx, wy, -wz); gravity (gx, gy, gz) -> (gx, -gy, gz)
+        for base in (6, 6 + nl, 6 + 2 * nl):  # joint pos, joint vel, last action
+            o_perm += [base + i for i in perm]
+            o_sign += sign
+        o_perm += [6 + 3 * nl, 6 + 3 * nl + 1, 6 + 3 * nl + 2]
+        o_sign += [1.0, -1.0, -1.0]  # command (vx, vy, wz)
+        self.symmetry = {
+            "obs_perm": torch.tensor(o_perm, device=dev), "obs_sign": torch.tensor(o_sign, device=dev),
+            "act_perm": nl_perm, "act_sign": nl_sign, "coef": self.cfg.symmetry_loss_coef,
+            "start_step": self.cfg.symmetry_kick_start_step, "env": self,
+        }
         print(f"[ARTI-D1 VEL] {n} envs, policy obs {self.cfg.observation_space}, critic {self.cfg.state_space}, "
               f"{nl} leg actions, scale {self.cfg.action_scale}, arms held at {self.cfg.arm_hold_target}", flush=True)
 
@@ -283,6 +307,8 @@ class ArtiD1VelEnv(DirectRLEnv):
 
         lin_err = torch.sum(torch.square(self.commands[:, :2] - lin_b[:, :2]), dim=1) + torch.square(lin_b[:, 2])
         r_lin = torch.exp(-lin_err / cfg.track_lin_vel_std**2)
+        r_lat = torch.exp(-torch.square(self.commands[:, 1] - lin_b[:, 1]) / cfg.track_lat_vel_std**2)
+        died = self.reset_terminated.float()
         ang_err = torch.square(self.commands[:, 2] - ang_b[:, 2]) + torch.sum(torch.square(ang_b[:, :2]), dim=1)
         r_ang = torch.exp(-ang_err / cfg.track_ang_vel_std**2)
         r_up = torch.exp(-torch.sum(torch.square(grav_b[:, :2]), dim=1) / cfg.upright_std**2)
@@ -311,11 +337,17 @@ class ArtiD1VelEnv(DirectRLEnv):
         self.peak_height = torch.where(first_contact, torch.zeros_like(self.peak_height), self.peak_height)
 
         c_slip = torch.sum(torch.square(speed_xy) * contact.float(), dim=1) * moving
+        # v4: swing-foot horizontal speed above the limit (right-foot kick at ~1.5 m/s vs left 0.8 m/s in v2)
+        c_kick = torch.sum(torch.square((speed_xy - cfg.swing_speed_limit).clamp_min(0.0)) * (~contact).float(), dim=1)
 
         w_rate = self._stage(cfg.action_rate_stages, step)
         terms = {
             "track_lin_vel": cfg.track_lin_vel_weight * r_lin,
             "track_ang_vel": cfg.track_ang_vel_weight * r_ang,
+            "track_lat_vel": cfg.track_lat_vel_weight * r_lat,
+            "alive": cfg.alive_weight * (1.0 - died),
+            # one-off on the falling step: weight / step_dt so that x step_dt below gives the raw weight
+            "termination": cfg.termination_weight / self.step_dt * died,
             "upright": cfg.upright_weight * r_up,
             "pose": cfg.pose_weight * r_pose,
             "body_ang_vel": cfg.body_ang_vel_weight * c_ang,
@@ -325,6 +357,7 @@ class ArtiD1VelEnv(DirectRLEnv):
             "foot_clearance": cfg.foot_clearance_weight * c_clear,
             "foot_swing_height": cfg.foot_swing_height_weight * c_swing,
             "foot_slip": cfg.foot_slip_weight * c_slip,
+            "swing_speed": (cfg.swing_speed_weight if step >= cfg.symmetry_kick_start_step else 0.0) * c_kick,
         }
         reward = torch.zeros(self.num_envs, device=self.device)
         log = {}
