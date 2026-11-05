@@ -789,3 +789,15 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   standpush 1/32 (one fall at 0.5 m/s).
   VIDEO newton_gl: all upright whole clip, crouched alternating steps.
   Trade-off vs 240000: backward + symmetry + swing height + softer touchdown better, forward slightly lower.
+
+- 11-05 12:34 final check, continuation 1 run 10-37-33 FINISHED (agent_240000 = cumulative 480000). PID 671276 exited.
+  TB (sixths): plateau - lin err .187 .185 .183 .185 .186 .186, track_lin .73 flat, track_yaw 1.42 -> 1.43, peak 28 -> 31 mm,
+  slip 38 -> 35 mm/s, std .031.
+  EVAL score 64: 0/64 falls; forward .12 -> .053, backward -.10 -> -.042, side .06 -> .002 (none), diagonal -> (.045,-.014),
+  turn .30 -> .294, stand drift ~0, lifts 0. touchdowns 2.14/s, peak 29 mm, touchdown 415/549 mm/s (softest so far), slip
+  55 mm/s, DS slide .7/p90 1.7 mm. ROM L/R: hip_roll 18/18, hip_yaw 22/20, hip_pitch 27/28, knee 38/32, ankle 22/21.
+  standpush 3/32 (all at 0.5 m/s).
+  VIDEO Kit: all upright whole clip, crouched alternating steps.
+  Decision: plateau -> no further continuation (pre-approved rule). Cron 625147a6 deleted.
+  Candidates: v2s7 08-41-26 agent_240000 (best forward .064, push 0/32) vs cont1 agent_144000 (best backward -.060, symmetric,
+  push 1/32) vs cont1 agent_240000 (softest touchdown). Lateral walking not learned in any (policy std ~.03).
