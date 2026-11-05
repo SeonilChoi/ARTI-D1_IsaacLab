@@ -119,10 +119,10 @@ class ArtiD1VelEnvCfg(DirectRLEnvCfg):
 
     # ---- rewards (weights x step_dt, like mjlab's RewardManager)
     track_lin_vel_weight = 2.0
-    track_lin_vel_std = 0.06  # m/s; microduck sqrt(0.1)=0.32 for +-0.4 commands, scaled by the command range (v2: 0.08)
+    track_lin_vel_std = 0.08  # m/s; microduck sqrt(0.1)=0.32 for +-0.4 commands, scaled by the command range (v3/v4: 0.06, no tracking learned)
     # v3: extra lateral term (v1/v2 never learned lin y: a 0.06 m/s miss still paid exp(-.56)=.57 of the joint xy term)
     track_lat_vel_weight = 1.0
-    track_lat_vel_std = 0.03
+    track_lat_vel_std = 0.06  # v3/v4: 0.03
     # v3: alive bonus (per s) + one-off termination penalty (seed 42 v2 run collapsed into "fall early" optimum)
     alive_weight = 1.0
     termination_weight = -10.0

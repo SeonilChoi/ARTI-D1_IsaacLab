@@ -843,3 +843,8 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   but tracking was lost. Suspects (untested): tighter track std (.08 -> .06) + lat std .03 give ~0 gradient when
   standing still, alive bonus makes marching in place a good optimum.
   Decision: not improving -> no continuation. Asked the user before any change / stopping the run.
+
+- 11-05 22:51 user: "추천으로 진행" -> v4 run (PID 703207) stopped at ~165k (collapsed). v5 = v4 with tracking stds
+  restored: track_lin_vel_std .06 -> .08 (v2 value), track_lat_vel_std .03 -> .06. Symmetry .5 / swing-speed penalty /
+  alive 1.0 / termination -10 / seed 42 unchanged. Run 2026-11-05_22-51-32_ppo_torch, PID 710488,
+  log logs/train/train_vel_microduck_v5.log ([SYMMETRY] coef 0.5 seen). Cron 6dcf78db -> c44fc749 (hourly :13).
