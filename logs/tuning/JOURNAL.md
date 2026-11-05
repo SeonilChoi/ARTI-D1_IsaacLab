@@ -875,3 +875,11 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   track_lin_vel_std .08 (v2), agent.seed=7 (v2s7 lineage; seed 42 v2 collapsed). Env code unchanged (zero weights).
   Run 2026-11-06_07-58-49_ppo_torch, PID 737585, log logs/train/train_vel_microduck_v6.log
   ([SYMMETRY] coef 0.2, seed 7 seen). Hourly check cron recreated.
+
+- 11-06 08:3x v6 check (run 07-58-49, PID 737585 alive, 72k/240k, iter 3000, ~36 it/s). TB by sixths: track_lin
+  .031 -> .043, track_ang .010 -> .034 (rising), std .20, symmetry loss .002, action_rate -.76, LR normal (1e-4 range).
+  agent_72000 (eval_v6_72000_score/push.log, video vel_v6_72000.mp4): falls 0/64. Walks FORWARD (unlike v4/v5) but
+  mostly regardless of command: vx fwd +.064 / stand +.045 / side +.058 / back +.035 / diag +.060 / turn +.051;
+  vy ~0; wz +.04 on fwd/diag. Weak modulation only. Per foot L/R swing max xy 940/928 mm/s (symmetric, no kick),
+  step 42/48 mm, peak 30/33 mm, touchdown 672/680; ROM L/R within 2 deg (hip_yaw 6.6/8.2). standpush fell 3/32
+  (0.5 m/s 3/8). Video: all upright, walking forward steadily past the camera. Command following expected ~iter 4000.
