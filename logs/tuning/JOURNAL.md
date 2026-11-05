@@ -848,3 +848,11 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   restored: track_lin_vel_std .06 -> .08 (v2 value), track_lat_vel_std .03 -> .06. Symmetry .5 / swing-speed penalty /
   alive 1.0 / termination -10 / seed 42 unchanged. Run 2026-11-05_22-51-32_ppo_torch, PID 710488,
   log logs/train/train_vel_microduck_v5.log ([SYMMETRY] coef 0.5 seen). Cron 6dcf78db -> c44fc749 (hourly :13).
+
+- 11-05 23:4x v5 check (run 22-51-32, PID 710488 alive, 60k/240k, iter ~2500). TB by sixths: track_lin .027 -> .077,
+  track_lat .120 -> .183 (v4 peak .040 / .084), track_ang .008 -> .016, termination -.02, std .20, symmetry loss .003,
+  swing_speed -.047, LR 8e-5..2e-4 (healthy, not at the 1e-6 floor).
+  agent_60000 (eval_v5_60000_score/push.log, video vel_v5_60000.mp4): falls 0/64, no tracking yet (vx -.014..-.024 in
+  every segment = slow backward drift, wz drift up to +.09); per foot L/R swing max xy 581/534 mm/s, peak 28/32 mm,
+  step 13/14 mm; ROM L/R within 2.4 deg. standpush fell 2/32 (0.5 m/s 2/8). Video: upright, stepping in place, one
+  robot drifting back toward the camera. Too early (v1/v2 learned tracking ~iter 4000).
