@@ -828,3 +828,18 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   35/34 mm, touchdown 653/659 mm/s. ROM L/R identical within 1 deg (hip_roll 14/14, hip_yaw 25/25, hip_pitch 38/39, knee
   41/41, ankle 25/26). standpush 0/32 (but stepping 7-9 lifts/s).
   VIDEO newton_gl: all upright, marching in place with wide crouched stance.
+
+- 11-05 22:3x v4 check (run 21-09-49, PID 703207 alive, 161k/240k steps).
+  COLLAPSE from ~133k steps (iter ~5540): Learning rate pinned at the 1e-6 floor from ~134k (KL over target even at
+  min LR), then termination reward -0.01 -> -13, action_rate -0.9 -> -21, mean total reward 77 -> -18, symmetry loss
+  .003 -> 1.5 (159.8k). std flat .23 (not the std-explosion type of collapse). Still getting worse at 160k.
+  Pre-collapse agent_126000 (eval_v4_126000_score/push.log, video vel_v4_126000.mp4):
+    falls 0/64 but NO tracking in any segment (vx +.02..+.025 for fwd/back/side/stand, vy ~0, wz +.03..+.08 drift);
+    TB track_lin_vel peaked .040 (v1/v2 learned tracking ~iter 4000; v4 never did by iter 5250).
+    marching in place, stand foot lifts 2.85/s; per foot L/R swing max xy 587/598 mm/s, peak 28.5/31.0 mm,
+    touchdown 595/594, step 18.5/22.4 mm; ROM L/R within 3 deg (hip_pitch 23.9/25.9, ankle 17.8/20.8).
+    standpush fell 1/32 (0.5 m/s 1/8). Video: upright, wide crouched stance, stepping in place, slow yaw drift.
+  vs v1 05-51-37 agent_240000 (fwd .081/back -.041, push 10/32) and cont1 (fwd .048-.053): v4 symmetry fixed the kick
+  but tracking was lost. Suspects (untested): tighter track std (.08 -> .06) + lat std .03 give ~0 gradient when
+  standing still, alive bonus makes marching in place a good optimum.
+  Decision: not improving -> no continuation. Asked the user before any change / stopping the run.
