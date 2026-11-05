@@ -868,3 +868,10 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   collapsed): symmetry loss .5, swing-speed penalty, alive +1/s, termination -10, lateral term. Mirror map rechecked
   (obs/act perm and signs match sysid expect_positive), no bug found.
   Decision: collapse -> no continuation, cron c44fc749 deleted. Run left running (ends ~01:50); asked the user.
+
+- 11-06 07:58 user chose "v2 + symmetry only" and "stop v5" (v5 had already finished 240k by then, collapsed).
+  v6 = v2 config + symmetry loss only: track_lat_vel_weight 0, alive 0, termination 0, swing_speed_weight 0,
+  symmetry_loss_coef .5 -> .2 (start iter 500), log_std bounds back to v2 (-20 / 2; v4/v5 had floor .1 / cap 1.5),
+  track_lin_vel_std .08 (v2), agent.seed=7 (v2s7 lineage; seed 42 v2 collapsed). Env code unchanged (zero weights).
+  Run 2026-11-06_07-58-49_ppo_torch, PID 737585, log logs/train/train_vel_microduck_v6.log
+  ([SYMMETRY] coef 0.2, seed 7 seen). Hourly check cron recreated.

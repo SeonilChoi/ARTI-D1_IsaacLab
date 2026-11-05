@@ -121,15 +121,15 @@ class ArtiD1VelEnvCfg(DirectRLEnvCfg):
     track_lin_vel_weight = 2.0
     track_lin_vel_std = 0.08  # m/s; microduck sqrt(0.1)=0.32 for +-0.4 commands, scaled by the command range (v3/v4: 0.06, no tracking learned)
     # v3: extra lateral term (v1/v2 never learned lin y: a 0.06 m/s miss still paid exp(-.56)=.57 of the joint xy term)
-    track_lat_vel_weight = 1.0
+    track_lat_vel_weight = 0.0  # v6 off (v3-v5: 1.0)
     track_lat_vel_std = 0.06  # v3/v4: 0.03
     # v3: alive bonus (per s) + one-off termination penalty (seed 42 v2 run collapsed into "fall early" optimum)
-    alive_weight = 1.0
-    termination_weight = -10.0
+    alive_weight = 0.0  # v6 off (v3-v5: 1.0)
+    termination_weight = 0.0  # v6 off (v3-v5: -10)
     # v4: swing-foot xy speed penalty (excess over the limit, squared) and left/right symmetry loss on the policy mean
     swing_speed_limit = 0.5  # m/s
-    swing_speed_weight = -5.0
-    symmetry_loss_coef = 0.5  # scripts/skrl/train.py; 0 = off
+    swing_speed_weight = 0.0  # v6 off (v4/v5: -5; v4/v5 never tracked and collapsed)
+    symmetry_loss_coef = 0.2  # scripts/skrl/train.py; 0 = off (v4/v5: 0.5)
     # both start at iter 500 (from the start they made the stand-up phase collapse on 2 of 3 seeds)
     symmetry_kick_start_step = 500 * 24
     track_ang_vel_weight = 2.0
