@@ -818,3 +818,13 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   and 123 both stable through 800 iters (std .36, ep len 1187, sym loss .005).
   Stopped v3 full run 20:2x (PID 695994 verified, 6 min in).
   Run 2026-11-05_21-09-49_ppo_torch (seed 42), PID 703207, log logs/train/train_vel_microduck_v4.log, ~1h40m.
+
+- 11-05 21:26 check, v4 run 21-09-49 agent_30000 (1250 iters of 10000; early). PID 703207 alive (16 min).
+  TB (sixths): ep len 917 -> 1194, termination -.53 -> -.003, std .72 -> .23, sym loss .018 -> .003 (on from iter 500),
+  swing_speed -.10 -> -.05, track_lat .055 -> .073, track_lin .011 -> .024, track_yaw ~.02 (tracking not learned yet; v1/v2
+  jumped at iter ~4000), lin err .45 -> .37.
+  EVAL score 64: 0/64 falls, no tracking yet (all segments vx ~ -.01, yaw drift -.02..-.06), stand foot lifts 2.8/s
+  (marching in place). Per foot L/R: swing max xy speed 565/570 mm/s (v2 cont1 810/1519: kick gone), step 13/14 mm, peak
+  35/34 mm, touchdown 653/659 mm/s. ROM L/R identical within 1 deg (hip_roll 14/14, hip_yaw 25/25, hip_pitch 38/39, knee
+  41/41, ankle 25/26). standpush 0/32 (but stepping 7-9 lifts/s).
+  VIDEO newton_gl: all upright, marching in place with wide crouched stance.
