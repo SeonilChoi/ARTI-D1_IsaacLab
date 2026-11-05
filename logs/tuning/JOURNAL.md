@@ -751,3 +751,16 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   Stopped 07-18-50 (PID 659962 verified train.py) at 197k steps; no eval/video (unusable policy).
   New run 2026-11-05_08-41-26_ppo_torch, agent.seed=7, everything else as v2, PID 664689,
   log logs/train/train_vel_microduck_v2s7.log; first 210 iters identical to debug run A (deterministic). ETA ~1h35m.
+
+- 11-05 09:34 check, v2 seed-7 run 08-41-26 agent_132000 (5500 iters of 10000). PID 664689 alive (53 min), healthy.
+  TB (sixths): ep len 1092 -> 1194, track_lin .034 -> .619, track_yaw .012 -> 1.24 (jump in 5th sixth as in v1), upright
+  1.97, pose .83, action_rate -.09, lin err .41 -> .21 m/s (trunk point), yaw err 1.16 -> .10, slip 197 -> 41 mm/s, roll
+  .8 deg, peak 23 mm, std .41 -> .036. Penalties all <= 0.
+  EVAL score 64 (lin vel now at the trunk point; v1 numbers were pelvis origin): 0/64 falls; forward .12 -> .052,
+  backward -.10 -> -.021, side .06 -> .010 (still ~none), diagonal (.10,-.05) -> (.048,+.005), turn .30 -> .285, stand drift
+  ~0, foot lifts 0. touchdowns 2.16/s, swing .42 s, peak 24 mm, touchdown 495/637 mm/s, slip 61 mm/s, DS slide .3/p90 2.4 mm,
+  both-down .02. ROM L/R: hip_roll 16/18, hip_yaw 10/16, hip_pitch 8/23 (asymmetric), knee 34/30, ankle 17/17.
+  standpush 0/32 (v1 final 10/32; 0.4-0.5 m/s now survived).
+  VIDEO newton_gl (record_video.sh needs PY=/opt/isaac/IsaacLab-main/.venv/bin/python): all 4 upright the whole clip,
+  crouched alternating steps.
+  vs v1 final: push much better; forward/backward/side tracking not better yet (mid-training).
