@@ -778,3 +778,14 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   Run 2026-11-05_10-37-33_ppo_torch from 08-41-26 agent_240000, agent.seed=7, env.curriculum_step_offset=240000,
   +240000 steps, PID 671276, log logs/train/train_vel_microduck_v2_cont1.log. Checkpoint load verified (std .031,
   track_lin .75 from the start). Cumulative step at its agent_N = 240000 + N.
+
+- 11-05 11:34 check, continuation 1 run 10-37-33 agent_144000 (cumulative 384000). PID 671276 alive (57 min).
+  TB (sixths): flat - track_lin .737 -> .723, lin err .186 -> .185, track_yaw 1.41 -> 1.39, slip 38 mm/s, std .030-.032;
+  only peak height rose 27 -> 30 mm. -> plateau so far.
+  EVAL score 64: 0/64 falls; forward .12 -> .048 (vy -.025), backward -.10 -> -.060 (was -.017), side .06 -> .005 (none),
+  diagonal -> (.042,-.019), turn .30 -> .286, stand drift ~0, lifts 0. touchdowns 1.98/s, peak 32 mm (target 30), touchdown
+  436/545 mm/s (better), slip 51 mm/s, DS slide .4/p90 1.4 mm, both-down .10. ROM L/R: hip_roll 18/18, hip_yaw 20/20,
+  hip_pitch 28/29, knee 41/33, ankle 20/20 -> nearly symmetric now.
+  standpush 1/32 (one fall at 0.5 m/s).
+  VIDEO newton_gl: all upright whole clip, crouched alternating steps.
+  Trade-off vs 240000: backward + symmetry + swing height + softer touchdown better, forward slightly lower.
