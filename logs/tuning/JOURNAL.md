@@ -764,3 +764,17 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   VIDEO newton_gl (record_video.sh needs PY=/opt/isaac/IsaacLab-main/.venv/bin/python): all 4 upright the whole clip,
   crouched alternating steps.
   vs v1 final: push much better; forward/backward/side tracking not better yet (mid-training).
+
+- 11-05 10:34 check, v2 seed-7 run 08-41-26 FINISHED (10000 iters, agent_240000).
+  TB 2nd half (sixths): track_lin .627 .647 .667 .691 .707 .717 (still rising), lin err .206 -> .189, track_yaw 1.27 ->
+  1.37, std .035 -> .032, slip 39 mm/s, peak 27 mm, ep len 1197.
+  EVAL score 64: 0/64 falls; forward .12 -> .064 (132k .052), backward -.10 -> -.017, side .06 -> .000 (none),
+  diagonal (.10,-.05) -> (.062,-.012), turn .30 -> .296, stand drift ~0, foot lifts 0. touchdowns 2.11/s, swing .42 s,
+  peak 24 mm, touchdown 552/682 mm/s, slip 60 mm/s, DS slide .5/p90 1.5 mm, both-down .05. ROM L/R: hip_roll 16/19,
+  hip_yaw 16/19, hip_pitch 23/31, knee 37/30, ankle 21/24 (more symmetric than 132k / v1).
+  standpush 0/32 (v1 10/32).
+  VIDEO Kit: all upright whole clip, crouched alternating steps, no drag visible.
+  Decision (user pre-approved): still improving -> continuation, no setting changes.
+  Run 2026-11-05_10-37-33_ppo_torch from 08-41-26 agent_240000, agent.seed=7, env.curriculum_step_offset=240000,
+  +240000 steps, PID 671276, log logs/train/train_vel_microduck_v2_cont1.log. Checkpoint load verified (std .031,
+  track_lin .75 from the start). Cumulative step at its agent_N = 240000 + N.
