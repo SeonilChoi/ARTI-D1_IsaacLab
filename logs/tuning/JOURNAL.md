@@ -856,3 +856,15 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   every segment = slow backward drift, wz drift up to +.09); per foot L/R swing max xy 581/534 mm/s, peak 28/32 mm,
   step 13/14 mm; ROM L/R within 2.4 deg. standpush fell 2/32 (0.5 m/s 2/8). Video: upright, stepping in place, one
   robot drifting back toward the camera. Too early (v1/v2 learned tracking ~iter 4000).
+
+- 11-06 00:4x v5 check (PID 710488 alive, 138k/240k). COLLAPSE from ~106k steps (iter ~4400), same kind as v4:
+  termination -.02 -> -5.6 (109k) then -0.3..-1.5, action_rate -0.8 -> -25..-151, total reward min -3.8e5 (huge actions in
+  some envs), mean 82 -> -1080, std .20 -> .36 rising, LR dropped to 1e-6..2e-5. v4 collapsed at ~133k the same way.
+  Pre-collapse agent_102000 (eval_v5_102000_score/push.log, video vel_v5_102000.mp4): falls 0/64, NO command
+  response at all (vx +.002..+.006 in every segment, vy ~0, wz +.02..+.07 drift); TB track_lin .093 there is mostly
+  zero-command envs. L/R swing max xy 576/544 mm/s, peak 30/32 mm, step 14/15 mm, ROM L/R within 3.4 deg (hip_pitch
+  29.2/25.8); standpush 0/32. Video: upright, marching in place, slow yaw drift.
+  Std restore did not bring back tracking. Common to v4/v5 and absent in v1/v2 (both tracked by iter ~4000, never
+  collapsed): symmetry loss .5, swing-speed penalty, alive +1/s, termination -10, lateral term. Mirror map rechecked
+  (obs/act perm and signs match sysid expect_positive), no bug found.
+  Decision: collapse -> no continuation, cron c44fc749 deleted. Run left running (ends ~01:50); asked the user.
