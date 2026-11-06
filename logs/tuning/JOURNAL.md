@@ -931,3 +931,12 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   back -.073, diag vx +.047, turn wz +.293, stand -.002 (0 foot lifts), side vy -.012 (no lateral). Per foot L/R swing
   max xy 998/1045 mm/s (= v6, v7 779/834), touchdown 586/526, peak 21/22 mm, step 33/30 mm, slip 61.6; ROM L/R
   hip_pitch 15.0/21.7 (6.7 deg gap, largest), others within 2.7. standpush 0/32. Video: upright, fwd/back/turn/stand.
+
+- 11-06 21:2x v6 cont1 FINISHED (cumulative 480k). Last sixth TB +1% (track_lin .778 -> .788, track_ang 1.480 -> 1.489).
+  agent_240000 (eval_v6c1_240000_score/push.log, video vel_v6c1_240000.mp4, kit render): falls 0/64; fwd +.059, back
+  -.075, diag vx +.044, turn +.297, stand -.004 (0 lifts), side vy -.013 (no lateral). L/R swing max xy 1000/1008,
+  touchdown 545/512, peak 20/22 mm, step 32/28 mm, slip 59.8; ROM hip_pitch 14.7/20.3, others within 2.3.
+  standpush 2/32 (0.5 m/s 2/8). Video: upright, fwd/back/turn/stand.
+  Eval not better than agent_174000 (fwd .063, push 0/32) -> plateau: no further continuation, cron f03cee68 deleted.
+  Candidates: v7 17-24-53 agent_240000 (softest swings 779/834, push 0/32, fwd .055) vs v6 07-58-49 agent_210000
+  (fastest fwd .075, push 0/32) vs v6 cont1 agent_174000 (balanced fwd .063 / back -.073, push 0/32).
