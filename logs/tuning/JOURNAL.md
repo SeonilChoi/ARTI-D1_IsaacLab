@@ -883,3 +883,14 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   vy ~0; wz +.04 on fwd/diag. Weak modulation only. Per foot L/R swing max xy 940/928 mm/s (symmetric, no kick),
   step 42/48 mm, peak 30/33 mm, touchdown 672/680; ROM L/R within 2 deg (hip_yaw 6.6/8.2). standpush fell 3/32
   (0.5 m/s 3/8). Video: all upright, walking forward steadily past the camera. Command following expected ~iter 4000.
+
+- 11-06 09:3x v6 check (PID 737585 alive, 211k/240k, ~10 min left). TRACKING LEARNED: TB jump in the 4th sixth
+  (track_lin .109 -> .566 -> .742, track_ang .109 -> 1.08 -> 1.39, mean reward 72 -> 118, std .16 -> .029,
+  action_rate -.54 -> -.13), symmetry loss .001, no collapse, LR normal. Last sixth still slightly rising.
+  agent_210000 (eval_v6_210000_score/push.log, video vel_v6_210000.mp4): falls 0/64; fwd +.075 (cmd .12),
+  back -.057 (cmd -.10), diag vx +.059 vy -.001, turn wz +.299 (cmd .30), stand -.002 with foot lifts 0.00/s
+  (stands still), side_left vy +.002 (lateral still not learned). Per foot L/R: swing max xy 991/1033 mm/s (p90
+  1086/1162; no one-sided kick, cf. cont1 810/1519), peak 22.0/17.9 mm, touchdown 669/538 mm/s, step 28.4/28.6 mm,
+  swing .33 s; ROM L/R hip_roll 14.9/18.4, hip_yaw 16.7/19.3, hip_pitch 14.6/18.4, knee 26.8/27.8, ankle 17.0/18.2.
+  standpush 0/32, foot lifts 0-2.5 (stands through pushes). Video: walks fwd, stops, walks back, turns; upright.
+  vs v1 240000 (fwd .081 / back -.041 / push 10/32) and v2s7 240000 (.064 / -.017 / 0/32): best backward and push so far.
