@@ -923,3 +923,11 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
 - 11-06 19:29 v6 cont1 started as deferred (swing_speed_weight back to 0.0 = v6 config): from v6 agent_240000,
   env.curriculum_step_offset=240000, agent.seed=7. Run 2026-11-06_19-29-54_ppo_torch, PID 780477,
   log logs/train/train_vel_microduck_v6_cont1.log (checkpoint load, seed 7, [SYMMETRY] .2 seen). Cron switched to it.
+
+- 11-06 20:4x v6 cont1 check (run 19-29-54, PID 780477 alive, 176k/240k). TB by sixths: track_lin .760 -> .770 (flat
+  last 3 sixths .773/.771/.770), track_ang 1.443 -> 1.475 (slowly rising), reward 110 -> 120.7, std .026, symmetry .001,
+  action_rate -.134, LR normal. Near plateau.
+  agent_174000 (cumulative 414k; eval_v6c1_174000_score/push.log, video vel_v6c1_174000.mp4): falls 0/64; fwd +.063,
+  back -.073, diag vx +.047, turn wz +.293, stand -.002 (0 foot lifts), side vy -.012 (no lateral). Per foot L/R swing
+  max xy 998/1045 mm/s (= v6, v7 779/834), touchdown 586/526, peak 21/22 mm, step 33/30 mm, slip 61.6; ROM L/R
+  hip_pitch 15.0/21.7 (6.7 deg gap, largest), others within 2.7. standpush 0/32. Video: upright, fwd/back/turn/stand.
