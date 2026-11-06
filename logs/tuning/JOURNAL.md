@@ -903,3 +903,12 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   log logs/train/train_vel_microduck_v7.log (checkpoint load + [SYMMETRY] coef 0.2 seen). Cron switched to v7.
   Baseline to beat (v6 agent_210000): swing max xy L/R 991/1033 mm/s, touchdown 669/538, fwd .075 / back -.057 /
   turn .299, push 0/32.
+
+- 11-06 18:3x v7 check (run 17-24-53, PID 772771 alive, 149k/240k). TB by sixths: swing_speed -.042 -> -.019
+  (decreasing), track_lin .767 -> .786, track_ang 1.449 -> 1.486, std .025, symmetry .001, action_rate -.13, LR normal,
+  mean reward 110 -> 120. Healthy, no collapse.
+  agent_144000 (cumulative 384k; eval_v7_144000_score/push.log, video vel_v7_144000.mp4): falls 0/64; fwd +.053 (v6
+  .075), back -.071 (v6 -.057), diag vx +.038, turn wz +.301, stand -.005 (0 foot lifts), side vy -.015 (no lateral).
+  Per foot L/R swing max xy 859/830 mm/s (v6 991/1033, -15%), touchdown 573/513 (v6 669/538), peak 22.5/20.8 mm,
+  step 29.7/23.7 mm; ROM L/R within 3.5 deg. standpush 1/32 (0.5 m/s 1/8). Video: upright, walks fwd/back, turns.
+  Trade-off so far: softer swings, slower forward.
