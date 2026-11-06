@@ -894,3 +894,12 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   swing .33 s; ROM L/R hip_roll 14.9/18.4, hip_yaw 16.7/19.3, hip_pitch 14.6/18.4, knee 26.8/27.8, ankle 17.0/18.2.
   standpush 0/32, foot lifts 0-2.5 (stands through pushes). Video: walks fwd, stops, walks back, turns; upright.
   vs v1 240000 (fwd .081 / back -.041 / push 10/32) and v2s7 240000 (.064 / -.017 / 0/32): best backward and push so far.
+
+- 11-06 17:24 v6 finished 240k (last sixth still slightly rising: track_lin .726 -> .742, track_ang 1.353 -> 1.391).
+  User: "다른 학습도 또 진행해봐" -> chose "v6 + swing-speed penalty", GPU: "new experiment only now" (v6 continuation
+  deferred until after v7; 2 x 4096 envs won't fit in 16 GB).
+  v7 = v6 + swing_speed_weight -1.0 (limit .5 m/s; v4/v5 had -5 from scratch), fine-tuned from v6 agent_240000
+  (env.curriculum_step_offset=240000, agent.seed=7, 240k more steps). Run 2026-11-06_17-24-53_ppo_torch, PID 772771,
+  log logs/train/train_vel_microduck_v7.log (checkpoint load + [SYMMETRY] coef 0.2 seen). Cron switched to v7.
+  Baseline to beat (v6 agent_210000): swing max xy L/R 991/1033 mm/s, touchdown 669/538, fwd .075 / back -.057 /
+  turn .299, push 0/32.

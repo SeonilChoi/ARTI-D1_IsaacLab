@@ -128,7 +128,7 @@ class ArtiD1VelEnvCfg(DirectRLEnvCfg):
     termination_weight = 0.0  # v6 off (v3-v5: -10)
     # v4: swing-foot xy speed penalty (excess over the limit, squared) and left/right symmetry loss on the policy mean
     swing_speed_limit = 0.5  # m/s
-    swing_speed_weight = 0.0  # v6 off (v4/v5: -5; v4/v5 never tracked and collapsed)
+    swing_speed_weight = -1.0  # v7 (fine-tune from v6 240k); v6 0, v4/v5 -5 (v4/v5 never tracked and collapsed)
     symmetry_loss_coef = 0.2  # scripts/skrl/train.py; 0 = off (v4/v5: 0.5)
     # both start at iter 500 (from the start they made the stand-up phase collapse on 2 of 3 seeds)
     symmetry_kick_start_step = 500 * 24
