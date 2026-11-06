@@ -912,3 +912,14 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   Per foot L/R swing max xy 859/830 mm/s (v6 991/1033, -15%), touchdown 573/513 (v6 669/538), peak 22.5/20.8 mm,
   step 29.7/23.7 mm; ROM L/R within 3.5 deg. standpush 1/32 (0.5 m/s 1/8). Video: upright, walks fwd/back, turns.
   Trade-off so far: softer swings, slower forward.
+
+- 11-06 19:3x v7 FINISHED (240k more, cumulative 480k). Last sixth still slightly rising (track_lin .793 -> .798,
+  track_ang 1.494 -> 1.503, swing_speed -.016 -> -.015, reward 121.4); healthy throughout.
+  agent_240000 (eval_v7_240000_score/push.log, video vel_v7_240000.mp4): falls 0/64; fwd +.055, back -.078, diag vx
+  +.038, turn wz +.290, stand -.003 (0 foot lifts), side vy -.016 (no lateral). Per foot L/R swing max xy 779/834 mm/s
+  (v6 991/1033), touchdown 525/552 (v6 669/538), peak 20.4/23.7 mm, step 29.0/23.9 mm, stance slip 54.6 (v6 70.9);
+  ROM L/R within 3.8 deg (hip_pitch 14.7/18.5). standpush 0/32. Video: upright, walks fwd/back, turns, stands.
+  v7 continuation NOT started (needs user approval); asked.
+- 11-06 19:29 v6 cont1 started as deferred (swing_speed_weight back to 0.0 = v6 config): from v6 agent_240000,
+  env.curriculum_step_offset=240000, agent.seed=7. Run 2026-11-06_19-29-54_ppo_torch, PID 780477,
+  log logs/train/train_vel_microduck_v6_cont1.log (checkpoint load, seed 7, [SYMMETRY] .2 seen). Cron switched to it.
