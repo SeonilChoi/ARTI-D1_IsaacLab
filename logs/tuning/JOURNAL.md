@@ -960,3 +960,10 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   779/834, v6 991/1033), touchdown 521/554, peak 23/23 mm, step 31/25 mm, slip 52.1; ROM L/R within 2.4 deg
   (hip_pitch 15.6/18.0). standpush 2/32 (0.4 1/8, 0.5 1/8; 36000 was 0/32). Video: upright, fwd/back/turn/stand.
   Swings keep getting softer with tracking held; push slightly worse.
+
+- 11-07 11:3x v7 cont1 check (PID 820595 alive, 206k/240k, ~22 min left). TB: tracking flat (lin .805, ang 1.532),
+  swing_speed -.008 -> -.007 (flattening), reward 122.0, std .024, LR normal.
+  agent_204000 (cumulative 684k; eval_v7c1_204000_score/push.log, video vel_v7c1_204000.mp4): falls 0/64; fwd +.050,
+  back -.086, diag vx +.037, turn +.296, stand -.005 (0 lifts), side vy -.016. L/R swing max xy 716/703 (120000:
+  686/728), touchdown 532/548, peak 23/24 mm, step 31/26 mm, slip 50.8; ROM L/R within 2.6 deg. standpush 1/32
+  (0.5 1/8). Video: upright, fwd/back/turn/stand. Mostly plateaued vs 120000.
