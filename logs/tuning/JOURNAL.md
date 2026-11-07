@@ -952,3 +952,11 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   back -.081, diag vx +.037, turn +.290, stand -.004 (0 lifts), side vy -.016 (no lateral). L/R swing max xy 780/777
   (v7 779/834, now symmetric), touchdown 532/535 (v7 525/552), peak 22/23 mm, step 30/24 mm, slip 52.2; ROM hip_pitch
   14.6/18.6, others within 1.5. standpush 0/32. Video: upright, fwd/back/turn/stand. Same as v7 final, L/R more even.
+
+- 11-07 10:3x v7 cont1 check (PID 820595 alive, 121k/240k, ~25 it/s, H1 run still sharing GPU). TB: tracking flat
+  (lin .807/.801, ang 1.52), swing_speed -.012 -> -.008 (still falling), reward 121.6, std .024, LR normal.
+  agent_120000 (cumulative 600k; eval_v7c1_120000_score/push.log, video vel_v7c1_120000.mp4): falls 0/64; fwd +.052,
+  back -.081, diag vx +.040, turn +.292, stand -.004 (0 lifts), side vy -.015. L/R swing max xy 686/728 mm/s (v7
+  779/834, v6 991/1033), touchdown 521/554, peak 23/23 mm, step 31/25 mm, slip 52.1; ROM L/R within 2.4 deg
+  (hip_pitch 15.6/18.0). standpush 2/32 (0.4 1/8, 0.5 1/8; 36000 was 0/32). Video: upright, fwd/back/turn/stand.
+  Swings keep getting softer with tracking held; push slightly worse.
