@@ -967,3 +967,13 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   back -.086, diag vx +.037, turn +.296, stand -.005 (0 lifts), side vy -.016. L/R swing max xy 716/703 (120000:
   686/728), touchdown 532/548, peak 23/24 mm, step 31/26 mm, slip 50.8; ROM L/R within 2.6 deg. standpush 1/32
   (0.5 1/8). Video: upright, fwd/back/turn/stand. Mostly plateaued vs 120000.
+
+- 11-07 12:1x v7 cont1 FINISHED (cumulative 720k). Last sixth flat (track_lin .808 -> .804, ang 1.532 -> 1.533,
+  swing_speed -.006, reward 122.0).
+  agent_240000 (eval_v7c1_240000_score/push.log, video vel_v7c1_240000.mp4, kit render): falls 0/64; fwd +.055, back
+  -.078, diag vx +.043, turn +.306, stand -.004 (0 lifts), side vy -.009 (no lateral). L/R swing max xy 708/699 mm/s,
+  touchdown 529/556, peak 23/25 mm, step 34/29 mm; ROM L/R within 2.8 deg. standpush 0/32. Video: upright,
+  fwd/back/turn/stand.
+  PLATEAU -> no further continuation, cron 0c0b3a57 deleted.
+  Deployment candidate: v7 cont1 08-49-37 agent_240000 (softest symmetric swings 708/699, push 0/32, all tracking
+  except lateral). Alternatives: v6 07-58-49 agent_210000 (fastest fwd .075, swings ~1000).
