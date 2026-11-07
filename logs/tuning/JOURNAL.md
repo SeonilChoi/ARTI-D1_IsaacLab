@@ -944,3 +944,11 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
 - 11-07 08:49 user: "계속 진행해" -> option 1, v7 cont1 (same v7 config: swing_speed_weight back to -1.0) from v7
   17-24-53 agent_240000, env.curriculum_step_offset=480000, agent.seed=7, 240k more. Run 2026-11-07_08-49-37_ppo_torch,
   PID 820595, log logs/train/train_vel_microduck_v7_cont1.log (checkpoint load, seed 7, [SYMMETRY] .2 seen).
+
+- 11-07 09:1x v7 cont1 check (run 08-49-37, PID 820595 alive, 37k/240k, 26 it/s: GPU shared with an H1 vel training
+  PID 820964 started outside this session, left alone). TB flat: track_lin .80-.81, track_ang 1.52, swing_speed
+  -.013 -> -.011, std .024, symmetry .001, LR normal; reward 100 -> 117 (first sixth = restart transient).
+  agent_36000 (cumulative 516k; eval_v7c1_36000_score/push.log, video vel_v7c1_36000.mp4): falls 0/64; fwd +.053,
+  back -.081, diag vx +.037, turn +.290, stand -.004 (0 lifts), side vy -.016 (no lateral). L/R swing max xy 780/777
+  (v7 779/834, now symmetric), touchdown 532/535 (v7 525/552), peak 22/23 mm, step 30/24 mm, slip 52.2; ROM hip_pitch
+  14.6/18.6, others within 1.5. standpush 0/32. Video: upright, fwd/back/turn/stand. Same as v7 final, L/R more even.
