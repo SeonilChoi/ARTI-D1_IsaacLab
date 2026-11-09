@@ -1008,3 +1008,10 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   back -.063, side_left vy -.011 (still wrong sign / ~zero; v7c1 -.009), diag vy -.008, turn +.192 (v7c1 .306),
   stand 0 lifts. Swing max L/R 687/717, touchdown 505/514, step 36/37 mm, ROM L/R within 2.3 deg. standpush 0/32.
   Video: upright, walking/turning, no sideways stepping. Half-way: lateral not learned, turn ~-0.1 rad/s lost.
+
+- 11-09 11:5x v8 check (PID 938814 alive, 158k/240k, ~17 it/s, external H1 PID 941153 still on GPU). TB near flat:
+  track_lat .51 -> .59, track_lin .96 -> 1.10 (last sixths +.004), track_ang 1.46, swing_speed -.003, reward 128, LR normal.
+  agent_156000 (cumulative 876k; eval_v8_156000_score/push.log, video vel_v8_156000.mp4): falls 0/64; fwd +.060,
+  back -.046 (worse), side_left vy -.013 (still wrong/zero), diag vy -.002, turn +.211, stand 0 lifts. Swing max L/R
+  678/715, touchdown 507/527, ROM L/R within 2.1 deg. standpush 0/32. Video: upright, no sideways stepping.
+  Lateral not learned at 2/3; v7c1 agent_240000 remains the better policy (back -.078, turn .306).
