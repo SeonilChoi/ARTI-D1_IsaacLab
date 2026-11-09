@@ -62,6 +62,17 @@ class Scaler(nn.Module):
 
 
 def load_policy(path, device):
+    if path.endswith(".onnx"):
+        # deployment check: the exported model (scripts/vel/pt_to_onnx_vel.py) on CPU, its "actions" output drives the env
+        import onnxruntime as ort
+
+        sess = ort.InferenceSession(path, providers=["CPUExecutionProvider"])
+
+        def run(obs):
+            out = [sess.run(["actions"], {"obs": o[None]})[0][0] for o in obs.detach().cpu().numpy()]
+            return torch.from_numpy(np.stack(out)).to(device)
+
+        return run
     ck = torch.load(path, map_location=device, weights_only=False)
     sd = ck["policy"]
     idx = sorted({int(k.split(".")[1]) for k in sd if k.startswith("net_container.") and k.endswith(".weight")})

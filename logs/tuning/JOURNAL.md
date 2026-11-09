@@ -1031,3 +1031,18 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   Verdict: lateral fine-tune failed (eval never showed lateral; TB lat gain = zero-vy envs). Back/turn worse than v7c1.
   Plateau -> no continuation, cron 4699b3bd deleted. Deployment candidate stays v7 cont1 08-49-37 agent_240000.
   NOTE: cfg still has track_lat_vel_weight = 1.0 (v8); revert to 0.0 before any v7-style run (ask user).
+
+- 11-09 user: "게속 진행해" -> option 1, deployment prep of v7 cont1 08-49-37 agent_240000 (no training cfg change;
+  cfg still has track_lat_vel_weight 1.0 from v8, not reverted: ask before the next run).
+  scripts/vel/pt_to_onnx_vel.py: obs [1,39] -> "actions" [1,10] (raw mean, no clip, as in the env) + "q_des" [1,14]
+  (Dynamixel order: default + 0.5*a on legs, arms = arm_hold_target 0, clamp URDF limits). Default pose / action_scale /
+  arm hold from params/env.yaml. torch vs onnxruntime max diff 2.9e-6 on 200 random obs.
+  eval_vel.py: --checkpoint *.onnx runs the exported model (CPU onnxruntime "actions") in the loop.
+  Closed loop eval_v7c1_240000_onnx_score.log vs .pt: falls 0/64 both; fwd .056/.055, back -.077/-.078, turn .302/.306,
+  side vy -.011/-.009, swing max L/R 711/697 vs 708/699 -> export matches.
+  humanoid_controller_d1 (branch arti-d1, uncommitted): robot.yaml policy.type amp|vel; ArtiD1 vel observation
+  (pelvis-frame IMU gyro + projected gravity, leg q - default_pose, leg qd, prev 10 actions, unscaled command),
+  no gait clock, tilt stop from gravity; AmpController sizes "actions" from its own output shape;
+  config/robot/ARTI-D1/robot_vel.yaml + agent_vel.onnx (command_max 0.12 / 0.08 / 0.4). ARTI_D1.cpp passes
+  g++ -fsyntax-only (pinocchio from motion_generator venv, URDF parser stubbed); no full build here (no yaml-cpp /
+  onnxruntime dev packages on this PC).
