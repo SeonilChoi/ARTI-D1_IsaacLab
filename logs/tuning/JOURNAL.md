@@ -1022,3 +1022,12 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   back -.041 (worse again), side_left vy -.009 (= v7c1 baseline, no lateral), diag vy +.001, turn +.193, stand 0 lifts.
   Swing max L/R 655/711, touchdown 514/517, step 37/37 mm, ROM L/R within 1.7 deg. standpush 0/32.
   Video: upright, no sideways stepping. Lateral fine-tune not working; only forward +.011 gained, back/turn lost.
+
+- 11-09 12:5x v8 final (run 09-58-13 finished 240k, cumulative 960k). TB last sixth flat: track_lat .598 -> .608,
+  track_lin 1.12 -> 1.14, track_ang 1.46, swing_speed -.003, reward 128.9, LR normal.
+  agent_240000 (eval_v8_240000_score/push.log, video vel_v8_240000.mp4): falls 0/64; fwd +.061, back -.027,
+  side_left vy -.008 (v7c1 -.009: no lateral), diag vy +.001 (cmd -.05), turn +.220, stand 0 lifts. Swing max L/R
+  686/684, touchdown 519/531, ROM L/R within 2.3 deg. standpush 1/32. Video: upright, no sideways stepping.
+  Verdict: lateral fine-tune failed (eval never showed lateral; TB lat gain = zero-vy envs). Back/turn worse than v7c1.
+  Plateau -> no continuation, cron 4699b3bd deleted. Deployment candidate stays v7 cont1 08-49-37 agent_240000.
+  NOTE: cfg still has track_lat_vel_weight = 1.0 (v8); revert to 0.0 before any v7-style run (ask user).
