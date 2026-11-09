@@ -121,7 +121,7 @@ class ArtiD1VelEnvCfg(DirectRLEnvCfg):
     track_lin_vel_weight = 2.0
     track_lin_vel_std = 0.08  # m/s; microduck sqrt(0.1)=0.32 for +-0.4 commands, scaled by the command range (v3/v4: 0.06, no tracking learned)
     # v3: extra lateral term (v1/v2 never learned lin y: a 0.06 m/s miss still paid exp(-.56)=.57 of the joint xy term)
-    track_lat_vel_weight = 0.0  # v6 off (v3-v5: 1.0)
+    track_lat_vel_weight = 1.0  # v8 lateral fine-tune from v7 cont1 240k; v6/v7 off; v3-v5 1.0 (from scratch, never tracked)
     track_lat_vel_std = 0.06  # v3/v4: 0.03
     # v3: alive bonus (per s) + one-off termination penalty (seed 42 v2 run collapsed into "fall early" optimum)
     alive_weight = 0.0  # v6 off (v3-v5: 1.0)

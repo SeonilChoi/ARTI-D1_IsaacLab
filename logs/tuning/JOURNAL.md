@@ -977,3 +977,9 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   PLATEAU -> no further continuation, cron 0c0b3a57 deleted.
   Deployment candidate: v7 cont1 08-49-37 agent_240000 (softest symmetric swings 708/699, push 0/32, all tracking
   except lateral). Alternatives: v6 07-58-49 agent_210000 (fastest fwd .075, swings ~1000).
+
+- 11-09 09:58 user: "2 진행해" -> v8 lateral retry: fine-tune from v7 cont1 08-49-37 agent_240000 with
+  track_lat_vel_weight 0 -> 1.0 (std 0.06); everything else = v7 (swing_speed -1.0, symmetry 0.2, alive/termination 0,
+  v2 log-std bounds). env.curriculum_step_offset=720000, agent.seed=7, 240k more. Run 2026-11-09_09-58-13_ppo_torch,
+  PID 938814, log logs/train/train_vel_microduck_v8_lat.log (checkpoint load, seed 7, [SYMMETRY] .2 seen), ~42 it/s
+  (GPU free, H1 run gone). Cron 4699b3bd (:17/:47). Baseline side vy: v7c1 240000 -.009.
