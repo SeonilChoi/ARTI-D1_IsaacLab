@@ -1015,3 +1015,10 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   back -.046 (worse), side_left vy -.013 (still wrong/zero), diag vy -.002, turn +.211, stand 0 lifts. Swing max L/R
   678/715, touchdown 507/527, ROM L/R within 2.1 deg. standpush 0/32. Video: upright, no sideways stepping.
   Lateral not learned at 2/3; v7c1 agent_240000 remains the better policy (back -.078, turn .306).
+
+- 11-09 12:2x v8 check (PID 938814 alive, 199k/240k, ~24 it/s, external H1 still on GPU). TB near flat: track_lat .60,
+  track_lin 1.12, track_ang 1.46, swing_speed -.003, reward 128.7, LR normal.
+  agent_198000 (cumulative 918k; eval_v8_198000_score/push.log, video vel_v8_198000.mp4): falls 0/64; fwd +.066,
+  back -.041 (worse again), side_left vy -.009 (= v7c1 baseline, no lateral), diag vy +.001, turn +.193, stand 0 lifts.
+  Swing max L/R 655/711, touchdown 514/517, step 37/37 mm, ROM L/R within 1.7 deg. standpush 0/32.
+  Video: upright, no sideways stepping. Lateral fine-tune not working; only forward +.011 gained, back/turn lost.
