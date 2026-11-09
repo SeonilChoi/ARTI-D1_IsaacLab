@@ -983,3 +983,13 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   v2 log-std bounds). env.curriculum_step_offset=720000, agent.seed=7, 240k more. Run 2026-11-09_09-58-13_ppo_torch,
   PID 938814, log logs/train/train_vel_microduck_v8_lat.log (checkpoint load, seed 7, [SYMMETRY] .2 seen), ~42 it/s
   (GPU free, H1 run gone). Cron 4699b3bd (:17/:47). Baseline side vy: v7c1 240000 -.009.
+
+- 11-09 10:2x v8 check (PID 938814 alive, ~36k/240k at check time). Speed fell 42 -> 24 it/s: a new external H1 vel
+  training (PID 941153, Template-Arti-H1-Velocity-Direct-v0, started outside this session) shares the GPU; left alone.
+  TB rising: track_lat_vel .46 -> .55, track_lin .89 -> 1.03, track_ang 1.52 -> 1.45 (slight drop), swing_speed -.004,
+  action_rate -.10, reward 102 -> 124, LR normal.
+  agent_30000 (cumulative 750k; eval_v8_30000_score/push.log, video vel_v8_30000.mp4): falls 0/64; fwd +.060,
+  back -.021 (v7c1 -.078: regressed), side_left vy +.004 (v7c1 -.009: right sign, ~7% of .06), diag vx +.047 vy -.014
+  (cmd -.05), turn +.238 (v7c1 .306), stand 0 lifts. Swing max L/R 715/696, touchdown 525/546, ROM L/R within 1 deg.
+  standpush 1/32 (one fall at .5 m/s). Video: all upright, walking/turning, no visible sideways stepping yet.
+  Early: lateral term rising but backward/turn traded away; keep watching.
