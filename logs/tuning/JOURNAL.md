@@ -1049,3 +1049,14 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
 
 - 11-10 user: "다 설정해" -> track_lat_vel_weight back to 0.0 (deployed v7c1 config). humanoid_controller_d1 a8e6295 (vel policy,
   robot_vel.yaml command_max 0.10 / 0 / 0.3 for first real tests, agent_vel.onnx = v7c1 agent_240000).
+
+- 11-10 first real run of agent_vel.onnx (humanoid_controller 3ef0a2d logs arti_d1_vel_run_20261110_0814*.csv): robot
+  shakes. Run 1: quiet for 14 s with zero command (gyro rms .013, actions steady = sim-like), a disturbance at 13.8 s
+  (robot set down / touched) grows into a self-sustained ~8 Hz shake with zero command (gyro std .65 rad/s vs sim
+  stand .02; action step-diff rms .14 vs sim .005). Runs 2/3: shake within 0.5-1 s of a forward command.
+  Observation checks OK: gyro frame consistent with d(gravity)/dt (corr .86 at lag 0), gravity upright, q_rel ~0 at
+  start, 60 Hz loop (dt 16.7 ms), no servo errors, temps 23-26 C.
+  Mismatch found: action -> measured joint lag 5-7 control steps (85-117 ms) on the robot vs 3-4 (50-67 ms) in sim
+  (same estimator, forward walking). Extra ~40-50 ms loop delay -> likely the cause (policy trained with 10 ms
+  -6/+8 bus delay). To check: FTDI latency_timer (16 ms default), motor.yaml on the Jetson (local edits on its temp
+  branch). Fix candidates: cut the real delay; or retrain/fine-tune with larger actuator + obs delay (needs approval).
