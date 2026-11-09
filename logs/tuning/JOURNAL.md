@@ -1046,3 +1046,6 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   config/robot/ARTI-D1/robot_vel.yaml + agent_vel.onnx (command_max 0.12 / 0.08 / 0.4). ARTI_D1.cpp passes
   g++ -fsyntax-only (pinocchio from motion_generator venv, URDF parser stubbed); no full build here (no yaml-cpp /
   onnxruntime dev packages on this PC).
+
+- 11-10 user: "다 설정해" -> track_lat_vel_weight back to 0.0 (deployed v7c1 config). humanoid_controller_d1 a8e6295 (vel policy,
+  robot_vel.yaml command_max 0.10 / 0 / 0.3 for first real tests, agent_vel.onnx = v7c1 agent_240000).
