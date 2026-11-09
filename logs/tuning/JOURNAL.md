@@ -1070,3 +1070,10 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   logs/train/train_vel_microduck_v9_delay.log, ~28 it/s (external H1 PID 1027964 on GPU, left alone).
   Baseline v7c1 agent_240000 under the new delay (eval_v7c1_240000_delay40_score.log): falls 12/64 (vs 0/64 at 10 ms),
   fwd .050, back -.056, turn .246 -> the delay alone destabilizes it in sim too.
+
+- 11-10 09:1x v9 check (PID 1030654 alive, 41k/240k, 18-28 it/s, external H1 on GPU). TB: reward 89 -> 108 (restart
+  transient), track_lin .83 -> .79 (slowly down), track_ang 1.22 -> 1.20, action_rate -.10 -> -.11, swing_speed -.003, LR normal.
+  agent_36000 (cumulative 756k, 25-65 ms delay; eval_v9_36000_score/push.log, video vel_v9_36000.mp4): falls 0/64
+  (v7c1 same delay 12/64), fwd +.044 (v7c1 .050), back -.040 (-.056), turn +.305 (.246), stand 0 lifts. Swing max L/R
+  648/654, touchdown 547/512, peak 28/26 mm, step 29/21 mm. standpush 4/32 (falls at .4/.5 m/s). Video: upright,
+  walking/turning, no visible shake. Delay robustness learned early; tracking fwd/back a bit lower.
