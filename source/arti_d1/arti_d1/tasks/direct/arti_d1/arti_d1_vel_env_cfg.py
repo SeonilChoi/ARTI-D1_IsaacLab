@@ -92,8 +92,10 @@ class ArtiD1VelEnvCfg(DirectRLEnvCfg):
     arm_hold_target = {"left_arm_m8": 0.0, "right_arm_m8": 0.0, "left_arm_m8crank_plate": 0.0, "right_arm_m8crank_plate": 0.0}
 
     # ---- Dynamixel joint model, every physics step (same as ArtiD1AmpEnvCfg; BAM stand-in)
-    actuator_delay_ms = 10.0
-    actuator_delay_jitter_ms = (-6.0, 8.0)
+    # v9 (real robot 11-10: action -> joint lag 85-117 ms vs 50-67 ms in sim at 10 ms, robot shook): 40 ms, 25-65 ms per env.
+    # v1-v8: 10.0 with (-6, 8)
+    actuator_delay_ms = 40.0
+    actuator_delay_jitter_ms = (-15.0, 25.0)
     actuator_armature = dict(ARTI_D1_ACTUATOR_ARMATURE)
     actuator_armature_scale_range = (0.9, 1.1)  # microduck ARMATURE_RANDOMIZATION_RANGE
     actuator_coulomb = {

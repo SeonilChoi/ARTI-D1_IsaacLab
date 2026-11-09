@@ -1060,3 +1060,13 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   (same estimator, forward walking). Extra ~40-50 ms loop delay -> likely the cause (policy trained with 10 ms
   -6/+8 bus delay). To check: FTDI latency_timer (16 ms default), motor.yaml on the Jetson (local edits on its temp
   branch). Fix candidates: cut the real delay; or retrain/fine-tune with larger actuator + obs delay (needs approval).
+
+- 11-10 user: "1이야" (FTDI latency_timer already 1 ms). Jetson motor.yaml diff showed two local fixes missing from the
+  deployed branch: left_hip_yaw axis -1 and right m7 (ID 7) axis -1 (Jetson 2026-11-04). humanoid_controller 69612ef
+  applies both (pushed); the first real vel runs had a reversed left hip yaw.
+- 11-10 user: "진행해" -> v9 delay fine-tune: actuator_delay_ms 10 -> 40, jitter (-6, 8) -> (-15, 25) = 25-65 ms per env;
+  everything else = v7c1 (lateral term off). IMU lag unchanged (0/1 step; real gyro matched d(gravity)/dt at lag 0).
+  From v7c1 08-49-37 agent_240000, offset 720000, seed 7, 240k. Run 2026-11-10_08-23-43_ppo_torch, PID 1030654, log
+  logs/train/train_vel_microduck_v9_delay.log, ~28 it/s (external H1 PID 1027964 on GPU, left alone).
+  Baseline v7c1 agent_240000 under the new delay (eval_v7c1_240000_delay40_score.log): falls 12/64 (vs 0/64 at 10 ms),
+  fwd .050, back -.056, turn .246 -> the delay alone destabilizes it in sim too.
