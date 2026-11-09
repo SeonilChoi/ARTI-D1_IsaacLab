@@ -1001,3 +1001,10 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   (v7c1 .306, dropping), stand 0 lifts. Swing max L/R 657/722, touchdown 504/527, ROM L/R within 2 deg. standpush 0/32.
   Video: all upright, walking/turning, no clear sideways stepping. TB lat gain likely comes from zero-vy envs standing
   still, not from real lateral tracking. Keep watching; if lateral still absent at the end, report instead of continuing.
+
+- 11-09 11:2x v8 check (PID 938814 alive, 118k/240k, ~27 it/s, external H1 run still on GPU). TB slowly rising:
+  track_lat .50 -> .58, track_lin .95 -> 1.08, track_ang flat 1.46, swing_speed -.003, reward 114 -> 128, LR normal.
+  agent_114000 (cumulative 834k; eval_v8_114000_score/push.log, video vel_v8_114000.mp4): falls 0/64; fwd +.063,
+  back -.063, side_left vy -.011 (still wrong sign / ~zero; v7c1 -.009), diag vy -.008, turn +.192 (v7c1 .306),
+  stand 0 lifts. Swing max L/R 687/717, touchdown 505/514, step 36/37 mm, ROM L/R within 2.3 deg. standpush 0/32.
+  Video: upright, walking/turning, no sideways stepping. Half-way: lateral not learned, turn ~-0.1 rad/s lost.
