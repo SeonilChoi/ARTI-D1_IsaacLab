@@ -13,7 +13,7 @@ models:
     clip_actions: False  # bounded in the env: ArtiD1DuckEnv clamps actions to [-1, 1] (skrl clip needs finite action-space bounds)
     clip_log_std: True
     min_log_std: -20.0  # v6 back to v2 (v4/v5: -2.3026 = std floor 0.1)
-    max_log_std: 2.0  # v6 back to v2 (v4/v5: 0.405 = cap 1.5)
+    max_log_std: 0.0  # duck v3: std <= 1 (v2: 2.0 -> std pinned at 7.4 past the [-1, 1] clamp, collapse at 60k)
     initial_log_std: 0.0
     network:
       - name: net
@@ -44,8 +44,9 @@ agent:
   discount_factor: 0.97
   gae_lambda: 0.95
   learning_rate: 3.0e-04
-  learning_rate_scheduler: null
-  learning_rate_scheduler_kwargs: null
+  learning_rate_scheduler: KLAdaptiveLR  # duck v3 (v2: fixed 3e-4)
+  learning_rate_scheduler_kwargs:
+    kl_threshold: 0.01
   observation_preprocessor: RunningStandardScaler
   observation_preprocessor_kwargs: null
   state_preprocessor: RunningStandardScaler

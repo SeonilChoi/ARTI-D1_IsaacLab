@@ -1356,3 +1356,15 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   the entropy bonus keeps growing it. Best duck v2 checkpoints were 24k-48k (still 13-19/64 falls, torso roll .6).
   Proposal (needs approval): duck v3 = std cap (max_log_std 0 -> std <= 1) + KL-adaptive LR (our stable setting) +
   ARTI-realistic noise (gravity .02, gyro .05, joint pos .01-.02, joint vel .5) + pushes .25.
+
+- 11-11 08:1x duck v3 launched. User (watched duck2 videos): prefers the small quick steps the policy took before
+  falling over the slow dragging 0.45 s reference gait. New reference: motion_generator config/arti_d1/gait_quick.json
+  (from gait_duck.json: single support 0.45 -> 0.25 s, period 1.08 -> 0.6 s, foot height 25 -> 15 mm so the knee
+  stays <= 4.8 rad/s; tests: 0.25 s / 25 mm -> 8.3 rad/s, 0.25 / 15 mm -> 4.5, 0.3 / 18 mm -> 4.5), sweep 200 clips
+  dx -0.015..0.02 / dy +-0.015 / dth +-0.1 per step -> assets/motions/arti_d1_quick, table
+  arti_d1_quick_reference.npz (30 phase bins = 36 frames per period at 60 fps; coverage vx -.060..+.071, vy +-.07,
+  wz +-.33, max knee 4.8 rad/s). Isaac replay: logs/tuning/videos/quick_reference_isaac.mp4 (+ sheet; fwd / back /
+  turn / side, close view).
+  Duck v3 config (user: "새롭게 학습 수행해"): reference quick, yaw cmd +-.33 (sigma ang .0011), std cap max_log_std 0,
+  KL-adaptive LR (kl .01), noise gyro .05 / gravity .02 / joint pos .01-.02 / joint vel .5, pushes .25. Rest as v2.
+  Run 2026-11-11_08-14-17_ppo_torch, PID 1190970, seed 7, log logs/train/train_duck_v3.log, ~28 it/s (GPU alone).

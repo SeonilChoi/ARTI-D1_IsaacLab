@@ -31,7 +31,9 @@ ARTI_D1_DUCK_POLICY_OBS = 3 + 3 + 10 + 10 + 10 * DUCK_ACTION_HISTORY + 10 + 2 + 
 # + lin vel 3, foot height 2, air time 2, contact 2, reference joint pos 10, reference contact 2
 ARTI_D1_DUCK_CRITIC_OBS = ARTI_D1_DUCK_POLICY_OBS + 3 + 2 + 2 + 2 + 10 + 2
 
-_REFERENCE = os.path.join(os.path.dirname(__file__), "..", "..", "..", "assets", "motions", "arti_d1_duck_reference.npz")
+_REFERENCE = os.path.join(os.path.dirname(__file__), "..", "..", "..", "assets", "motions", "arti_d1_quick_reference.npz")
+# duck v3 (2026-11-11): quick short-step gait (motion_generator gait_quick.json: single support 0.25 s, period 0.6 s,
+# foot 15 mm); duck v1 / v2 used arti_d1_duck_reference.npz (0.45 s, period 1.08 s, 25 mm: feet dragged)
 
 
 @configclass
@@ -83,18 +85,19 @@ class ArtiD1DuckEnvCfg(ArtiD1VelEnvCfg):
     actuator_kp_random = (0.9, 1.1)  # Open Duck kp x0.9-1.1 per env
     actuator_backlash_deg = (1.0, 3.0)
 
-    # ---- commands: inside the reference coverage (vx -0.056..0.074, vy +-0.06, wz +-0.37)
+    # ---- commands: inside the reference coverage (quick: vx -0.060..0.071, vy +-0.07, wz +-0.33)
     command_lin_x_range = (-0.05, 0.07)
     command_lin_y_range = (-0.05, 0.05)
-    command_yaw_range = (-0.35, 0.35)
+    command_yaw_range = (-0.33, 0.33)
     command_resample_s = (6.0, 10.0)  # Open Duck: every 500 steps (10 s)
     zero_command_fraction = 0.1
 
-    # ---- observation noise (Open Duck scales, uniform +-)
-    noise_ang_vel = 0.1
-    noise_gravity = 0.1
-    noise_joint_pos_by_type = {"hip_yaw": 0.03, "hip_roll": 0.03, "hip_pitch": 0.03, "knee": 0.05, "ankle": 0.08}
-    noise_joint_vel = 2.5  # rad/s before the 0.05 scale
+    # ---- observation noise, uniform +- (duck v3: ARTI-D1 sensor levels; Open Duck gyro .1, gravity .1, joint pos
+    # .03-.08, joint vel 2.5 made duck v2 lurch)
+    noise_ang_vel = 0.05
+    noise_gravity = 0.02
+    noise_joint_pos_by_type = {"hip_yaw": 0.01, "hip_roll": 0.01, "hip_pitch": 0.01, "knee": 0.015, "ankle": 0.02}
+    noise_joint_vel = 0.5  # rad/s before the 0.05 scale
     joint_vel_obs_scale = 0.05
     encoder_bias_range = 0.03  # Open Duck qpos0 +-0.03
     imu_delay_max_steps = 2
@@ -102,13 +105,13 @@ class ArtiD1DuckEnvCfg(ArtiD1VelEnvCfg):
 
     # ---- pushes (Open Duck 0.1-1.0 m/s every 5-10 s on a ~2 kg robot)
     push_interval_s = (5.0, 10.0)
-    push_velocity = 0.5
+    push_velocity = 0.25  # duck v3 (v2: 0.5)
 
     # ---- rewards (Open Duck scales; sigmas scaled to the ARTI-D1 command coverage)
     duck_tracking_lin_vel = 2.5
     duck_tracking_ang_vel = 6.0
     duck_tracking_sigma_lin = 0.0022  # Open Duck 0.01 for +-0.15 m/s -> x (0.07 / 0.15)^2
-    duck_tracking_sigma_ang = 0.0014  # Open Duck 0.01 for +-1.0 rad/s -> x 0.37^2
+    duck_tracking_sigma_ang = 0.0011  # Open Duck 0.01 for +-1.0 rad/s -> x 0.33^2
     duck_tracking_y_tol = 0.03  # Open Duck 0.1 for +-0.2 m/s
     duck_torques = -7.5e-5  # Open Duck -1e-3 with ~2.9 Nm servos -> x (2.9 / 10.6)^2
     duck_action_rate = -0.5
