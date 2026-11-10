@@ -2,18 +2,19 @@
 
     python scripts/vel/pt_to_onnx_vel.py --checkpoint <run>/checkpoints/agent_N.pt [--output agent_vel.onnx]
 
-ONNX input "obs" [1, 39] (ArtiD1VelEnv._get_observations, actor part, no noise):
+ONNX input "obs" [1, 29 + 10 N] (ArtiD1VelEnv._get_observations, actor part, no noise; N = action_history_steps,
+1 for v1-v9 = 39, 3 for v10 = 59):
     [0:3]   pelvis angular velocity, pelvis frame (rad/s)
     [3:6]   projected gravity, pelvis frame (unit vector, (0, 0, -1) when upright)
     [6:16]  leg joint position - default pose (rad), LEG order below
     [16:26] leg joint velocity (rad/s), LEG order
-    [26:36] previous raw actions (the "actions" output of the last step), LEG order
-    [36:39] command (vx m/s, vy m/s, yaw rate rad/s), unscaled
+    [26:26+10N] previous raw actions, newest first (the "actions" outputs of the last N steps), LEG order
+    [-3:]   command (vx m/s, vy m/s, yaw rate rad/s), unscaled
 LEG order = Dynamixel order without the arms: left_hip_yaw, right_hip_yaw, left_hip_roll, right_hip_roll,
 left_hip_pitch, right_hip_pitch, left_knee, right_knee, left_ankle, right_ankle.
 
 Outputs:
-    "actions" [1, 10]: raw policy mean (not clipped, the env does not clip either); feed back as obs[26:36].
+    "actions" [1, 10]: raw policy mean (not clipped, the env does not clip either); feed back as obs[26:36] (newest), shifting the older ones back.
     "q_des"   [1, 14]: joint targets, ISAAC_JOINT_NAMES (Dynamixel) order = clamp(default + action_scale * a, URDF
                        limits) on the legs, arm_hold_target on the arms (ArtiD1VelEnv._pre_physics_step).
 """
@@ -96,8 +97,9 @@ def build(checkpoint_path: Path) -> VelOnnxPolicy:
     model = VelOnnxPolicy(actor, normalizer, default, scale, lower, upper).eval()
     obs_dim = next(actor.parameters()).shape[1]
     act_dim = actor[-1].out_features
-    if obs_dim != 39 or act_dim != len(LEG_IDS):
-        raise RuntimeError(f"policy MLP {obs_dim} -> {act_dim}, expected 39 -> {len(LEG_IDS)}")
+    if (obs_dim - 29) % 10 or obs_dim < 39 or act_dim != len(LEG_IDS):
+        raise RuntimeError(f"policy MLP {obs_dim} -> {act_dim}, expected 29 + 10 N -> {len(LEG_IDS)}")
+    print(f"[INFO] obs {obs_dim} = action history {(obs_dim - 29) // 10}")
     print(f"[INFO] action_scale {scale}, arms held at {arm_hold}")
     print(f"[INFO] default pose (Dynamixel order): {dict(zip(p2o.ISAAC_JOINT_NAMES, default))}")
     return model
@@ -112,7 +114,8 @@ def main() -> int:
     ckpt = args.checkpoint.resolve()
     out = (args.output or ckpt.with_suffix(".onnx")).resolve()
     model = build(ckpt)
-    dummy = torch.zeros(1, 39)
+    obs_dim = next(model.actor.parameters()).shape[1]
+    dummy = torch.zeros(1, obs_dim)
     torch.onnx.export(model, dummy, str(out), input_names=["obs"], output_names=["actions", "q_des"],
                       opset_version=args.opset, dynamo=False)
     import numpy as np
@@ -122,7 +125,7 @@ def main() -> int:
     rng = np.random.default_rng(0)
     worst = 0.0
     for _ in range(200):
-        obs = rng.normal(size=(1, 39)).astype(np.float32)
+        obs = rng.normal(size=(1, obs_dim)).astype(np.float32)
         a, q = sess.run(["actions", "q_des"], {"obs": obs})
         with torch.no_grad():
             ta, tq = model(torch.from_numpy(obs))
