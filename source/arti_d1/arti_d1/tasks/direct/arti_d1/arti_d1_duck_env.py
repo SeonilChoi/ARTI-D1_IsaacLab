@@ -102,6 +102,9 @@ class ArtiD1DuckEnv(ArtiD1VelEnv):
     # ------------------------------------------------------------------ actions
     def _pre_physics_step(self, actions: torch.Tensor):
         self.phase = (self.phase + self.step_dt / self.ref_period) % 1.0
+        # brax PPO (Open Duck) samples tanh-squashed actions in (-1, 1); skrl's Gaussian is unbounded. Without this the
+        # policy mean drifted to 1e12 (duck v1 collapse at 25k): the >= 0 reward clip hid the action-rate penalty.
+        actions = torch.clamp(actions, -1.0, 1.0)
         super()._pre_physics_step(actions)  # history, commands, pushes, target = default + scale * a
         # Open Duck motor speed limit on the targets (rad per control step)
         step = self.cfg.max_motor_velocity * self.step_dt

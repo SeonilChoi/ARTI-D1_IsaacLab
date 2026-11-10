@@ -1316,3 +1316,11 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   back -.023 of -.05, side/diag/turn ~0, both feet down 98 % of walking time (0.11 touchdowns/s; shuffling / sliding,
   trailing-foot slide 11 mm), ROM small (knee 8.6 deg), torso fwd .106/.110/.046. standpush 9/32.
   Video: robots slide / lean, no stepping yet. Early (90M samples of Open Duck's 150-300M); watch.
+
+- 11-10 16:4x duck v1 COLLAPSED at 24-25k: episode length 913 -> 35, action_rate -3.6e19 .. -1.8e24 (policy mean
+  exploded), value loss .015 -> 4.2, imitation joint error 4 -> 23 deg. Before it (21k): length 913, lin err .09.
+  Cause (port bug): brax PPO (Open Duck) samples tanh-squashed actions in (-1, 1); skrl's Gaussian is unbounded, and
+  the Open Duck reward clip (total >= 0) hid the growing action-rate penalty, so nothing stopped the drift.
+  Fix: actions clamped to [-1, 1] in ArtiD1DuckEnv._pre_physics_step (+ clip_actions True in skrl_duck_ppo_cfg).
+  Run 15-33-27 stopped (PID 1110435 verified, killed; cron dac9c9e2 deleted). Duck v2 = same + the clamp, from
+  scratch, seed 7, PID 1117495, log logs/train/train_duck_v2.log.

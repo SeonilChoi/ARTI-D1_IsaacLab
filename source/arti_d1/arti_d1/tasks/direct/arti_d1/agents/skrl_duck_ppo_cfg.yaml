@@ -10,7 +10,7 @@ models:
   separate: True
   policy:
     class: GaussianMixin
-    clip_actions: False
+    clip_actions: True  # duck: bounded actions like brax's tanh-squashed policy (env clamps to [-1, 1] too)
     clip_log_std: True
     min_log_std: -20.0  # v6 back to v2 (v4/v5: -2.3026 = std floor 0.1)
     max_log_std: 2.0  # v6 back to v2 (v4/v5: 0.405 = cap 1.5)
