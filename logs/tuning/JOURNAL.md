@@ -1335,3 +1335,14 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   1.8 touchdowns/s, both down 74 %, swing 0.12 s (reference single support 0.45 s), peak 19 mm, swing max 714 mm/s,
   stance slip 108 mm/s, torso fwd .60/.22/.14. standpush 12/32. Video: stepping but lurching / tilting, some falls.
   Early; tracking and contact match improving.
+
+- 11-10 17:2x duck v2 check (PID 1117929 alive, 51k/120k, ~10 it/s, external H1 still on GPU). TB: contact match .43 ->
+  .54 (rising), but episode length 840 -> 731 (more falls), tracking flat (lin err .13, yaw err .25), imitation joint
+  err 4.9 deg, action_rate -.009, value loss .025 (no blow-up).
+  agent_48000 (eval_duck2_48000_score/push.log, video duck2_48000.mp4): falls 19/64 (24k: 13), fwd +.052 of .06, back
+  -.009 of -.05, diag .040 / -.014, turn +.152 of .15, 1.55 touchdowns/s, both down 69 %, swing 0.17 s, peak 24 mm,
+  stance slip 101 mm/s, torso fwd .67/.23/.15 (v12 42k .17/.12/.07). standpush 11/32. Video: lurching, several falls.
+  Getting less stable, not smoother. Suspect Open Duck's noise / DR / pushes (sized for a 42 cm duck) are too harsh
+  for ARTI-D1's slow gait and narrow feet: gravity noise +-.1, gyro +-.1, ankle pos +-.08 rad, joint vel +-2.5 rad/s,
+  pushes +-.5 m/s, CoM +-3 cm, kp +-10 % on top of play / delay. Proposal to the user (config change): duck v3 with
+  ARTI-realistic noise (gravity .02, gyro .05, joint pos .01-.02, joint vel .5) and pushes .25.
