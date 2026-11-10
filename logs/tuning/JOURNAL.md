@@ -1129,3 +1129,9 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   then a ~60 ms servo rise. Ask the user: the [DynamixelMaster] latency line printed at start, `readlink -f
   /dev/Dynamixel` + that ttyUSB's latency_timer, servo Return Delay Time. Fix the bus first, then re-run sysid for the
   servo-only response to fit the sim.
+
+- 11-10 11:0x v10 check (PID 1050077 alive, 53k/240k, 22-27 it/s). TB: episode length full (1195), reward 39 -> 104,
+  track_lin .25 -> 1.12, track_ang .15 -> 1.38 (rising), action_rate -.16 (weight ramped to -1), air_time 0 (no steps
+  yet), LR normal. agent_48000 (eval_v10_48000_score/push.log, video vel_v10_48000.mp4): falls 0/64, no foot lifts
+  anywhere (touchdowns 0/s), fwd -.004, back .000, turn +.204 by twisting on planted feet, stand still. standpush 0/32.
+  Video: all standing, no stepping. Like v6 before it learned to step (~iter 4000 = 96k); watch the next checks.
