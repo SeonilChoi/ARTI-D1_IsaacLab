@@ -1249,3 +1249,9 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
 - 11-10 user: "새로운 모델로 push" -> v12 agent_54000 score (eval_v12_54000_score.log): falls 0/64 but fwd .022, back -.019
   (worse than 42k). Deployed v12 agent_42000: torch vs onnx 3.3e-6, ONNX closed loop (eval_v12_42000_onnx_score.log)
   falls 0/64, fwd .040, back -.025, turn .290, torso fwd .172/.128/.066. humanoid_controller 27e44cc, pushed.
+
+- 11-10 14:2x v12 check (PID 1079218 alive, 86k/240k, 23 it/s). TB eroding: track_lin .84 -> .73, track_ang 1.33 ->
+  1.18, body_ang_vel -.010 -> -.013, action_rate -.086 -> -.102, reward ~109 flat, LR normal.
+  agent_84000 (cumulative 852k; eval_v12_84000_score/push.log, video vel_v12_84000.mp4): falls 0/64, fwd +.014
+  (42k .040), back -.025, turn +.269, stand 0 lifts, step 15 mm, torso fwd .184/.146/.072. standpush 1/32.
+  Video: upright; one robot drifts toward the camera from 17 s (no fall). Fwd keeps dropping; 42k (deployed) stays best.
