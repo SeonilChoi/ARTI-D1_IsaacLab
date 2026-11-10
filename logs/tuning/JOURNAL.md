@@ -1178,3 +1178,9 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   Baseline v9 36k under the v11 servo model (eval_v9_36000_v11model_score.log): falls 0/64, fwd .000 (vy -.023),
   back -.063, turn +.332 (vx -.073 drift), stand 0 lifts, step 13 mm -> stable but forward walking lost on the fitted
   (stiffer, faster) servos.
+
+- 11-10 11:5x v11 check (PID 1065246 alive, 18k/240k, 26 it/s). TB: reward 70 -> 111 (restart transient),
+  episode length 853 -> 1186, track_lin .69 -> .72, track_ang 1.00 -> 1.26, action_rate -.09, LR normal.
+  agent_12000 (cumulative 768k; eval_v11_12000_score/push.log, video vel_v11_12000.mp4): falls 0/64, fwd +.058
+  (baseline v9 36k on this model .000), back -.063, turn +.292, stand 0 lifts, swing max 666 mm/s, peak 28 mm,
+  step 33 mm. standpush 2/32. Video: upright, walking/turning. Forward walking recovered on the fitted servos.
