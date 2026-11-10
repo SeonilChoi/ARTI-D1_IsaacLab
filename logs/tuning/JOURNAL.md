@@ -1158,3 +1158,18 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   content = real body motion, not sensor noise. Xsens on /dev/Xsens at 115200 baud (sensor.yaml): enough for 60 Hz.
   => IMU noise / jitter is not the problem.
 - BAM: not applied. Only the step-response check of the existing (datasheet + delay) servo model vs the real servos.
+
+- 11-10 user: "v9 학습 기준에서 일단 bam만 적용해서 학습 진행" -> BAM-style servo fit + v11.
+  scripts/tuning/fit_servo_model.py: one param set per env on a fixed-base (hung) robot, the real sysid_response2
+  command traces replayed at 240 Hz, cost = RMS(sim - real) of the tested joint / RMS of its motion, mean over tests.
+  Grid 1 (540 sets; steps knee/hip_pitch/ankle + chirps, fit_servo_model_grid1.log): best delay 6 steps, kp x1.3 (edge),
+  kd x1, armature x3, Coulomb .05: .052 vs current model .110-.272. Grid 2 (405 sets, + hip_roll step/chirp,
+  fit_servo_model_grid2.log): best (5 steps = 21 ms, kp x1.6, kd x1.4, armature x4.5, Coulomb .06) .055; flat over
+  delay 5-6, kp 1.3-1.6, kd 1.0-1.4, armature 1.5-4.5, Coulomb .03-.1. Chosen: delay 22 ms, kp x1.5, kd x1.25,
+  armature x3, Coulomb .06. Sim step test with it: dead 38 ms, t63 96 ms (real 30-50 / 90-100).
+  cfg: ARTI_D1_VEL_PROFILE env var (v10 default; v11 = v9 setup: 1 action, scale .5, per-env delay 15-40 ms, IMU 0/1
+  per episode + the fitted servo model; actuator_kp/kd_scale applied in __post_init__).
+  v11: ARTI_D1_VEL_PROFILE=v11, from v9 08-23-43 agent_36000, offset 756000, seed 7, 240k. Run
+  2026-11-10_11-38-44_ppo_torch, PID 1065246, log logs/train/train_vel_microduck_v11_bam.log, ~25 it/s.
+  GPU now 14 GB (v10 + v11 + external H1): evals fail with CUDA OOM even at 16 envs -> no eval possible while
+  all three run; asked the user whether to stop v10 (no stepping at 93k).

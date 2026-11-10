@@ -13,6 +13,7 @@ Linear velocity (command tracking, critic obs) is taken at the trunk point, not 
 """
 
 import math
+import os
 
 from isaaclab.envs import DirectRLEnvCfg
 from isaaclab.managers import EventTermCfg as EventTerm
@@ -27,7 +28,16 @@ from .arti_d1_env_cfg import ARTI_D1_ACTUATOR_ARMATURE, ARTI_D1_JOINT_EFFORT_LIM
 ARTI_D1_VEL_NUM_JOINTS = 10  # leg joints
 # v10 (Open Duck Mini): the actor sees the last N actions (newest first), so it can tell which targets are still in
 # flight under the actuator delay. v1-v9: 1 (39-dim obs; set 1 + the v9 delay settings to evaluate those checkpoints).
-ARTI_D1_VEL_ACTION_HISTORY = 3
+# Run profile (env var ARTI_D1_VEL_PROFILE, read at import; set it for train / eval / video / export of a run):
+#   v10 (default): Open Duck style, 3-action history, action_scale 0.25, per-step 25-65 ms actuator + 0-2 step IMU delay
+#   v11: v9 setup (1 action, scale 0.5, per-env delay, IMU 0/1 per episode) + the servo model fitted to the real
+#        robot (scripts/tuning/fit_servo_model.py on sysid_response2 2026-11-10, Return Delay Time 0, 10 ms bus):
+#        delay ~22 ms, kp x1.5, kd x1.25, armature x3, Coulomb 0.06 Nm (fit: mean normalised RMS .055 vs .11-.27 before)
+ARTI_D1_VEL_PROFILE = os.environ.get("ARTI_D1_VEL_PROFILE", "v10")
+if ARTI_D1_VEL_PROFILE not in ("v10", "v11"):
+    raise ValueError(f"ARTI_D1_VEL_PROFILE must be v10 or v11, got {ARTI_D1_VEL_PROFILE}")
+_V11 = ARTI_D1_VEL_PROFILE == "v11"
+ARTI_D1_VEL_ACTION_HISTORY = 1 if _V11 else 3
 # actor: base ang vel (3) + projected gravity (3) + leg joint pos rel (10) + leg joint vel (10) + last N actions (10 N)
 # + command (3, always last)
 ARTI_D1_VEL_POLICY_OBS = 3 + 3 + 10 + 10 + 10 * ARTI_D1_VEL_ACTION_HISTORY + 3
@@ -92,7 +102,7 @@ class ArtiD1VelEnvCfg(DirectRLEnvCfg):
     # ---- actions: target = default + scale * a (mjlab JointPositionAction, use_default_offset). microduck scale 1.0 on
     # low-kp XL330s; ARTI-D1 XH540 kp ~49 Nm/rad tracks closely, 0.5 = mjlab's humanoid default.
     # v10 0.25 (Open Duck Mini action_scale; less aggressive targets); v1-v9 0.5
-    action_scale = 0.25
+    action_scale = 0.5 if _V11 else 0.25
     action_history_steps = ARTI_D1_VEL_ACTION_HISTORY
     # Arms held at this target (rad); no policy output.
     arm_hold_target = {"left_arm_m8": 0.0, "right_arm_m8": 0.0, "left_arm_m8crank_plate": 0.0, "right_arm_m8crank_plate": 0.0}
@@ -100,12 +110,15 @@ class ArtiD1VelEnvCfg(DirectRLEnvCfg):
     # ---- Dynamixel joint model, every physics step (same as ArtiD1AmpEnvCfg; BAM stand-in)
     # v9 (real robot 11-10: action -> joint lag 85-117 ms vs 50-67 ms in sim at 10 ms, robot shook): 40 ms, 25-65 ms per env.
     # v1-v8: 10.0 with (-6, 8)
-    actuator_delay_ms = 40.0
-    actuator_delay_jitter_ms = (-15.0, 25.0)
+    actuator_delay_ms = 22.0 if _V11 else 40.0  # v11: fitted 21-25 ms
+    actuator_delay_jitter_ms = (-7.0, 18.0) if _V11 else (-15.0, 25.0)  # v11: 15-40 ms per env
     # v10 (Open Duck Mini: action delay drawn every control step): True = a new delay per env every control step,
     # False = one per env at start-up (v1-v9)
-    actuator_delay_per_step = True
-    actuator_armature = dict(ARTI_D1_ACTUATOR_ARMATURE)
+    actuator_delay_per_step = not _V11
+    actuator_armature = {k: v * (3.0 if _V11 else 1.0) for k, v in ARTI_D1_ACTUATOR_ARMATURE.items()}
+    # PD gain scales on the robot actuators (applied in __post_init__); v11 fitted kp x1.5, kd x1.25
+    actuator_kp_scale = 1.5 if _V11 else 1.0
+    actuator_kd_scale = 1.25 if _V11 else 1.0
     actuator_armature_scale_range = (0.9, 1.1)  # microduck ARMATURE_RANDOMIZATION_RANGE
     actuator_coulomb = {
         "hip_yaw": 0.1, "hip_roll": 0.1, "hip_pitch": 0.1, "knee": 0.1, "ankle": 0.1,
@@ -179,8 +192,8 @@ class ArtiD1VelEnvCfg(DirectRLEnvCfg):
     noise_gravity = 0.01
     noise_joint_pos = 0.001
     noise_joint_vel = 0.25
-    imu_delay_max_steps = 2  # base ang vel / gravity lag 0..N steps (v1-v9: 1, per episode)
-    imu_delay_per_step = True  # v10 (Open Duck Mini 0-3 steps every step); False = drawn per episode
+    imu_delay_max_steps = 1 if _V11 else 2  # base ang vel / gravity lag 0..N steps (v1-v9: 1, per episode)
+    imu_delay_per_step = not _V11  # v10 (Open Duck Mini 0-3 steps every step); False = drawn per episode
     joint_vel_delay_steps = 1  # Dynamixel present velocity is ~1 control period old
     encoder_bias_range = 0.015  # rad, per env, actor joint pos only
     imu_misalign_deg = 6.0  # random-axis IMU mounting rotation per env, actor only
@@ -200,3 +213,12 @@ class ArtiD1VelEnvCfg(DirectRLEnvCfg):
     lin_vel_at_trunk = True  # False = pelvis link origin (v1 behaviour)
 
     curriculum_step_offset = 0
+
+    def __post_init__(self):
+        if _V11:  # fitted Coulomb friction on the legs
+            for k in ("hip_yaw", "hip_roll", "hip_pitch", "knee", "ankle"):
+                self.actuator_coulomb[k] = 0.06
+        if self.actuator_kp_scale != 1.0 or self.actuator_kd_scale != 1.0:
+            for act in self.scene.robot.actuators.values():
+                act.stiffness = {k: v * self.actuator_kp_scale for k, v in act.stiffness.items()}
+                act.damping = {k: v * self.actuator_kd_scale for k, v in act.damping.items()}
