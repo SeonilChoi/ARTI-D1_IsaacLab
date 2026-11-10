@@ -1135,3 +1135,13 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   yet), LR normal. agent_48000 (eval_v10_48000_score/push.log, video vel_v10_48000.mp4): falls 0/64, no foot lifts
   anywhere (touchdowns 0/s), fwd -.004, back .000, turn +.204 by twisting on planted feet, stand still. standpush 0/32.
   Video: all standing, no stepping. Like v6 before it learned to step (~iter 4000 = 96k); watch the next checks.
+
+- 11-10 user set Return Delay Time 250 -> 0 on all 14 servos (it was 250 = 500 us on every one). DXL_TIMING: bus now
+  100 Hz, update 6.5-6.8 ms (first reply 1.8-2.2 ms, all 14 replies 6.5 ms), latency_timer 1. --observe readings sane.
+  sysid_response2 (humanoid_controller 9af0afd): state refreshes every 10 ms. Steps +-0.1 rad (hung): dead (5%) 30-50 ms,
+  t63 90-100 ms, 10-90% 120-145 ms, no overshoot, peak current .5-.6 A (before the fix: dead 75-85, t63 135-145).
+  Sim fixed-base step test (scripts/tuning/sim_step_test.py, same steps, 60 Hz sampling):
+    old model (10 ms, -6/+8, v1-v9 except v9): dead 18 ms, t63 85 ms -> faster than the robot.
+    v9/v10 model (40 ms, 25-65): dead 43 ms, t63 113 ms -> brackets the robot (dead 40, t63 100).
+  With the old 30 ms bus the robot was dead 80 / t63 140 = beyond even the v9 training range -> why v9 still shook.
+  Next: real test of v9 36k with the fixed bus; v10 (same delay range) keeps training.
