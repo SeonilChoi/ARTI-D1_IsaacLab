@@ -1325,3 +1325,13 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   Run 15-33-27 stopped (PID 1110435 verified, killed; cron dac9c9e2 deleted). Duck v2 = same + the clamp, from
   scratch, seed 7 (first launch PID 1117495 died: skrl clip_actions True needs finite bounds -> reverted, the env clamp
   stays), run 2026-11-10_16-29-25_ppo_torch, PID 1117929, log logs/train/train_duck_v2.log.
+
+- 11-10 17:0x duck v2 check (run 16-29-25, PID 1117929 alive, 24k/120k; speed 27 -> 9 it/s since an external H1 vel
+  training PID 1096140 shares the GPU, left alone). No collapse at 24k (v1 broke there): action_rate -.007, value loss
+  .018, episode length 800-842, contact match .42 -> .51 (rising), imitation joint err 4.7 deg, lin err .12, yaw
+  err .23.
+  agent_24000 (eval_duck2_24000_score/push.log, cmd_scale .5, video duck2_24000.mp4): falls 13/64, fwd +.047 of .06,
+  back -.023 of -.05, diag +.042 / -.021 (of .05 / -.03), turn +.118 of .15, stand 0.03 lifts/s; stepping now:
+  1.8 touchdowns/s, both down 74 %, swing 0.12 s (reference single support 0.45 s), peak 19 mm, swing max 714 mm/s,
+  stance slip 108 mm/s, torso fwd .60/.22/.14. standpush 12/32. Video: stepping but lurching / tilting, some falls.
+  Early; tracking and contact match improving.
