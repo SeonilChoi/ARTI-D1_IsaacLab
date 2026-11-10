@@ -1268,3 +1268,11 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   Candidates: foot rolling on its sole edge (no ankle roll, 35 mm sole), lateral CoM / mass distribution, hip_roll
   play (encoders are motor side). Next (needs approval): physical checks; v13 with lateral CoM randomization,
   larger hip_roll play, higher swing target.
+
+- 11-10 user: soles are slightly elastic TPU; hip_roll looks fine; robot weighs 5.34 kg (URDF 5.79). "v13 바로 진행".
+  v13 profile (ARTI_D1_VEL_PROFILE=v13) = v12 + pelvis mass abs 2.92-3.56 kg per env (3.24 = 3.69 - 0.45, +-10%,
+  after body_mass +-5%) + pelvis CoM +-15 mm (was 5) + compliant ground contact 4e4 N/m / 400 N s/m (TPU-like, shared
+  by all envs). v12 stopped at ~117k (PID 1079218 verified, killed; cron f6c6db86 deleted; deployed v12 42k stays).
+  Baseline v12 42k on the v13 model (eval_v12_42000_v13model_score.log): falls 0/64, fwd .043, back -.041,
+  turn .296, stand 0 lifts, torso fwd .200/.138/.076. v13 from v12 13-08-29 agent_42000, offset 810000, seed 7, 240k,
+  PID 1092946, log logs/train/train_vel_microduck_v13_mass.log.

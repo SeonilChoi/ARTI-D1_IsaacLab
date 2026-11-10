@@ -35,10 +35,14 @@ ARTI_D1_VEL_NUM_JOINTS = 10  # leg joints
 #        delay ~22 ms, kp x1.5, kd x1.25, armature x3, Coulomb 0.06 Nm (fit: mean normalised RMS .055 vs .11-.27 before)
 ARTI_D1_VEL_PROFILE = os.environ.get("ARTI_D1_VEL_PROFILE", "v10")
 #   v12: v11 + joint play (backlash, total 1-3 deg per env / leg joint, user 2026-11-10) + torso ang vel penalty x4
-if ARTI_D1_VEL_PROFILE not in ("v10", "v11", "v12"):
-    raise ValueError(f"ARTI_D1_VEL_PROFILE must be v10, v11 or v12, got {ARTI_D1_VEL_PROFILE}")
-_V12 = ARTI_D1_VEL_PROFILE == "v12"
-_V11 = ARTI_D1_VEL_PROFILE in ("v11", "v12")  # v12 builds on v11
+#   v13: v12 + the real mass (robot weighed 5.34 kg vs URDF 5.79: pelvis 3.69 -> 3.24 kg, +-10%), pelvis CoM +-15 mm,
+#        TPU-like compliant foot / ground contact (user 2026-11-10: soles are slightly elastic TPU)
+_PROFILES = ("v10", "v11", "v12", "v13")
+if ARTI_D1_VEL_PROFILE not in _PROFILES:
+    raise ValueError(f"ARTI_D1_VEL_PROFILE must be one of {_PROFILES}, got {ARTI_D1_VEL_PROFILE}")
+_V13 = ARTI_D1_VEL_PROFILE == "v13"
+_V12 = ARTI_D1_VEL_PROFILE in ("v12", "v13")  # v13 builds on v12
+_V11 = ARTI_D1_VEL_PROFILE in ("v11", "v12", "v13")  # v12 builds on v11
 ARTI_D1_VEL_ACTION_HISTORY = 1 if _V11 else 3
 # actor: base ang vel (3) + projected gravity (3) + leg joint pos rel (10) + leg joint vel (10) + last N actions (10 N)
 # + command (3, always last)
@@ -83,9 +87,23 @@ class ArtiD1VelEventCfg:
         params={
             # microduck COM_RANDOMIZATION_RANGE +-3 mm (ramped to +-8 mm); per env at start-up here
             "asset_cfg": SceneEntityCfg("robot", body_names="pelvis"),
-            "com_range": {"x": (-0.005, 0.005), "y": (-0.005, 0.005), "z": (-0.005, 0.005)},
+            "com_range": {"x": (-0.015, 0.015), "y": (-0.015, 0.015), "z": (-0.015, 0.015)} if _V13
+            else {"x": (-0.005, 0.005), "y": (-0.005, 0.005), "z": (-0.005, 0.005)},
         },
     )
+
+    # v13: real pelvis mass. URDF total 5.79 kg, robot weighed 5.34 kg -> pelvis 3.69 - 0.45 = 3.24 kg, +-10% per env
+    # (applied after body_mass, absolute)
+    pelvis_mass = EventTerm(
+        func=mdp.randomize_rigid_body_mass,
+        mode="startup",
+        params={
+            "asset_cfg": SceneEntityCfg("robot", body_names="pelvis"),
+            "mass_distribution_params": (2.92, 3.56),
+            "operation": "abs",
+            "recompute_inertia": True,
+        },
+    ) if _V13 else None
 
 
 @configclass
@@ -220,6 +238,9 @@ class ArtiD1VelEnvCfg(DirectRLEnvCfg):
     curriculum_step_offset = 0
 
     def __post_init__(self):
+        if _V13:  # TPU-like soles: compliant contact on the ground material (~1.3 mm under the full weight on one point)
+            self.scene.terrain.physics_material.compliant_contact_stiffness = 4.0e4  # N/m
+            self.scene.terrain.physics_material.compliant_contact_damping = 400.0  # N s/m
         if _V11:  # fitted Coulomb friction on the legs
             for k in ("hip_yaw", "hip_roll", "hip_pitch", "knee", "ankle"):
                 self.actuator_coulomb[k] = 0.06
