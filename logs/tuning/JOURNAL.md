@@ -1276,3 +1276,11 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   Baseline v12 42k on the v13 model (eval_v12_42000_v13model_score.log): falls 0/64, fwd .043, back -.041,
   turn .296, stand 0 lifts, torso fwd .200/.138/.076. v13 from v12 13-08-29 agent_42000, offset 810000, seed 7, 240k,
   PID 1092946, log logs/train/train_vel_microduck_v13_mass.log.
+
+- 11-10 15:0x v13 check (run 2026-11-10_14-37-40, PID 1092946 alive, 42k/240k, 26 it/s). TB: reward 84 -> 102
+  (restart transient) but track_lin .92 -> .80, track_ang 1.25 -> 1.14, body_ang_vel -.012 -> -.015, action_rate
+  -.086 -> -.095 (slowly worse), episode length 943 -> 1145, LR normal.
+  agent_42000 (cumulative 852k, v13 model; eval_v13_42000_score/push.log, video vel_v13_42000.mp4): falls 1/64,
+  fwd +.030, back -.004 (!), turn +.252, stand 0 lifts, touchdown 440 mm/s, step 22 mm, torso fwd .219/.146/.087.
+  standpush 1/32. Video: upright, walking/turning. Worse than the baseline (v12 42k on the v13 model: fwd .043,
+  back -.041, turn .296, torso .200/.138/.076); keep watching.
