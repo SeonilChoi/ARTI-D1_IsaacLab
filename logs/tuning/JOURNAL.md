@@ -1308,3 +1308,11 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   motor rate 4.8 rad/s; ARTI-D1 parts: fitted servo model (v11), joint play 1-3 deg, real pelvis mass, TPU contact,
   no contacts in the actor (no foot sensors). eval_vel.py --task / --cmd_scale.
   Duck v1 from scratch, seed 7, 120k timesteps, PID 1110435, log logs/train/train_duck_v1.log.
+
+- 11-10 15:5x duck v1 check (PID 1110435 alive, 22k/120k, 22 it/s). TB: reward 181 -> 343, episode length 518 ->
+  883 (of 1200: still falls), alive .333/step dominates, imitation .035/step (~2.1 of ~5 per s), imitation joint
+  error 4.4-5.0 deg, contact match .42 (< .58 = always-both-down), lin vel err .21 -> .09 m/s, yaw err .43 -> .22.
+  agent_20000 (eval_duck1_20000_score/push.log, cmd_scale .5, video duck1_20000.mp4): falls 17/64, fwd +.037 of .06,
+  back -.023 of -.05, side/diag/turn ~0, both feet down 98 % of walking time (0.11 touchdowns/s; shuffling / sliding,
+  trailing-foot slide 11 mm), ROM small (knee 8.6 deg), torso fwd .106/.110/.046. standpush 9/32.
+  Video: robots slide / lean, no stepping yet. Early (90M samples of Open Duck's 150-300M); watch.
