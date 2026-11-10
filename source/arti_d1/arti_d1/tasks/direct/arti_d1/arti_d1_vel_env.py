@@ -52,9 +52,12 @@ class ArtiD1VelEnv(DirectRLEnv):
         # Dynamixel joint model (as ArtiD1AmpEnv._init_actuator_model)
         sim_dt = self.cfg.sim.dt
         lo, hi = self.cfg.actuator_delay_jitter_ms
-        delay_ms = self.cfg.actuator_delay_ms + torch.empty(n, 1, device=dev).uniform_(lo, hi).expand(n, nj)
-        self.act_delay_steps = torch.clamp(torch.round(delay_ms.clamp_min(0.0) / 1000.0 / sim_dt), min=0).long()
-        self.act_buffer = torch.zeros(int(self.act_delay_steps.max().item()) + 1, n, nj, device=dev)
+        self._sample_act_delay = lambda: torch.clamp(torch.round(
+            (self.cfg.actuator_delay_ms + torch.empty(n, 1, device=dev).uniform_(lo, hi)).clamp_min(0.0) / 1000.0 / sim_dt
+        ), min=0).long().expand(n, nj)
+        self.act_delay_steps = self._sample_act_delay()
+        max_steps = int(round(max(self.cfg.actuator_delay_ms + hi, 0.0) / 1000.0 / sim_dt))
+        self.act_buffer = torch.zeros(max_steps + 1, n, nj, device=dev)
         self.act_head = 0
         lo, hi = self.cfg.actuator_armature_scale_range
         armature = per_type(self.cfg.actuator_armature)[None, :] * torch.empty(n, nj, device=dev).uniform_(lo, hi)
@@ -83,6 +86,8 @@ class ArtiD1VelEnv(DirectRLEnv):
 
         self.actions = torch.zeros(n, nl, device=dev)
         self.prev_actions = torch.zeros(n, nl, device=dev)
+        # last N actions seen by the actor, newest first (cfg.action_history_steps)
+        self.act_hist = torch.zeros(n, self.cfg.action_history_steps, nl, device=dev)
         self.commands = torch.zeros(n, 3, device=dev)
         self.cmd_timer = torch.zeros(n, device=dev)
         self.push_timer = torch.zeros(n, device=dev)
@@ -98,6 +103,9 @@ class ArtiD1VelEnv(DirectRLEnv):
         self.imu_misalign = quat_from_angle_axis(angle, axis)
         self.imu_lag = torch.zeros(n, dtype=torch.long, device=dev)
         self.prev_imu = torch.zeros(n, 6, device=dev)
+        # IMU readings, newest first: index d = d control steps old
+        self.imu_hist = torch.zeros(n, self.cfg.imu_delay_max_steps + 1, 6, device=dev)
+        self.imu_hist[..., 5] = -1.0
         self.prev_joint_vel = torch.zeros(n, nl, device=dev)
 
         # scripts/skrl/play.py: it writes commands * command_scale into the last 3 obs and plays this sequence (5 s each)
@@ -127,10 +135,12 @@ class ArtiD1VelEnv(DirectRLEnv):
         nl_sign = torch.tensor(sign, device=dev)
         o_perm = list(range(6))
         o_sign = [-1.0, 1.0, -1.0, 1.0, -1.0, 1.0]  # ang vel (wx, wy, wz) -> (-wx, wy, -wz); gravity (gx, gy, gz) -> (gx, -gy, gz)
-        for base in (6, 6 + nl, 6 + 2 * nl):  # joint pos, joint vel, last action
+        nh = self.cfg.action_history_steps
+        for base in [6, 6 + nl] + [6 + (2 + h) * nl for h in range(nh)]:  # joint pos, joint vel, last N actions
             o_perm += [base + i for i in perm]
             o_sign += sign
-        o_perm += [6 + 3 * nl, 6 + 3 * nl + 1, 6 + 3 * nl + 2]
+        c0 = 6 + (2 + nh) * nl
+        o_perm += [c0, c0 + 1, c0 + 2]
         o_sign += [1.0, -1.0, -1.0]  # command (vx, vy, wz)
         self.symmetry = {
             "obs_perm": torch.tensor(o_perm, device=dev), "obs_sign": torch.tensor(o_sign, device=dev),
@@ -158,6 +168,10 @@ class ArtiD1VelEnv(DirectRLEnv):
     def _pre_physics_step(self, actions: torch.Tensor):
         self.prev_actions.copy_(self.actions)
         self.actions = actions.clone()
+        self.act_hist = torch.roll(self.act_hist, 1, dims=1)
+        self.act_hist[:, 0] = self.actions
+        if self.cfg.actuator_delay_per_step:
+            self.act_delay_steps = self._sample_act_delay()
         self.cmd_timer -= self.step_dt
         ids = torch.nonzero(self.cmd_timer <= 0.0).flatten()
         if len(ids):
@@ -265,7 +279,12 @@ class ArtiD1VelEnv(DirectRLEnv):
 
         # actor: IMU misalignment, 0..1 step lag, noise; encoder bias; joint vel one step old; noise
         imu = torch.cat((quat_apply(self.imu_misalign, ang_b), quat_apply(self.imu_misalign, grav_b)), dim=-1)
-        imu_seen = torch.where((self.imu_lag > 0).unsqueeze(-1), self.prev_imu, imu)
+        self.imu_hist = torch.roll(self.imu_hist, 1, dims=1)
+        self.imu_hist[:, 0] = imu
+        lag = self.imu_lag
+        if self.cfg.imu_delay_per_step:
+            lag = torch.randint(0, self.cfg.imu_delay_max_steps + 1, (self.num_envs,), device=dev)
+        imu_seen = self.imu_hist[torch.arange(self.num_envs, device=dev), lag]
         self.prev_imu = imu
         jv_seen = self.prev_joint_vel if self.cfg.joint_vel_delay_steps > 0 else qd
         self.prev_joint_vel = qd.clone()
@@ -279,7 +298,7 @@ class ArtiD1VelEnv(DirectRLEnv):
                 u(imu_seen[:, 3:], self.cfg.noise_gravity),
                 u(q_rel + self.encoder_bias, self.cfg.noise_joint_pos),
                 u(jv_seen, self.cfg.noise_joint_vel),
-                self.actions,
+                self.act_hist.flatten(1),
                 self.commands,
             ),
             dim=-1,
@@ -287,7 +306,7 @@ class ArtiD1VelEnv(DirectRLEnv):
         _, _, height = self._feet()
         contact = (height < self.cfg.contact_height).float()
         critic = torch.cat(
-            (ang_b, grav_b, q_rel, qd, self.actions, self.commands, lin_b, height, self.air_time, contact), dim=-1
+            (ang_b, grav_b, q_rel, qd, self.act_hist.flatten(1), self.commands, lin_b, height, self.air_time, contact), dim=-1
         )
         return {"policy": policy, "critic": critic}
 
@@ -419,12 +438,15 @@ class ArtiD1VelEnv(DirectRLEnv):
         self.joint_target[env_ids] = joint_pos
         self.actions[env_ids] = 0.0
         self.prev_actions[env_ids] = 0.0
+        self.act_hist[env_ids] = 0.0
         self.air_time[env_ids] = 0.0
         self.contact_time[env_ids] = 0.0
         self.last_contact[env_ids] = True
         self.peak_height[env_ids] = 0.0
         self.prev_imu[env_ids] = 0.0
         self.prev_imu[env_ids, 5] = -1.0
+        self.imu_hist[env_ids] = 0.0
+        self.imu_hist[env_ids, :, 5] = -1.0
         self.prev_joint_vel[env_ids] = 0.0
         self.imu_lag[env_ids] = torch.randint(0, self.cfg.imu_delay_max_steps + 1, (k,), device=dev)
         self._resample_commands(env_ids)

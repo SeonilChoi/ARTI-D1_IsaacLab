@@ -1095,3 +1095,15 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
 - 11-10 user: "가장 좋은 모델로 일단 commit push" -> v9 agent_36000 exported (torch vs onnx 2.0e-6); ONNX closed loop at
   25-65 ms delay (eval_v9_36000_onnx_score.log): falls 0/64, fwd .046, back -.031, turn .309, stand 0 lifts.
   humanoid_controller 7daa432: agent_vel.onnx replaced, robot_vel.yaml comment updated, pushed. v9 training continues.
+
+- 11-10 Open Duck Mini reference (apirrone/Open_Duck_Mini + Open_Duck_Playground joystick.py + Open_Duck_Mini_Runtime):
+  action delay 0-3 control steps drawn every step, IMU delay 0-3 steps every step, actor sees last 3 actions (+ motor
+  targets), action_scale 0.25, target rate clip 5.24 rad/s in sim, BAM-identified servo model (no XH540 params in BAM;
+  bam/dynamixel has record / measure_delay tools).
+- 11-10 user: "진행해" -> v9 stopped at 140k (PID 1030654 verified train.py, killed; cron bb2ca660 deleted; best v9 = 36k,
+  already deployed). v10 from scratch (seed 7): ARTI_D1_VEL_ACTION_HISTORY 3 (actor obs 59, critic 68), action_scale
+  0.25, actuator delay 25-65 ms drawn per env every control step (actuator_delay_per_step), IMU delay 0-2 steps every
+  step (imu_delay_per_step), rest = v7 config (swing_speed -1 from iter 500, symmetry .2, lateral 0). Not done: target
+  rate clip (servo model already saturates). Run 2026-11-10_10-12-27_ppo_torch, PID 1050077, log
+  logs/train/train_vel_microduck_v10_openduck.log, ~27 it/s. Old (39-dim) checkpoints need ACTION_HISTORY 1 + the old
+  delay flags to be evaluated now. Deploy needs the C++ vel observation extended to 3 actions.

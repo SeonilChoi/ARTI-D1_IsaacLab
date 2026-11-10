@@ -25,8 +25,12 @@ import isaaclab.envs.mdp as mdp
 from .arti_d1_env_cfg import ARTI_D1_ACTUATOR_ARMATURE, ARTI_D1_JOINT_EFFORT_LIMIT, ArtiD1PhysicsCfg, ArtiD1SceneCfg
 
 ARTI_D1_VEL_NUM_JOINTS = 10  # leg joints
-# actor: base ang vel (3) + projected gravity (3) + leg joint pos rel (10) + leg joint vel (10) + last action (10) + command (3)
-ARTI_D1_VEL_POLICY_OBS = 3 + 3 + 10 + 10 + 10 + 3
+# v10 (Open Duck Mini): the actor sees the last N actions (newest first), so it can tell which targets are still in
+# flight under the actuator delay. v1-v9: 1 (39-dim obs; set 1 + the v9 delay settings to evaluate those checkpoints).
+ARTI_D1_VEL_ACTION_HISTORY = 3
+# actor: base ang vel (3) + projected gravity (3) + leg joint pos rel (10) + leg joint vel (10) + last N actions (10 N)
+# + command (3, always last)
+ARTI_D1_VEL_POLICY_OBS = 3 + 3 + 10 + 10 + 10 * ARTI_D1_VEL_ACTION_HISTORY + 3
 # critic: actor terms without noise / delay / bias + base lin vel (3) + foot height (2) + air time (2) + contact (2)
 ARTI_D1_VEL_CRITIC_OBS = ARTI_D1_VEL_POLICY_OBS + 3 + 2 + 2 + 2
 
@@ -87,7 +91,9 @@ class ArtiD1VelEnvCfg(DirectRLEnvCfg):
 
     # ---- actions: target = default + scale * a (mjlab JointPositionAction, use_default_offset). microduck scale 1.0 on
     # low-kp XL330s; ARTI-D1 XH540 kp ~49 Nm/rad tracks closely, 0.5 = mjlab's humanoid default.
-    action_scale = 0.5
+    # v10 0.25 (Open Duck Mini action_scale; less aggressive targets); v1-v9 0.5
+    action_scale = 0.25
+    action_history_steps = ARTI_D1_VEL_ACTION_HISTORY
     # Arms held at this target (rad); no policy output.
     arm_hold_target = {"left_arm_m8": 0.0, "right_arm_m8": 0.0, "left_arm_m8crank_plate": 0.0, "right_arm_m8crank_plate": 0.0}
 
@@ -96,6 +102,9 @@ class ArtiD1VelEnvCfg(DirectRLEnvCfg):
     # v1-v8: 10.0 with (-6, 8)
     actuator_delay_ms = 40.0
     actuator_delay_jitter_ms = (-15.0, 25.0)
+    # v10 (Open Duck Mini: action delay drawn every control step): True = a new delay per env every control step,
+    # False = one per env at start-up (v1-v9)
+    actuator_delay_per_step = True
     actuator_armature = dict(ARTI_D1_ACTUATOR_ARMATURE)
     actuator_armature_scale_range = (0.9, 1.1)  # microduck ARMATURE_RANDOMIZATION_RANGE
     actuator_coulomb = {
@@ -170,7 +179,8 @@ class ArtiD1VelEnvCfg(DirectRLEnvCfg):
     noise_gravity = 0.01
     noise_joint_pos = 0.001
     noise_joint_vel = 0.25
-    imu_delay_max_steps = 1  # base ang vel / gravity lag 0..1 step, resampled per episode
+    imu_delay_max_steps = 2  # base ang vel / gravity lag 0..N steps (v1-v9: 1, per episode)
+    imu_delay_per_step = True  # v10 (Open Duck Mini 0-3 steps every step); False = drawn per episode
     joint_vel_delay_steps = 1  # Dynamixel present velocity is ~1 control period old
     encoder_bias_range = 0.015  # rad, per env, actor joint pos only
     imu_misalign_deg = 6.0  # random-axis IMU mounting rotation per env, actor only
