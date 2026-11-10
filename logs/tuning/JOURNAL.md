@@ -1084,3 +1084,10 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   back -.015 (36k -.040), turn +.311, stand 0 lifts. Swing max L/R 634/713, step 23/15 mm (shorter). standpush 1/32
   (36k 4/32). Video: one robot down at 7 s (front-left, then reset), others upright. Lin tracking eroding under delay;
   36k is the best so far (balanced). Keep watching; if fwd/back keep dropping, end at plateau and ship the best ckpt.
+
+- 11-10 10:1x v9 check (PID 1030654 alive, 119k/240k, 19-27 it/s). TB eroding: track_lin .84 -> .71, track_ang
+  1.22 -> 1.12, action_rate -.096 -> -.124, reward 107-109 (last sixth down to 107.1), LR normal.
+  agent_114000 (cumulative 834k; eval_v9_114000_score/push.log; first score try crashed in kit startup, exit 139, rerun
+  ok; video vel_v9_114000.mp4): falls 0/64; fwd +.023 (78k .035, 36k .044), back -.055, turn +.296, stand 0 lifts.
+  Swing max L/R 761/785 (up), swing 0.40 s, step 24/16 mm. standpush 1/32. Video: upright, walking/turning, no shake.
+  Fwd keeps dropping; 36k stays the best balanced checkpoint.
