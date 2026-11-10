@@ -1189,3 +1189,9 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   torch vs onnx 2.6e-6; ONNX closed loop on the v11 model (eval_v11_12000_onnx_score.log): falls 0/64, fwd .054,
   back -.067, turn .291, stand 0 lifts. humanoid_controller 9366931 (agent_vel.onnx, robot_vel.yaml comment,
   action_history 1), pushed. v11 training continues.
+
+- 11-10 12:2x v11 check (PID 1065246 alive, 59k/240k, 24 it/s). TB: reward ~112 flat, episode length 1161-1178,
+  track_lin .73, track_ang 1.32, action_rate -.099 -> -.078 (smoother), LR normal.
+  agent_54000 (cumulative 810k; eval_v11_54000_score/push.log, video vel_v11_54000.mp4): falls 0/64, fwd +.051, back
+  -.060, turn +.283, stand 0 lifts, swing max 746 mm/s, peak 21 mm, touchdown 470 mm/s (softer), step 32 mm.
+  standpush 2/32. Video: upright, walking/turning. About the same as 12k (deployed); keep watching.
