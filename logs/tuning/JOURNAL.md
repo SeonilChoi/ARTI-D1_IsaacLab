@@ -1238,3 +1238,10 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   torso to the floor (tether drag / pull on every step). Steps look tall with the body tilting over the stance leg.
   record.csv: forward commands are short stick taps (mean vx .01-.06); with even vx .01 the robot steps and the
   gyro jumps to .4-.9; yaw drift during walking up to +28 deg in 2 s and -20 deg in 4 s.
+
+- 11-10 13:4x v12 check (PID 1079218 alive, 47k/240k, 24 it/s). TB: reward 93 -> 109, episode length 1017 -> 1161,
+  track_lin .82-.85, track_ang 1.29-1.33, body_ang_vel -.010 (x4 weight), action_rate -.09, LR normal.
+  agent_42000 (cumulative 810k, v12 model; eval_v12_42000_score/push.log, video vel_v12_42000.mp4): falls 0/64
+  (v11 12k on this model 1/64), fwd +.039 (.053), back -.032 (-.050), turn +.292 (.181), stand 0 lifts, step 24 mm,
+  torso gyro std fwd .173/.123/.068 (v11 12k .168/.237/.136: pitch and yaw rocking halved). standpush 0/32.
+  Video: upright, walking/turning. Adapted to the play: steadier torso and turning back, slower fwd/back.
