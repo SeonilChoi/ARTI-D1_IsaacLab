@@ -1107,3 +1107,15 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   rate clip (servo model already saturates). Run 2026-11-10_10-12-27_ppo_torch, PID 1050077, log
   logs/train/train_vel_microduck_v10_openduck.log, ~27 it/s. Old (39-dim) checkpoints need ACTION_HISTORY 1 + the old
   delay flags to be evaluated now. Deploy needs the C++ vel observation extended to 3 actions.
+
+- 11-10 10:2x v10 check (PID 1050077 alive, 12k/240k, 27 it/s). TB stand-up phase normal: episode length 91 -> 1194,
+  upright 1.98, track_lin .03 -> .72, track_ang .03 -> .59, action_rate -1.49 -> -.06, LR adapting. agent_12000 score
+  (eval_v10_12000_score.log): falls 0/64, stands, no stepping yet (expected this early). push/video skipped this round
+  (user asked to look at the v9 real logs first).
+- 11-10 real logs (humanoid_controller c8c0a89): 08:28 x2 (v7c1 + axis fix) and 10:12-10:16 x6 (v9 36k). v9 still
+  shakes on the ground: stand gyro std .17-.47 rad/s (sim .02), same ~7.5-8 Hz as before; 6 of 8 runs end at 37-40 deg
+  tilt (max_tilt safe stop = fell). One run (10:14:27) quiet (gyro std .06/.01, action step-diff .002; likely hung).
+  Lag in that quiet run at ~0.8 Hz motion: action -> joint 6-9 steps (100-150 ms, corr .94-.99), i.e. the real
+  servos respond slowly even to slow targets (bandwidth, not only transport delay). Correction: the earlier 5-7 step
+  numbers during shaking are ambiguous (the 8 Hz period is ~7.5 steps). Next: identify the XH540 step / chirp
+  response on the hung robot (example_sysid step/chirp tests) and fit the sim actuator model (kp, armature, delay).
