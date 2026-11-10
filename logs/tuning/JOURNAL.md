@@ -1232,3 +1232,9 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   Baseline v11 12k: v11 model falls 0/64, torso gyro std fwd x/y/z .174/.133/.092; with v12 play falls 1/64, fwd .053,
   back -.050, turn .181 (down from .29), torso fwd .168/.237/.136. Play 1-3 deg raises pitch rocking but not roll;
   the robot rolled .92 rad/s, so play of this size alone does not explain the real rocking.
+
+- 11-10 real video (arti_d1_local/logs/비디오 프로젝트 1.mp4, 11 s, portrait, record.csv run): robot starts facing the
+  camera, steps, ends side-on (turned / camera moved), steps again and goes down. A bundle of cables hangs from the
+  torso to the floor (tether drag / pull on every step). Steps look tall with the body tilting over the stance leg.
+  record.csv: forward commands are short stick taps (mean vx .01-.06); with even vx .01 the robot steps and the
+  gyro jumps to .4-.9; yaw drift during walking up to +28 deg in 2 s and -20 deg in 4 s.
