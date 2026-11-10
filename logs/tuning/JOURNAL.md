@@ -1173,3 +1173,8 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   2026-11-10_11-38-44_ppo_torch, PID 1065246, log logs/train/train_vel_microduck_v11_bam.log, ~25 it/s.
   GPU now 14 GB (v10 + v11 + external H1): evals fail with CUDA OOM even at 16 envs -> no eval possible while
   all three run; asked the user whether to stop v10 (no stepping at 93k).
+- 11-10 user: "v10 중단" -> v10 stopped at ~120k (PID 1050077 verified train.py, killed; cron 6157f6a0 deleted; last
+  ckpt agent_120000, no stepping). v11 cron 17fcca62 (:23/:53). GPU back to 9.8 GB.
+  Baseline v9 36k under the v11 servo model (eval_v9_36000_v11model_score.log): falls 0/64, fwd .000 (vy -.023),
+  back -.063, turn +.332 (vx -.073 drift), stand 0 lifts, step 13 mm -> stable but forward walking lost on the fitted
+  (stiffer, faster) servos.
