@@ -1119,3 +1119,13 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   servos respond slowly even to slow targets (bandwidth, not only transport delay). Correction: the earlier 5-7 step
   numbers during shaking are ambiguous (the 8 Hz period is ~7.5 steps). Next: identify the XH540 step / chirp
   response on the hung robot (example_sysid step/chirp tests) and fit the sim actuator model (kp, armature, delay).
+
+- 11-10 sysid_response (humanoid_controller 83a7466 sysid_response.zip, hung robot, P 800 / D 0, 10 ms test loop):
+  The servo state only changes every 30 ms in every test (pos/vel/current repeat for 3 ticks) = the bus round trip is
+  ~30 ms, not the 10 ms period. Same symptom as the 11-03 sysid that the FTDI latency_timer fix was for
+  (dynamixel_master.hpp set_low_latency comment). Step +-0.1 rad (6 joints, 12 steps each): dead time 75-85 ms before
+  the reading moves, 63% at 135-145 ms, 10-90% 120-140 ms, no overshoot, ss error 0.5-4%, current <= 0.3 A.
+  => most of the 100-150 ms lag is the communication cycle (command waits up to a cycle, the reading is a cycle old),
+  then a ~60 ms servo rise. Ask the user: the [DynamixelMaster] latency line printed at start, `readlink -f
+  /dev/Dynamixel` + that ttyUSB's latency_timer, servo Return Delay Time. Fix the bus first, then re-run sysid for the
+  servo-only response to fit the sim.
