@@ -1,0 +1,73 @@
+# ARTI-D1 Open Duck style walk (arti_d1_duck_env.py), PPO after mujoco_playground brax_ppo_config (Open Duck runner):
+# lr 3e-4, entropy 5e-3, discount 0.97, lambda 0.95, unroll 20, 32 minibatches x 4 epochs, 512-256-128, obs normalization.
+# (previous header kept below for reference)
+#
+# actor / critic 512-256-128 elu, init std 1.0, obs normalization, clip 0.2, entropy 0.01, 5 epochs x 4 mini-batches,
+# lr 1e-3 adaptive (kl 0.01), gamma 0.99, lambda 0.95, value loss 1.0, grad norm 1.0, 24 steps per env per iteration.
+seed: 42
+
+models:
+  separate: True
+  policy:
+    class: GaussianMixin
+    clip_actions: False
+    clip_log_std: True
+    min_log_std: -20.0  # v6 back to v2 (v4/v5: -2.3026 = std floor 0.1)
+    max_log_std: 2.0  # v6 back to v2 (v4/v5: 0.405 = cap 1.5)
+    initial_log_std: 0.0
+    network:
+      - name: net
+        input: OBSERVATIONS
+        layers: [512, 256, 128]
+        activations: elu
+    output: ACTIONS
+  value:
+    class: DeterministicMixin
+    clip_actions: False
+    network:
+      - name: net
+        # asymmetric critic: env "critic" state (noise-free obs + base lin vel + foot height / air time / contact)
+        input: STATES
+        layers: [512, 256, 128]
+        activations: elu
+    output: ONE
+
+memory:
+  class: RandomMemory
+  memory_size: -1
+
+agent:
+  class: PPO
+  rollouts: 20
+  learning_epochs: 4
+  mini_batches: 32
+  discount_factor: 0.97
+  gae_lambda: 0.95
+  learning_rate: 3.0e-04
+  learning_rate_scheduler: null
+  learning_rate_scheduler_kwargs: null
+  observation_preprocessor: RunningStandardScaler
+  observation_preprocessor_kwargs: null
+  state_preprocessor: RunningStandardScaler
+  state_preprocessor_kwargs: null
+  value_preprocessor: RunningStandardScaler
+  value_preprocessor_kwargs: null
+  random_timesteps: 0
+  learning_starts: 0
+  grad_norm_clip: 1.0
+  ratio_clip: 0.2
+  value_clip: 0.2
+  entropy_loss_scale: 0.005
+  value_loss_scale: 1.0
+  kl_threshold: 0.0
+  time_limit_bootstrap: True
+  experiment:
+    directory: "arti_d1_duck_walk"
+    experiment_name: ""
+    write_interval: 240
+    checkpoint_interval: 4000   # = 200 iterations
+
+trainer:
+  class: SequentialTrainer
+  timesteps: 120000   # 6000 iterations x 20 = 490M samples (Open Duck: 150-300M)
+  environment_info: log

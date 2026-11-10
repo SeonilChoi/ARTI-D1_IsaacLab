@@ -17,6 +17,8 @@ parser.add_argument("--checkpoint", type=str, required=True)
 parser.add_argument("--num_envs", type=int, default=64)
 parser.add_argument("--physics", type=str, default="isaacsim_physx")
 parser.add_argument("--train_step", type=int, default=0, help="curriculum step the checkpoint was at (logging only)")
+parser.add_argument("--task", type=str, default="Template-Arti-D1-Vel-Direct-v0")
+parser.add_argument("--cmd_scale", type=float, default=1.0, help="scale the scored command sequence (duck task: 0.5)")
 AppLauncher.add_app_launcher_args(parser)
 args_cli = parser.parse_args()
 simulation_app = AppLauncher(args_cli).app
@@ -34,7 +36,7 @@ from isaaclab_tasks.utils import resolve_task_config
 
 import arti_d1.tasks  # noqa: F401
 
-TASK = "Template-Arti-D1-Vel-Direct-v0"
+TASK = args_cli.task
 SEG_S = 5.0
 SEQUENCE = (
     ("forward", (0.12, 0.0, 0.0)),
@@ -46,6 +48,7 @@ SEQUENCE = (
     ("turn_left", (0.0, 0.0, 0.3)),
     ("stand", (0.0, 0.0, 0.0)),
 )
+SEQUENCE = tuple((nm, tuple(c * args_cli.cmd_scale for c in cmd)) for nm, cmd in SEQUENCE)
 SKIP_S = 1.0  # transition after each command change, not scored
 PUSHES = (0.2, 0.3, 0.4, 0.5)
 SETTLE_S, OBSERVE_S = 2.0, 3.0

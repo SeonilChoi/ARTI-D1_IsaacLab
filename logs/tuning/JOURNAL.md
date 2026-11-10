@@ -1284,3 +1284,27 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   fwd +.030, back -.004 (!), turn +.252, stand 0 lifts, touchdown 440 mm/s, step 22 mm, torso fwd .219/.146/.087.
   standpush 1/32. Video: upright, walking/turning. Worse than the baseline (v12 42k on the v13 model: fwd .043,
   back -.041, turn .296, torso .200/.138/.076); keep watching.
+
+- 11-10 user: v12/v13 look jittery next to Open Duck Mini -> "open duck mini의 학습 방법을 분석해서 그대로 진행해. arti d1에 맞게"
+  + "참조 보행 모션도 참고해서 새롭게 만들어". v13 stopped (PID 1092946 verified, killed; cron 19207b60 deleted).
+  Open Duck analysis (Open_Duck_Playground joystick.py / custom_rewards.py / rewards.py / randomize.py, reference
+  generator placo_defaults + auto_gait sweep + fit_poly): imitation reward to a placo gait looked up by command and
+  phase (joint pos weight 15 dominates), tracking lin 2.5 / ang 6.0 exp(-err^2/0.01), torques -1e-3, action rate
+  -0.5, stand still -0.2, alive 20, reward clipped >= 0; obs gyro, accel, cmd, q - q0, qd*0.05, last 3 actions,
+  motor targets, contacts, phase; action_scale .25, motor target rate 5.24 rad/s, action / IMU delay 0-3 steps,
+  noise (q .03/.05/.08, qd 2.5, gyro .1, gravity .1), DR (floor friction .5-1, mass x.9-1.1, torso +-.1 kg,
+  CoM +-5 cm, kp x.9-1.1, qpos0 +-.03, frictionloss / armature), pushes .1-1 m/s every 5-10 s, backlash joints,
+  10 % zero commands, commands resampled every 10 s, brax PPO lr 3e-4, ent .005, gamma .97, 150-300M samples.
+  Their gait: single support 0.17 s, ds ratio .18, foot 4 cm (fast small steps).
+  New ARTI-D1 reference (motion_generator: gait_generator.py --gait_config, scripts/sweep_motions.py,
+  config/arti_d1/gait_duck.json): Open Duck defaults scaled; a scan showed single support 0.25 s needs knee
+  10.7 rad/s (XH540 no-load 4.8) -> single support 0.45 s, ds .18, foot 25 mm, period 1.08 s (knee max 4.5 rad/s;
+  old gait 0.65 s / 28 mm / 1.625 s). Sweep dx -.03..+.04 (.01), dy +-.02 (.01), dth +-.2 (.1) = 200 clips ->
+  assets/motions/arti_d1_duck/ ; scripts/duck/build_duck_reference.py -> arti_d1_duck_reference.npz (100 phase bins,
+  coverage vx -.056..+.074, vy +-.06, wz +-.37; within joint limits; mirror error <= 3 deg).
+  New task Template-Arti-D1-Duck-Direct-v0 (arti_d1_duck_env.py / _cfg.py, agents/skrl_duck_ppo_cfg.yaml): the
+  Open Duck rewards / obs (71, critic 92 incl. reference) / noise / DR / PPO, reference = 4-NN inverse-distance blend
+  by command at the phase, sigmas scaled to the coverage (lin .0022, ang .0014, y tol .03), torques -7.5e-5,
+  motor rate 4.8 rad/s; ARTI-D1 parts: fitted servo model (v11), joint play 1-3 deg, real pelvis mass, TPU contact,
+  no contacts in the actor (no foot sensors). eval_vel.py --task / --cmd_scale.
+  Duck v1 from scratch, seed 7, 120k timesteps, PID 1110435, log logs/train/train_duck_v1.log.

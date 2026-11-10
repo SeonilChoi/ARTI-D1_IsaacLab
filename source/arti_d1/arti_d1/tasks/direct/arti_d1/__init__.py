@@ -50,3 +50,14 @@ gym.register(
         "skrl_cfg_entry_point": f"{agents.__name__}:skrl_vel_ppo_cfg.yaml",
     },
 )
+
+gym.register(
+    id="Template-Arti-D1-Duck-Direct-v0",
+    entry_point=f"{__name__}.arti_d1_duck_env:ArtiD1DuckEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": f"{__name__}.arti_d1_duck_env_cfg:ArtiD1DuckEnvCfg",
+        "default_agent": "skrl",
+        "skrl_cfg_entry_point": f"{agents.__name__}:skrl_duck_ppo_cfg.yaml",
+    },
+)
