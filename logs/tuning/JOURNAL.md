@@ -1206,3 +1206,9 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   gyro .64-.76, joints p-p 30-46 deg (sim 19-25), falls.
   => policy output in walking looks like sim, the body moves 4-6x more: plant mismatch under load (backlash / frame
   compliance / foot contact / mass-CoM), not the controller loop. Ask for a phone video of a walk + stand, floor type.
+
+- 11-10 12:5x v11 check (PID 1065246 alive, 98k/240k, 17-24 it/s). TB: reward ~111-112 flat, track_lin .74 -> .66 and
+  track_ang 1.33 -> 1.22 (slowly down), action_rate -.08, LR normal.
+  agent_96000 (cumulative 852k; eval_v11_96000_score/push.log, video vel_v11_96000.mp4): falls 0/64, fwd +.048
+  (vy -.017), back -.062, turn +.292, side vx -.018, stand 0 lifts, touchdown 471 mm/s, step 30 mm. standpush 3/32.
+  Video: upright, walking/turning. No better than 12k / 54k; tracking TB eroding slightly.
