@@ -1255,3 +1255,16 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   agent_84000 (cumulative 852k; eval_v12_84000_score/push.log, video vel_v12_84000.mp4): falls 0/64, fwd +.014
   (42k .040), back -.025, turn +.269, stand 0 lifts, step 15 mm, torso fwd .184/.146/.072. standpush 1/32.
   Video: upright; one robot drifts toward the camera from 17 s (no fall). Fwd keeps dropping; 42k (deployed) stays best.
+
+- 11-10 real logs after cable tidy (humanoid_controller adbf5ab, v12 42k, joystick dead-man OK): standing tilt now
+  ~1 deg (was 4.4 with the cables). Walking still rocks: 142230 vx .04-.10 gyro std x/y/z 1.62/1.17/.80 (roll 88% at
+  2-6 Hz), 141957 falls at 7.7 s. Findings (walk 4-10 s vs sim v11 12k walk):
+  * joint tracking error target(t-3) - q: real ~= sim (hip_roll 3.8 vs 3.3 deg, knee 8-10 vs 10-11) -> servos track
+    like the sim; currents <= 2.5 A.
+  * torso roll rate vs sum of both hip_roll joint velocities: real corr -.79, sim .11 -> on the robot the hip_roll
+    motion rolls the torso (both feet on the ground) instead of swinging a leg.
+  * swing clearance from FK + IMU (|vertical sole height difference|): real median 1.7 / p90 8.4 / max 17.6 mm,
+    sim 12.1 / 19.7 / 24.4 mm -> the real robot barely unloads / lifts a foot; it tips toward the swing side.
+  Candidates: foot rolling on its sole edge (no ankle roll, 35 mm sole), lateral CoM / mass distribution, hip_roll
+  play (encoders are motor side). Next (needs approval): physical checks; v13 with lateral CoM randomization,
+  larger hip_roll play, higher swing target.
