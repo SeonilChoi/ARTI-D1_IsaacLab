@@ -1212,3 +1212,13 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   agent_96000 (cumulative 852k; eval_v11_96000_score/push.log, video vel_v11_96000.mp4): falls 0/64, fwd +.048
   (vy -.017), back -.062, turn +.292, side vx -.018, stand 0 lifts, touchdown 471 mm/s, step 30 mm. standpush 3/32.
   Video: upright, walking/turning. No better than 12k / 54k; tracking TB eroding slightly.
+
+- 11-10 floor tests (humanoid_controller badfffd: capet.csv, rubber.csv, 대리석.csv = marble, record.csv = the run
+  filmed; the video itself is not in the repo). Every floor: standing quiet (gyro .001), then within 2-4 s of a
+  forward command gyro .4-1.3 rad/s and a fall (carpet 2.7 s, rubber 2.7 s, marble 6.8 s). Floor type is not the
+  cause. record.csv walking segments: gyro std x/y/z .92/.72/.65 (sim .15/.16/.11); real roll power 78% at 2-6 Hz
+  (side rocking at the step rhythm), pitch 53% at 6-12 Hz (impact / vibration); joint motions about sim-sized.
+  User: "유격이 약간 있다" (some joint play). The servo encoders are motor-side, so link play does not show in the
+  joint readings -> body rocks without the joints moving more = backlash / structural compliance, not modelled in sim.
+  Proposal (needs approval): (1) tighten / shim the leg joints, hip_roll first; (2) v12 = v11 + backlash in the sim
+  actuator (dead band +-b on the PD error, b random per env/joint 0-1.5 deg) + stronger torso angular-velocity penalty.
