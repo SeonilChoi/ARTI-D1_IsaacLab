@@ -1077,3 +1077,10 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   (v7c1 same delay 12/64), fwd +.044 (v7c1 .050), back -.040 (-.056), turn +.305 (.246), stand 0 lifts. Swing max L/R
   648/654, touchdown 547/512, peak 28/26 mm, step 29/21 mm. standpush 4/32 (falls at .4/.5 m/s). Video: upright,
   walking/turning, no visible shake. Delay robustness learned early; tracking fwd/back a bit lower.
+
+- 11-10 09:4x v9 check (PID 1030654 alive, 81k/240k, ~27 it/s). TB: track_lin falling .84 -> .76, track_ang 1.23 -> 1.18,
+  action_rate -.096 -> -.116 (worse), reward flat 108-109, LR normal.
+  agent_78000 (cumulative 798k; eval_v9_78000_score/push.log, video vel_v9_78000.mp4): falls 0/64; fwd +.035 (36k .044),
+  back -.015 (36k -.040), turn +.311, stand 0 lifts. Swing max L/R 634/713, step 23/15 mm (shorter). standpush 1/32
+  (36k 4/32). Video: one robot down at 7 s (front-left, then reset), others upright. Lin tracking eroding under delay;
+  36k is the best so far (balanced). Keep watching; if fwd/back keep dropping, end at plateau and ship the best ckpt.
