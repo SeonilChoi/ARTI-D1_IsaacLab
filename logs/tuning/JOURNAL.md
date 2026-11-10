@@ -1195,3 +1195,14 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   agent_54000 (cumulative 810k; eval_v11_54000_score/push.log, video vel_v11_54000.mp4): falls 0/64, fwd +.051, back
   -.060, turn +.283, stand 0 lifts, swing max 746 mm/s, peak 21 mm, touchdown 470 mm/s (softer), step 32 mm.
   standpush 2/32. Video: upright, walking/turning. About the same as 12k (deployed); keep watching.
+
+- 11-10 real v11 12k logs (humanoid_controller 0ae54de: 122647 stand 45 s, 122805 stand/walk/turn 40 s):
+  STAND now quiet: gyro std .000-.001 rad/s for 36 s (sim stand .018), action step-diff .001, no 8 Hz chatter.
+  Lag action -> joint 3-4 steps = sim. Standing pitch +4.4 deg forward (grav x .076; sim .012).
+  122647 at 38.5 s a pitch rocking starts (0.7 Hz, gyro y +-.3 growing), policy corrections tiny (knee act .02-.05),
+  no step taken, falls at 44-45 s (39 deg tilt stop).
+  122805 walking vx .04 (18-21 s): gyro std .43-.85 (sim at vx .07: .13), action step-diff .107 (sim .110), knee p-p
+  20-25 deg (sim 19), gyro y has 8-10 Hz content; calms when the command returns to 0 (27-33 s). Turn .25 (33-39 s):
+  gyro .64-.76, joints p-p 30-46 deg (sim 19-25), falls.
+  => policy output in walking looks like sim, the body moves 4-6x more: plant mismatch under load (backlash / frame
+  compliance / foot contact / mass-CoM), not the controller loop. Ask for a phone video of a walk + stand, floor type.
