@@ -1245,3 +1245,7 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   (v11 12k on this model 1/64), fwd +.039 (.053), back -.032 (-.050), turn +.292 (.181), stand 0 lifts, step 24 mm,
   torso gyro std fwd .173/.123/.068 (v11 12k .168/.237/.136: pitch and yaw rocking halved). standpush 0/32.
   Video: upright, walking/turning. Adapted to the play: steadier torso and turning back, slower fwd/back.
+
+- 11-10 user: "새로운 모델로 push" -> v12 agent_54000 score (eval_v12_54000_score.log): falls 0/64 but fwd .022, back -.019
+  (worse than 42k). Deployed v12 agent_42000: torch vs onnx 3.3e-6, ONNX closed loop (eval_v12_42000_onnx_score.log)
+  falls 0/64, fwd .040, back -.025, turn .290, torso fwd .172/.128/.066. humanoid_controller 27e44cc, pushed.
