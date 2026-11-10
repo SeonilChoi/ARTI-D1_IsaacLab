@@ -1091,3 +1091,7 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   ok; video vel_v9_114000.mp4): falls 0/64; fwd +.023 (78k .035, 36k .044), back -.055, turn +.296, stand 0 lifts.
   Swing max L/R 761/785 (up), swing 0.40 s, step 24/16 mm. standpush 1/32. Video: upright, walking/turning, no shake.
   Fwd keeps dropping; 36k stays the best balanced checkpoint.
+
+- 11-10 user: "가장 좋은 모델로 일단 commit push" -> v9 agent_36000 exported (torch vs onnx 2.0e-6); ONNX closed loop at
+  25-65 ms delay (eval_v9_36000_onnx_score.log): falls 0/64, fwd .046, back -.031, turn .309, stand 0 lifts.
+  humanoid_controller 7daa432: agent_vel.onnx replaced, robot_vel.yaml comment updated, pushed. v9 training continues.
