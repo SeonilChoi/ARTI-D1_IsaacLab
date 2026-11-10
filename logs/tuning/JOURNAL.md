@@ -1184,3 +1184,8 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   agent_12000 (cumulative 768k; eval_v11_12000_score/push.log, video vel_v11_12000.mp4): falls 0/64, fwd +.058
   (baseline v9 36k on this model .000), back -.063, turn +.292, stand 0 lifts, swing max 666 mm/s, peak 28 mm,
   step 33 mm. standpush 2/32. Video: upright, walking/turning. Forward walking recovered on the fitted servos.
+
+- 11-10 user: v9 36k still shakes on the robot after the bus fix (by eye, no log). Deployed v11 agent_12000 early:
+  torch vs onnx 2.6e-6; ONNX closed loop on the v11 model (eval_v11_12000_onnx_score.log): falls 0/64, fwd .054,
+  back -.067, turn .291, stand 0 lifts. humanoid_controller 9366931 (agent_vel.onnx, robot_vel.yaml comment,
+  action_history 1), pushed. v11 training continues.
