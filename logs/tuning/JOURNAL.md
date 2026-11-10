@@ -1145,3 +1145,16 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
     v9/v10 model (40 ms, 25-65): dead 43 ms, t63 113 ms -> brackets the robot (dead 40, t63 100).
   With the old 30 ms bus the robot was dead 80 / t63 140 = beyond even the v9 training range -> why v9 still shook.
   Next: real test of v9 36k with the fixed bus; v10 (same delay range) keeps training.
+
+- 11-10 11:4x v10 check (PID 1050077 alive, 93k/240k, 27 it/s). TB flat-ish: reward 106, track_lin 1.17, track_ang
+  1.43, action_rate -.15, air_time 0 (still no steps), episode length full, LR normal. agent_90000
+  (eval_v10_90000_score/push.log, video vel_v10_90000.mp4): falls 0/64, 0 touchdowns, fwd/back 0, turn +.287 by
+  twisting on planted feet, standpush 0/32. Video: all standing. No stepping yet at 93k (v6 stepped from ~96k); if still
+  none by ~150k, propose a change (air_time / gait incentive) to the user.
+- 11-10 IMU check (real logs restored from humanoid_controller c8c0a89): standing still (081433, 2-13 s) gyro std
+  .002-.003 rad/s, step-to-step diff .002-.003, bias y -.012 rad/s, projected gravity std <= .002; 0.2% repeated
+  samples at 60 Hz (fresh every step), no spikes (max jump .03). Below the sim noise (gyro +-.03 uniform, gravity
+  +-.01). Hung run 101427: gyro std .02-.07 (leg motion). During the shake (101638) gyro std .4-.5 with smooth ~8 Hz
+  content = real body motion, not sensor noise. Xsens on /dev/Xsens at 115200 baud (sensor.yaml): enough for 60 Hz.
+  => IMU noise / jitter is not the problem.
+- BAM: not applied. Only the step-response check of the existing (datasheet + delay) servo model vs the real servos.
