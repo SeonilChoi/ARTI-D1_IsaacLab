@@ -65,6 +65,12 @@ class ArtiD1VelEnv(DirectRLEnv):
         lo, hi = self.cfg.actuator_coulomb_scale_range
         self.act_coulomb = per_type(self.cfg.actuator_coulomb)[None, :] * torch.empty(n, nj, device=dev).uniform_(lo, hi)
         self.act_stuck = torch.zeros(n, nj, dtype=torch.bool, device=dev)
+        # joint play: half-width of the dead band (rad) per env and joint, legs only
+        lo_b, hi_b = self.cfg.actuator_backlash_deg
+        self.act_backlash = torch.zeros(n, nj, device=dev)
+        if hi_b > 0.0:
+            play = torch.empty(n, nj, device=dev).uniform_(lo_b, hi_b) * (math.pi / 180.0) / 2.0
+            self.act_backlash = play * self.leg_mask.float()[None, :]
         self.act_q_stick = torch.zeros(n, nj, device=dev)
         self.effort_limit = torch.tensor([self.cfg.joint_effort_limit[j] for j in names], device=dev)
 
@@ -197,6 +203,9 @@ class ArtiD1VelEnv(DirectRLEnv):
         q = self.robot.data.joint_pos.torch
         qd = self.robot.data.joint_vel.torch
         kp = self.robot.data.joint_stiffness.torch.clamp_min(1e-3)
+        # joint play: no position torque inside +-backlash of the target (the link is free there)
+        e0 = delayed - q
+        delayed = q + torch.sign(e0) * (e0.abs() - self.act_backlash).clamp_min(0.0)
         err = delayed - q
         moving = qd.abs() > self.cfg.actuator_stick_velocity
         stick = ~moving & (kp * err.abs() <= self.act_coulomb)

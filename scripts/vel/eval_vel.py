@@ -240,6 +240,15 @@ def run_score(env, u, policy):
             vals.append(math.degrees(np.median(rom)) if rom else float("nan"))
         parts.append(f"{jt} {vals[0]:.1f}/{vals[1]:.1f}")
     print("[VEL-SCORE] ROM p-p deg L/R forward: " + " | ".join(parts))
+    # torso angular velocity spread per env (pelvis frame, = the real IMU gyro std the robot logs give), forward / turn
+    for s_name in ("forward", "turn_left"):
+        s = [i for i, (nm, _) in enumerate(SEQUENCE) if nm == s_name][0]
+        m = (seg == s) & (tseg >= SKIP_S)
+        W = R["w"][m]
+        stds = [W[al[m][:, e], e].std(0) for e in range(n) if al[m][:, e].sum() > 10]
+        if stds:
+            sd = np.median(np.array(stds), axis=0)
+            print(f"[VEL-SCORE] torso gyro std {s_name}: x {sd[0]:.3f} y {sd[1]:.3f} z {sd[2]:.3f} rad/s")
 
 
 def run_standpush(env, u, policy):

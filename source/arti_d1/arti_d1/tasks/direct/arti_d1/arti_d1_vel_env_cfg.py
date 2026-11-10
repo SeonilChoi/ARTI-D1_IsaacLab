@@ -34,9 +34,11 @@ ARTI_D1_VEL_NUM_JOINTS = 10  # leg joints
 #        robot (scripts/tuning/fit_servo_model.py on sysid_response2 2026-11-10, Return Delay Time 0, 10 ms bus):
 #        delay ~22 ms, kp x1.5, kd x1.25, armature x3, Coulomb 0.06 Nm (fit: mean normalised RMS .055 vs .11-.27 before)
 ARTI_D1_VEL_PROFILE = os.environ.get("ARTI_D1_VEL_PROFILE", "v10")
-if ARTI_D1_VEL_PROFILE not in ("v10", "v11"):
-    raise ValueError(f"ARTI_D1_VEL_PROFILE must be v10 or v11, got {ARTI_D1_VEL_PROFILE}")
-_V11 = ARTI_D1_VEL_PROFILE == "v11"
+#   v12: v11 + joint play (backlash, total 1-3 deg per env / leg joint, user 2026-11-10) + torso ang vel penalty x4
+if ARTI_D1_VEL_PROFILE not in ("v10", "v11", "v12"):
+    raise ValueError(f"ARTI_D1_VEL_PROFILE must be v10, v11 or v12, got {ARTI_D1_VEL_PROFILE}")
+_V12 = ARTI_D1_VEL_PROFILE == "v12"
+_V11 = ARTI_D1_VEL_PROFILE in ("v11", "v12")  # v12 builds on v11
 ARTI_D1_VEL_ACTION_HISTORY = 1 if _V11 else 3
 # actor: base ang vel (3) + projected gravity (3) + leg joint pos rel (10) + leg joint vel (10) + last N actions (10 N)
 # + command (3, always last)
@@ -119,6 +121,9 @@ class ArtiD1VelEnvCfg(DirectRLEnvCfg):
     # PD gain scales on the robot actuators (applied in __post_init__); v11 fitted kp x1.5, kd x1.25
     actuator_kp_scale = 1.5 if _V11 else 1.0
     actuator_kd_scale = 1.25 if _V11 else 1.0
+    # Joint play (backlash) on the leg joints: total play in deg, drawn per env and joint; inside +-play/2 of the target
+    # the servo gives no position torque (dead band on the PD error). (0, 0) = off. v12: 1-3 deg (user estimate).
+    actuator_backlash_deg = (1.0, 3.0) if _V12 else (0.0, 0.0)
     actuator_armature_scale_range = (0.9, 1.1)  # microduck ARMATURE_RANDOMIZATION_RANGE
     actuator_coulomb = {
         "hip_yaw": 0.1, "hip_roll": 0.1, "hip_pitch": 0.1, "knee": 0.1, "ankle": 0.1,
@@ -165,7 +170,7 @@ class ArtiD1VelEnvCfg(DirectRLEnvCfg):
     # its weight with hip_roll, the demo uses 15 deg of it)
     pose_std_standing = {"hip_yaw": 0.1, "hip_roll": 0.05, "hip_pitch": 0.15, "knee": 0.15, "ankle": 0.1}
     pose_std_walking = {"hip_yaw": 0.3, "hip_roll": 0.1, "hip_pitch": 0.4, "knee": 0.4, "ankle": 0.25}
-    body_ang_vel_weight = -0.05
+    body_ang_vel_weight = -0.2 if _V12 else -0.05  # v12 x4 (real torso rocked 6x sim)
     dof_pos_limits_weight = -1.0
     action_rate_stages = ((0, -0.1), (500 * 24, -0.2), (750 * 24, -0.4), (1000 * 24, -0.6), (1250 * 24, -0.8), (1500 * 24, -1.0))
     air_time_weight = 3.0

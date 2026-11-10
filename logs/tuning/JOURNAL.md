@@ -1222,3 +1222,13 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   joint readings -> body rocks without the joints moving more = backlash / structural compliance, not modelled in sim.
   Proposal (needs approval): (1) tighten / shim the leg joints, hip_roll first; (2) v12 = v11 + backlash in the sim
   actuator (dead band +-b on the PD error, b random per env/joint 0-1.5 deg) + stronger torso angular-velocity penalty.
+
+- 11-10 user: "v12 진행해. 유격은 1~3도" -> v12 profile (ARTI_D1_VEL_PROFILE=v12) = v11 + joint play on the leg
+  joints: total play 1-3 deg per env/joint (dead band +-0.5..1.5 deg on the PD error in _apply_action, no position
+  torque inside it) + body_ang_vel_weight -0.05 -> -0.2. v11 stopped at 114k (PID 1065246 verified train.py, killed;
+  cron 17fcca62 deleted; deployed v11 12k stays). v12 from v11 11-38-44 agent_12000, offset 768000, seed 7, 240k.
+  Run 2026-11-10_13-08-29_ppo_torch, PID 1079218, log logs/train/train_vel_microduck_v12_backlash.log, 26 it/s.
+  eval_vel.py now prints the torso gyro std (pelvis frame, = the real IMU gyro) for the forward / turn segments.
+  Baseline v11 12k: v11 model falls 0/64, torso gyro std fwd x/y/z .174/.133/.092; with v12 play falls 1/64, fwd .053,
+  back -.050, turn .181 (down from .29), torso fwd .168/.237/.136. Play 1-3 deg raises pitch rocking but not roll;
+  the robot rolled .92 rad/s, so play of this size alone does not explain the real rocking.
