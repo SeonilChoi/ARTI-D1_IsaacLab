@@ -1368,3 +1368,12 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   Duck v3 config (user: "새롭게 학습 수행해"): reference quick, yaw cmd +-.33 (sigma ang .0011), std cap max_log_std 0,
   KL-adaptive LR (kl .01), noise gyro .05 / gravity .02 / joint pos .01-.02 / joint vel .5, pushes .25. Rest as v2.
   Run 2026-11-11_08-14-17_ppo_torch, PID 1190970, seed 7, log logs/train/train_duck_v3.log, ~28 it/s (GPU alone).
+
+- 11-11 08:4x duck v3 check (run 08-14-17, PID 1190970 alive, 22.7k/120k, 15-28 it/s). TB: episode length 826
+  (5.8k: 738), contact match .69 (v2 best .54), imitation joint err 4.8 deg, entropy loss -.063 (std well under the
+  cap, no drift), value loss .011, LR KL-adapted down to 5.9e-5, lin err .31, yaw err .56 (tracking weak / flat).
+  agent_20000 (eval_duck3_20000_score/push.log, cmd_scale .5, video duck3_20000.mp4): falls 2/64 (v2 24k: 13),
+  quick stepping as wanted: 3.14 touchdowns/s, swing 0.20 s, peak 33 mm, step 47 mm, both down 33 %. But tracking
+  poor: forward drift +.03 m/s on stand / back / side (back cmd -.05 got +.016, side .03 got .022, turn .15 got .205),
+  stand still steps 3.4 lifts/s, stance slip 269 mm/s, torso gyro std fwd 1.2 / 1.2 / .63 rad/s (v12 .17). standpush
+  5/32 (v2 11-12). Video: quick small steps, some lurching / tilts. Early; stable so far.
