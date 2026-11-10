@@ -1346,3 +1346,13 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   for ARTI-D1's slow gait and narrow feet: gravity noise +-.1, gyro +-.1, ankle pos +-.08 rad, joint vel +-2.5 rad/s,
   pushes +-.5 m/s, CoM +-3 cm, kp +-10 % on top of play / delay. Proposal to the user (config change): duck v3 with
   ARTI-realistic noise (gravity .02, gyro .05, joint pos .01-.02, joint vel .5) and pushes .25.
+
+- 11-10 17:5x duck v2 COLLAPSED at ~60k (final check, run stopped: PID 1117929 verified, killed; cron 6ef0d542
+  deleted). TB: episode length 860 (15k) -> 700 (55k) -> 321-348 (63k+), imitation joint err 4.9 -> 15 deg, contact
+  match .54 -> .42, value loss .025 -> .17, entropy loss pinned at -6e-4 from 63k = log std at the cap (max_log_std 2,
+  std 7.4) -> actions saturate at the +-1 clamp (action_rate -> 0). agent_76000 (eval_duck2_76000_score/push.log):
+  falls 25/64 within 0.9-3.9 s, survivors frozen (0.02 touchdowns/s), standpush 24/32.
+  Cause: clamping a Gaussian instead of brax's tanh squashing: past the clamp more std costs nothing in the env and
+  the entropy bonus keeps growing it. Best duck v2 checkpoints were 24k-48k (still 13-19/64 falls, torso roll .6).
+  Proposal (needs approval): duck v3 = std cap (max_log_std 0 -> std <= 1) + KL-adaptive LR (our stable setting) +
+  ARTI-realistic noise (gravity .02, gyro .05, joint pos .01-.02, joint vel .5) + pushes .25.
