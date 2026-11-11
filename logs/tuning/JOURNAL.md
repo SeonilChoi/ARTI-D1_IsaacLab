@@ -1377,3 +1377,15 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   poor: forward drift +.03 m/s on stand / back / side (back cmd -.05 got +.016, side .03 got .022, turn .15 got .205),
   stand still steps 3.4 lifts/s, stance slip 269 mm/s, torso gyro std fwd 1.2 / 1.2 / .63 rad/s (v12 .17). standpush
   5/32 (v2 11-12). Video: quick small steps, some lurching / tilts. Early; stable so far.
+
+- 11-11 09:0x duck v3 check (PID 1190970 alive, 60.6k/120k). TB slowly improving, no collapse: episode length 874
+  (20k: 826), contact match .68, imitation err 4.7 deg, lin err .28 (.31), yaw err .56, entropy -.063 flat, value
+  loss .014, LR 5.9e-5.
+  agent_60000 (eval_duck3_60000_score/push.log, video duck3_60000.mp4): falls 6/64 (4 of them at 1.5-2.3 s after
+  reset), fwd +.062 of .06, turn +.142 of .15 (better), but the forward bias stays: stand +.030, back cmd -.05 got
+  +.025, side .03 got .027 with vx +.043. Stepping 3.2/s, swing .20 s, peak 31 mm, stand still 3.4 lifts/s, slip
+  247 mm/s, torso gyro fwd 1.28 / 1.10 / .65. standpush 3/32 (20k: 5). Video: quick small steps, mostly upright.
+  Reference checked: the zero clip has mean v 0, backward clips reach -.06 -> the forward bias is the policy, not the
+  reference. Likely cause: tracking reward too narrow (sigma lin .0022: an error of .075 m/s pays exp(-2.6) = .08 of
+  2.5) next to imitation 15 + alive 20, so walking slightly forward is never worth correcting. Possible fix (needs
+  approval): sigma lin .0022 -> .005 or more tracking weight. Training continues.
