@@ -1522,3 +1522,14 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   still 0 lifts/s, torso gyro fwd .10 / .13 / .07 (v12 .17 / .12 / .07; duck runs .3-1.3). Tracking: fwd .046 of .12
   (v12 .040), back -.069 of -.10, side .005 of .06 (not learned, as v12), diag .031 / -.003, turn .289 of .30.
   Video: upright, quick small steps. Best gait so far. Improving -> continue.
+
+- 11-11 17:5x v14 check (84k/240k): TB flat since ~20k (episode length 1159-1199, air_time 1.64-1.74, track lin .70-.73,
+  ang 1.24-1.31). agent_84000 (eval_v14_84000_*, video vel_v14_84000.mp4): falls 0/64, standpush 1/32, fwd .051 of
+  .12, back -.074 of -.10, stand .000, side not learned, turn .291 of .30, 4.98 touchdowns/s, swing .22 s, peak 14.8 mm,
+  both up 12 % (both down 0 %), slip 52 mm/s, gyro .10 / .13 / .07. Video: upright, quick small steps.
+  Flight check: 5 touchdowns/s = each foot every 0.4 s with .22 s swings -> .18 s stance < swing, so both feet are up
+  ~10 % of the time (real flight, not a sensor artefact). Cause: the air-time reward is per foot per step (sum of feet
+  in the window), so both feet up pays double. v14 plateaued -> stopped at 85k (PID 1248291 verified, killed).
+  v15 = v14 + air_time_single_stance: a foot's air time only pays while the other foot is down. From v14 agent_84000,
+  curriculum offset 894000. Run 2026-11-11_17-51-33_ppo_torch, PID 1254584, log
+  logs/train/train_vel_microduck_v15_stance.log, cron 13/43.

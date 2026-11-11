@@ -39,13 +39,15 @@ ARTI_D1_VEL_PROFILE = os.environ.get("ARTI_D1_VEL_PROFILE", "v10")
 #        TPU-like compliant foot / ground contact (user 2026-11-10: soles are slightly elastic TPU)
 #   v14: v12 + "잔발" (user 2026-11-11: short quick steps like the shuffle reference, learned the microduck way, no
 #        reference): air-time window 0.15-0.45 -> 0.06-0.22 s, swing target 30 -> 12 mm
-_PROFILES = ("v10", "v11", "v12", "v13", "v14")
+#   v15: v14 + air-time reward only in single stance (v14 ran with 12 % both-feet-up flight)
+_PROFILES = ("v10", "v11", "v12", "v13", "v14", "v15")
 if ARTI_D1_VEL_PROFILE not in _PROFILES:
     raise ValueError(f"ARTI_D1_VEL_PROFILE must be one of {_PROFILES}, got {ARTI_D1_VEL_PROFILE}")
 _V13 = ARTI_D1_VEL_PROFILE == "v13"
-_V14 = ARTI_D1_VEL_PROFILE == "v14"
-_V12 = ARTI_D1_VEL_PROFILE in ("v12", "v13", "v14")  # v13 / v14 build on v12
-_V11 = ARTI_D1_VEL_PROFILE in ("v11", "v12", "v13", "v14")  # v12 builds on v11
+_V15 = ARTI_D1_VEL_PROFILE == "v15"
+_V14 = ARTI_D1_VEL_PROFILE in ("v14", "v15")  # v15 builds on v14
+_V12 = ARTI_D1_VEL_PROFILE in ("v12", "v13", "v14", "v15")  # v13 / v14 build on v12
+_V11 = ARTI_D1_VEL_PROFILE in ("v11", "v12", "v13", "v14", "v15")  # v12 builds on v11
 ARTI_D1_VEL_ACTION_HISTORY = 1 if _V11 else 3
 # actor: base ang vel (3) + projected gravity (3) + leg joint pos rel (10) + leg joint vel (10) + last N actions (10 N)
 # + command (3, always last)
@@ -198,6 +200,7 @@ class ArtiD1VelEnvCfg(DirectRLEnvCfg):
     # microduck window [0.125, 0.300] s; ARTI-D1 swings are slower (servo speed), policy swings measured 0.25-0.32 s
     air_time_min = 0.06 if _V14 else 0.15  # v14: quick short swings (shuffle reference single support 0.18 s)
     air_time_max = 0.22 if _V14 else 0.45
+    air_time_single_stance = _V15
     foot_clearance_weight = -2.0
     foot_swing_height_weight = -0.25
     # microduck 0.02 m on a 25 cm robot; the ARTI-D1 demo swings 28 mm

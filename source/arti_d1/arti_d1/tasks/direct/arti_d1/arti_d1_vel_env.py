@@ -353,6 +353,9 @@ class ArtiD1VelEnv(DirectRLEnv):
         c_rate = torch.sum(torch.square(self.actions - self.prev_actions), dim=1)
 
         in_range = (self.air_time > cfg.air_time_min) & (self.air_time < cfg.air_time_max)
+        if cfg.air_time_single_stance:
+            # v15: only while the other foot is down (v14's per-foot air reward paid double for both feet up -> 12 % flight)
+            in_range = in_range & contact.flip(-1)
         r_air = torch.sum(in_range.float(), dim=1) * moving
 
         speed_xy = torch.linalg.norm(foot_vel[..., :2], dim=-1)
