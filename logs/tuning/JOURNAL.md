@@ -1687,3 +1687,11 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   .22 s, peak 13.7 mm, both up 1 %, slip 74 mm/s, gyro .14 / .11 / .08. Play video: all 4 upright through the slow
   side step at ~12 s (no fall). Best compromise so far: side-step fall gone, turn and shuffle kept (both down 9 % vs
   v18 0-3 %, v19 33 %). Continue.
+
+- 11-12 03:3x v20 check (PID 1302658 alive, 85k/240k, ~21-24 it/s). TB mostly flat since ~40k (track_lin 1.26-1.29,
+  track_ang 1.07-1.09, track_lat .15, air_time 1.21-1.26, pose .85, episode length ~1180).
+  agent_84000 (eval_v20_84000_*, video vel_v20_84000.mp4): falls 0/64, standpush 0/32 (0/8 at .2-.5), fwd .077,
+  back -.060, side .018 (best of v18-v20), diag .062 / -.020, turn .256, 4.36 touchdowns/s, both down 5 %, swing
+  .22 s, peak 13.7 mm, slip 85 mm/s, gyro .13 / .12 / .08. Play video: all 4 upright, no fall at 12 s.
+  v20 84k = new best all-round on the realistic model (0/64, 0/32, no side-step fall, shuffle kept). Near plateau;
+  one more check, then close v20 and propose / do the export.
