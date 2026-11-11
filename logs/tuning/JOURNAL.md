@@ -1482,3 +1482,12 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   -> snap to the default pose mid-stride -> falls 0.8-2 s after a stop). Reset counts as already stopped. Command
   resample 6-10 s -> 3-6 s (more stop / start events). Run 2026-11-11_15-29-43_ppo_torch, PID 1239957, log
   logs/train/train_duck_shuffle_s2.log, ARTI_D1_DUCK_REF=shuffle, cron 13/43.
+
+- 11-11 16:0x shuffle s2 check (PID 1239957 alive, 31k/120k, ~21-25 it/s). TB: episode length 945 (rising), lin err
+  filt .043, yaw err filt .074, trunk rate rms .69, contact match .49, imitation err 5.8 deg, entropy -.059 flat.
+  agent_28000 (eval_shuffle2_28000_*, video shuffle2_28000.mp4): stop fix works: falls right after the forward ->
+  stand switch 2 (5.78, 7.33 s; s1 92k: 9). Total falls 19/64 though: 6 in the first 3 s after reset, 5 at 11-13.5 s
+  (side-step segment), rest scattered. standpush 10/32 (s1 92k: 14). Tracking best yet: fwd .058 of .06, back -.031,
+  stand -.005 / -.005, side .012 of .03, turn .149 of .15. 2.26 touchdowns/s, swing .10 s, peak 17 mm, both down 78 %,
+  stand 0.01 lifts/s, gyro .49 / .38 / .34. Improving -> keep going. Next suspects: start-up falls (reset pose /
+  first steps), side stepping.
