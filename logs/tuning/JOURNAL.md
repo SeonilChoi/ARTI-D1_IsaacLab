@@ -1510,3 +1510,6 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   (run 2026-11-10_13-08-29, curriculum offset 810000 -> action rate already at its final -1.0), so it starts from a
   walking policy and only has to shorten / lower the steps. Run 2026-11-11_16-47-59_ppo_torch, PID 1248291, log
   logs/train/train_vel_microduck_v14_shuffle.log. Duck shuffle s3 keeps running next to it. One cron for both.
+
+- 11-11 16:5x user: "MICRODUCK 방식만 돌려" -> duck shuffle s3 stopped at ~25k (PID 1246203 verified, killed; last ckpt
+  agent_24000, not evaluated). Duck imitation track closed. Only vel v14 (PID 1248291) runs; cron 306221e3 -> v14 only.
