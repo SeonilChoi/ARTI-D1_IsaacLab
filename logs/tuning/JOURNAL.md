@@ -1389,3 +1389,15 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   reference. Likely cause: tracking reward too narrow (sigma lin .0022: an error of .075 m/s pays exp(-2.6) = .08 of
   2.5) next to imitation 15 + alive 20, so walking slightly forward is never worth correcting. Possible fix (needs
   approval): sigma lin .0022 -> .005 or more tracking weight. Training continues.
+
+- 11-11 09:3x duck v3 PLATEAU, final check (PID 1190970 alive, 94k/120k, left to finish by itself ~20 min; cron
+  e9e87758 deleted). TB flat since ~40k: episode length 854-877, contact match .69, imitation err 4.75 deg, lin err
+  .28, yaw err .53, entropy -.063, LR 5.9e-5 (KL-adaptive LR sits low).
+  agent_92000 (eval_duck3_92000_score/push.log, video duck3_92000.mp4): falls 5/64 (all at 9.7-17 s, none at reset),
+  fwd +.068 of .06, turn +.162 of .15, but forward bias unchanged: stand +.021..+.025, back cmd -.05 got +.021, side
+  .03 got .020 (vx +.028). Stepping 3.15/s, swing .20 s, peak 33 mm, stand still 3.4 lifts/s, slip 244 mm/s, torso
+  gyro fwd 1.28 / 1.13 / .61. standpush 3/32. Video: quick small steps as wanted, mostly upright, a few tilts.
+  Best duck v3: 60k-92k (similar). Not deployable yet: cannot walk backward / stand still, torso shake 7x v12.
+  Proposal duck v4 (needs approval), from the v3 92k checkpoint or scratch: tracking sigma lin .0022 -> .006 / ang
+  .0011 -> .004 (err .05 m/s still pays ~.66), stand_still -0.2 -> -1.0 with the zero-command fraction .1 -> .2;
+  optionally gyro / angular velocity penalty for the torso shake.
