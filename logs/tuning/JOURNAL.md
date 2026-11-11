@@ -1414,3 +1414,13 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   (follows the 0.25 s reference timing but lifts higher / steps longer than its 15 mm / ~2 cm). Feasible quicker
   references (knee <= 4.8 rad/s): single support .18 s / 10 mm (period .43 s, 4.3 rad/s), .15 s / 8 mm (period .36 s,
   4.2 rad/s). Offered to the user.
+
+- 11-11 12:5x duck shuffle s1 launched (user: "잔발 참조 보행으로 새로 학습 진행해"). Reference: motion_generator
+  config/arti_d1/gait_shuffle.json (from gait_quick: single support .25 -> .18 s, period .6 -> .432 s, foot 15 -> 10 mm,
+  steps ~1.5 cm), sweep 250 clips dx -.012..+.015 / dy +-.01 / dth +-.07 per step -> assets/motions/arti_d1_shuffle,
+  table arti_d1_shuffle_reference.npz (24 bins; coverage vx -.062..+.074, vy +-.07, wz +-.32; max knee 4.18 rad/s).
+  Isaac replay logs/tuning/videos/shuffle_reference_isaac.mp4 (+ sheet). New env var ARTI_D1_DUCK_REF = quick
+  (default) | shuffle | duck selects the reference (prefix on train / eval / video / export); yaw cmd +-.32 for shuffle.
+  Same rewards / noise as duck v4, from scratch (phase period changed). Run 2026-11-11_12-52-34_ppo_torch, PID
+  1226450, log logs/train/train_duck_shuffle_s1.log. Duck v4 (PID 1212578) keeps running next to it (GPU 8.4 / 16 GB,
+  ~11 it/s each). One cron for both: e.g. ARTI_D1_DUCK_REF=shuffle on every s1 eval.

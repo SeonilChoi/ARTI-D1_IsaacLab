@@ -31,7 +31,14 @@ ARTI_D1_DUCK_POLICY_OBS = 3 + 3 + 10 + 10 + 10 * DUCK_ACTION_HISTORY + 10 + 2 + 
 # + lin vel 3, foot height 2, air time 2, contact 2, reference joint pos 10, reference contact 2
 ARTI_D1_DUCK_CRITIC_OBS = ARTI_D1_DUCK_POLICY_OBS + 3 + 2 + 2 + 2 + 10 + 2
 
-_REFERENCE = os.path.join(os.path.dirname(__file__), "..", "..", "..", "assets", "motions", "arti_d1_quick_reference.npz")
+# ARTI_D1_DUCK_REF selects the reference gait (prefix it on train / eval / video / export like ARTI_D1_VEL_PROFILE):
+#   quick (default; duck v3 / v4): gait_quick.json, single support 0.25 s, period 0.6 s, foot 15 mm
+#   shuffle (duck s1, user's "잔발"): gait_shuffle.json, single support 0.18 s, period 0.432 s, foot 10 mm
+#   duck (v1 / v2): gait_duck.json, 0.45 s, period 1.08 s, 25 mm
+DUCK_REF = os.environ.get("ARTI_D1_DUCK_REF", "quick")
+if DUCK_REF not in ("quick", "shuffle", "duck"):
+    raise ValueError(f"ARTI_D1_DUCK_REF={DUCK_REF!r}: quick | shuffle | duck")
+_REFERENCE = os.path.join(os.path.dirname(__file__), "..", "..", "..", "assets", "motions", f"arti_d1_{DUCK_REF}_reference.npz")
 # duck v3 (2026-11-11): quick short-step gait (motion_generator gait_quick.json: single support 0.25 s, period 0.6 s,
 # foot 15 mm); duck v1 / v2 used arti_d1_duck_reference.npz (0.45 s, period 1.08 s, 25 mm: feet dragged)
 
@@ -88,7 +95,7 @@ class ArtiD1DuckEnvCfg(ArtiD1VelEnvCfg):
     # ---- commands: inside the reference coverage (quick: vx -0.060..0.071, vy +-0.07, wz +-0.33)
     command_lin_x_range = (-0.05, 0.07)
     command_lin_y_range = (-0.05, 0.05)
-    command_yaw_range = (-0.33, 0.33)
+    command_yaw_range = (-0.32, 0.32) if DUCK_REF == "shuffle" else (-0.33, 0.33)
     command_resample_s = (6.0, 10.0)  # Open Duck: every 500 steps (10 s)
     zero_command_fraction = 0.2  # duck v4 (v3: 0.1, Open Duck)
 
