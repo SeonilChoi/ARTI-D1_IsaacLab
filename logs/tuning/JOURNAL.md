@@ -1611,3 +1611,10 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   .12, back -.066, side .009 (lost), diag .064 / -.028, turn .284, 4.46 touchdowns/s, swing .22 s, peak 13.1 mm,
   both up 1 %, touchdown 242 mm/s, slip 83 mm/s, gyro .10 / .11 / .07. Video: upright, low quick steps.
   v17 already recovered the falls on the realistic model; lateral dropped. Improving -> continue.
+
+- 11-11 23:3x v17 check (PID 1280809 alive, 78k/240k). TB: episode length 1196, track_lin 1.22 -> 1.35, track_ang
+  1.24 -> 1.29, pose .85, air_time 1.45 -> 1.32 (down).
+  agent_78000 (eval_v17_78000_*, video vel_v17_78000.mp4, v17 model): falls 0/64, standpush 4/32 (36k 2), fwd .082 of
+  .12, back -.061, side .014, diag .068 / -.022, turn .273, 4.47 touchdowns/s, swing .22 s, peak 12.9 mm, both up 1 %,
+  touchdown 259 mm/s, slip 85 mm/s, gyro .11 / .10 / .07. Video: upright, low quick steps.
+  Mixed vs 36k (fwd / diag up; back, push down; side still weak). Keep going.
