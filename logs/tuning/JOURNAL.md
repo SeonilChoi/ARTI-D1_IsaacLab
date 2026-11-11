@@ -1640,3 +1640,13 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   CORRECTION (v18 30k video): not all upright - one env falls at ~12.5-13 s. play.py applies a scheduled push there
   (12.5 s: +0.10 m/s lateral during the backward segment); v17 120k's video leaned at the same moment. So a sideways
   shove while walking backward is still a weak spot (standpush only tests standing). Track it in later checks.
+
+- 11-12 00:5x v18 check (PID 1288431 alive, 75k/240k, ~25 it/s). TB: episode length 1147-1181, tracking flat-low
+  (lin 1.08-1.12, ang 1.02-1.03 vs v17 ~1.27), air_time 1.37-1.39, pose .84.
+  agent_72000 (eval_v18_72000_*, video vel_v18_72000.mp4): falls 0/64, standpush 0/32 (0.2 / 0.3 / 0.4 / 0.5: 0/8
+  each, 1.6 lifts at .5), fwd .072, back -.059, side .015, diag .056, turn .257, 4.30 touchdowns/s, swing .22 s, peak
+  14 mm, both up 1 %, both down 4 %, gyro .12 / .12 / .08. Video: one env falls again at ~12 s, i.e. BEFORE the 12.5 s
+  push. Checked play.py: segment 3 (10-15 s) is a slow side step (vy .016) right after the 7.5 s lateral -0.10 m/s
+  push in the stand segment; the score eval's side segment (vy .06, no pushes) passes on 64 envs. Same moment leaned in
+  v17 120k and fell in v18 30k -> slow side stepping on the realistic model (after a shove) is the weak spot.
+  Continue; if v18 plateaus, next fix targets lateral stability.
