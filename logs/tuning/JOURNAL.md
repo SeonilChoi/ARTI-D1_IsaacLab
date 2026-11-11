@@ -1601,3 +1601,13 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   v17 = v16 + the v13 realism for the real robot (pelvis 3.24 kg +-10 % abs, pelvis CoM +-15 mm, TPU-like compliant
   ground contact 4e4 / 400). From v16 agent_138000, offset 1272000. Run 2026-11-11_22-30-29_ppo_torch, PID 1280809,
   log logs/train/train_vel_microduck_v17_real.log, cron 13/43.
+
+- 11-11 23:0x v17 check (PID 1280809 alive, 36k/240k, ~30 it/s). TB: episode length ~1170 (v16 ~1190), air_time
+  1.26 -> 1.41, pose .85, track_lin 1.25, track_ang 1.24 (all a bit lower than v16 on its own model: harder model).
+  Baseline v16 agent_138000 on the v17 model (eval_v16_138000_v17model_*): falls 4/64 (17.8-36 s), standpush 2/32,
+  fwd .078, back -.079, side .030, turn .267, swing .20 s, peak 11.5 mm, both down 7 %, slip 92 mm/s, gyro .14 / .12
+  / .08 -> the real mass / CoM / TPU contact costs v16 some stability.
+  agent_36000 (eval_v17_36000_*, video vel_v17_36000.mp4) on the v17 model: falls 0/64, standpush 2/32, fwd .081 of
+  .12, back -.066, side .009 (lost), diag .064 / -.028, turn .284, 4.46 touchdowns/s, swing .22 s, peak 13.1 mm,
+  both up 1 %, touchdown 242 mm/s, slip 83 mm/s, gyro .10 / .11 / .07. Video: upright, low quick steps.
+  v17 already recovered the falls on the realistic model; lateral dropped. Improving -> continue.
