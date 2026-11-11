@@ -1637,3 +1637,6 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   lower: fwd .068 (v17 .077), back -.066, side .021, diag .053, turn .254 (.281). Gait: 4.24 touchdowns/s, swing
   .22 s, peak 13.6 mm, both up 1 %, both down 6 %, touchdown 246 mm/s, gyro .11 / .12 / .08. Video: upright, quick
   low steps. First 0/64 + 0/32 checkpoint on the realistic model. Continue; watch tracking.
+  CORRECTION (v18 30k video): not all upright - one env falls at ~12.5-13 s. play.py applies a scheduled push there
+  (12.5 s: +0.10 m/s lateral during the backward segment); v17 120k's video leaned at the same moment. So a sideways
+  shove while walking backward is still a weak spot (standpush only tests standing). Track it in later checks.
