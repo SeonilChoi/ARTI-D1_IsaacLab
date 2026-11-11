@@ -1577,3 +1577,10 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   trades speed for the gait terms. v16 = v15 + track_lin_vel_weight 2 -> 3 (std .08 kept), from v15 agent_240000,
   curriculum offset 1134000. Run 2026-11-11_20-48-57_ppo_torch, PID 1269144, log
   logs/train/train_vel_microduck_v16_track.log, cron 13/43. If it hurts the gait / stability, v15 240k stays final.
+
+- 11-11 21:3x v16 check (PID 1269144 alive, 57k/240k, ~26 it/s). TB: track_lin (x3 weight) 1.24 -> 1.34 (= .41 -> .45
+  normalised), pose .88 -> .86, air_time 1.55, track_ang 1.39 -> 1.30, episode length ~1190.
+  agent_54000 (eval_v16_54000_*, video vel_v16_54000.mp4): falls 0/64, standpush 3/32 (v15 240k 1), fwd .068 of .12
+  (v15 .059), back -.080 of -.10 (-.065), side .028, diag .050, turn .281; gait kept: 4.43 touchdowns/s, swing .22 s,
+  peak 12.1 mm, both up 1 %, touchdown 266 mm/s; gyro .12 / .11 / .07 (roll a bit up from .09). Video: upright, low
+  quick steps. Tracking better, gait intact, slight cost in push / roll -> continue.
