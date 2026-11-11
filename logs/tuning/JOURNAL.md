@@ -1561,3 +1561,10 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   4.40 touchdowns/s, swing .22 s, peak 12.7 mm, touchdown 280 mm/s, slip 65 mm/s, gyro .09 / .11 / .07; fwd .050 of
   .12, back -.072, side .031, diag .033, turn .277. Video: upright, low quick steps. Best all-round v15 so far
   (126k-level gait with 1/32 push). Slowly improving -> continue to the end (240k).
+
+- 11-11 20:2x v15 check (PID 1254584 alive, 216k/240k, ends in ~15 min). TB converged: pose .854-.858, total 6.47,
+  tracking flat (lin .77-.79, ang 1.35), episode length ~1195.
+  agent_210000 (eval_v15_210000_*, video vel_v15_210000.mp4): falls 0/64, standpush 1/32, both up 1 % (both down 1 %),
+  4.45 touchdowns/s, swing .22 s, peak 12.6 mm, touchdown 261 mm/s (softest yet), slip 73 mm/s, gyro .09 / .10 / .07;
+  fwd .054 of .12, back -.069, side .026, diag .040, turn .274. Video: upright, low quick steps.
+  Converged; flight essentially gone. Plan: final check at 240k, then close v15 (best candidates 168k / 210k).
