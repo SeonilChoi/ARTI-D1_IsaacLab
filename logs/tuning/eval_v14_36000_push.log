@@ -1,0 +1,83 @@
+AppLauncher is deprecated; use isaaclab.app.launch_simulation.
+[INFO]: Running headless because '--viz kit' was not requested. Pass it to open a viewport.
+[INFO]: Using device: cuda:0
+[INFO]: Loading experience file: /opt/isaac/IsaacLab-main/apps/isaaclab.python.headless.kit
+Loading user config located at: '/opt/isaac/IsaacLab-main/.venv/lib/python3.12/site-packages/isaacsim/kit/data/Kit/IsaacLab/3.0/user.config.json'
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1794385123.514396 1251730 descriptor_database.cc:633] File already exists in database: grpc/health/v1/health.proto
+W0000 00:00:1794385123.514430 1251730 message.cc:301] Protobuf GeneratedMessageFactory: File is already registered: grpc/health/v1/health.proto
+2026-11-11T08:18:43Z [0ms] [Warning] [omni.usd_config.extension] Enable omni.materialx.libs extension to use MaterialX
+Warning: Possible version incompatibility. Attempting to load carb::ujitso::IFactory with version v0.3 against v0.2.
+Warp 1.17.0 initialized:
+   CUDA Toolkit 12.9, Driver 13.2
+   Devices:
+     "cpu"      : "x86_64"
+     "cuda:0"   : "NVIDIA GeForce RTX 5070 Ti" (15 GiB, sm_120, mempool enabled)
+   Kernel cache:
+     /home/monster1502/.cache/warp/1.17.0
+[ISAACLAB] KitLauncher initialization complete
+[INFO]: Parsing configuration from: arti_d1.tasks.direct.arti_d1.arti_d1_vel_env_cfg:ArtiD1VelEnvCfg
+2026-11-11T08:18:44Z [1,005ms] [Warning] [isaaclab.envs.direct_rl_env] Seed not set for the environment. The environment creation may not be deterministic.
+[INFO]: Base environment:
+	Environment device    : cuda:0
+	Environment seed      : None
+	Physics step-size     : 0.004166666666666667
+	Rendering step-size   : 0.016666666666666666
+	Environment step-size : 0.016666666666666666
+2026-11-11T08:18:45Z [2,087ms] [Warning] [isaaclab.utils.assets] Serving remote assets from the local cache under '/tmp'. Each copy is checked against the server before use; delete the directory to force a full re-download.
+[INFO]: Loading local copy of remote asset 'https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/6.2/Isaac/IsaacLab/Environments/Grid/default_ground_plane_checker_v1/default_ground_plane.usda' from '/tmp/https/omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/6.2/Isaac/IsaacLab/Environments/Grid/default_ground_plane_checker_v1/default_ground_plane.usda'.
+[INFO]: Loading local copy of remote asset 'https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/6.2/Isaac/IsaacLab/Environments/Grid/default_ground_plane_checker_v1/Materials/Textures/default_ground_plane_albedo.png' from '/tmp/https/omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/6.2/Isaac/IsaacLab/Environments/Grid/default_ground_plane_checker_v1/Materials/Textures/default_ground_plane_albedo.png'.
+[INFO]: Loading local copy of remote asset 'https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/6.2/Isaac/IsaacLab/Environments/Grid/default_ground_plane_checker_v1/Materials/Textures/default_ground_plane_roughness.png' from '/tmp/https/omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/6.2/Isaac/IsaacLab/Environments/Grid/default_ground_plane_checker_v1/Materials/Textures/default_ground_plane_roughness.png'.
+[INFO]: Registered backend 'physx' for factory Articulation.
+2026-11-11T08:18:47Z [3,246ms] [Warning] [isaaclab.sim.schemas.schemas] Skipping fragment updates on instanced prims matched by '/World/envs/env_0/Robot(/.*)?': ['/World/envs/env_0/Robot/Geometry/pelvis/left_hip/left_roll_to_pitch/left_thigh/left_shin/left_foot_link/left_foot_1/left_foot', '/World/envs/env_0/Robot/Geometry/pelvis/left_hip/left_roll_to_pitch/left_thigh/left_shin/left_shin_1/left_shin', '/World/envs/env_0/Robot/Geometry/pelvis/left_hip/left_roll_to_pitch/left_thigh/left_thigh_1/left_thigh', '/World/envs/env_0/Robot/Geometry/pelvis/left_hip/left_roll_to_pitch/left_roll_to_pitch_1/left_roll_to_pitch', '/World/envs/env_0/Robot/Geometry/pelvis/left_hip/left_hip_1/left_hip', '/World/envs/env_0/Robot/Geometry/pelvis/right_hip/right_roll_to_pitch/right_thigh/right_shin/right_foot_link/right_foot_1/right_foot', '/World/envs/env_0/Robot/Geometry/pelvis/right_hip/right_roll_to_pitch/right_thigh/right_shin/right_shin_1/right_shin', '/World/envs/env_0/Robot/Geometry/pelvis/right_hip/right_roll_to_pitch/right_thigh/right_thigh_1/right_thigh', '/World/envs/env_0/Robot/Geometry/pelvis/right_hip/right_roll_to_pitch/right_roll_to_pitch_1/right_roll_to_pitch', '/World/envs/env_0/Robot/Geometry/pelvis/right_hip/right_hip_1/right_hip', '/World/envs/env_0/Robot/Geometry/pelvis/left_arm_m8_crank/left_arm_plate/left_arm_plate_1/left_arm_plate', '/World/envs/env_0/Robot/Geometry/pelvis/left_arm_m8_crank/left_arm_m8_crank_1/left_arm_m8_crank', '/World/envs/env_0/Robot/Geometry/pelvis/right_arm_m8_crank/right_arm_plate/right_arm_plate_1/right_arm_plate', '/World/envs/env_0/Robot/Geometry/pelvis/right_arm_m8_crank/right_arm_m8_crank_1/right_arm_m8_crank', '/World/envs/env_0/Robot/Geometry/pelvis/pelvis_1/pelvis'].
+[INFO]: Physics scene prim path: /physicsScene
+[INFO]: Time taken for scene creation Last: 2.210333 s, Mean: 2.210333 s, Std: 0.000000 s, N: 1
+[INFO]: Scene manager: <class InteractiveScene>
+	Number of environments: 32
+	Environment spacing   : 1.0
+	Source prim name      : /World/envs/env_0
+	Global prim paths     : ['/World/ground']
+[INFO]: Starting the simulation. This may take a few seconds. Please wait...
+2026-11-11T08:18:47Z [3,535ms] [Warning] [usdrt.population.plugin] Last global time was not created. Did you call setEnableUsdNoticeHandling?
+[INFO]: Simulation parameters for joints in /World/envs/env_.*/Robot:
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                      Simulation Joint Information (Prim path: /World/envs/env_.*/Robot)                                                      |
++-------+-------------------------+-----------+---------+----------+-----------------+------------------+------------------+-----------------+-----------------+---------------+
+| Index | Name                    | Stiffness | Damping | Armature | Static Friction | Dynamic Friction | Viscous Friction | Position Limits | Velocity Limits | Effort Limits |
++-------+-------------------------+-----------+---------+----------+-----------------+------------------+------------------+-----------------+-----------------+---------------+
+|   0   | left_arm_m8             |   28.314  |  1.064  |  0.000   |      0.000      |      0.000       |      0.000       | [-1.047, 0.349] |      4.820      |     4.100     |
+|   1   | left_hip_yaw            |   73.200  |  4.220  |  0.000   |      0.000      |      0.000       |      0.000       | [-0.524, 0.524] |      3.140      |     10.600    |
+|   2   | right_arm_m8            |   28.314  |  1.064  |  0.000   |      0.000      |      0.000       |      0.000       | [-1.047, 0.349] |      4.820      |     4.100     |
+|   3   | right_hip_yaw           |   73.200  |  4.220  |  0.000   |      0.000      |      0.000       |      0.000       | [-0.524, 0.524] |      3.140      |     10.600    |
+|   4   | left_arm_m8crank_plate  |   28.314  |  1.064  |  0.000   |      0.000      |      0.000       |      0.000       | [-0.227, 1.169] |      4.820      |     4.100     |
+|   5   | left_hip_roll           |   73.200  |  4.220  |  0.000   |      0.000      |      0.000       |      0.000       | [-0.314, 0.209] |      3.140      |     10.600    |
+|   6   | right_arm_m8crank_plate |   28.314  |  1.064  |  0.000   |      0.000      |      0.000       |      0.000       | [-0.227, 1.169] |      4.820      |     4.100     |
+|   7   | right_hip_roll          |   73.200  |  4.220  |  0.000   |      0.000      |      0.000       |      0.000       | [-0.209, 0.314] |      3.140      |     10.600    |
+|   8   | left_hip_pitch          |   73.200  |  4.220  |  0.000   |      0.000      |      0.000       |      0.000       | [-1.156, 0.781] |      3.140      |     10.600    |
+|   9   | right_hip_pitch         |   73.200  |  4.220  |  0.000   |      0.000      |      0.000       |      0.000       | [-1.156, 0.781] |      3.140      |     10.600    |
+|   10  | left_knee               |   73.200  |  4.220  |  0.000   |      0.000      |      0.000       |      0.000       | [-0.354, 1.548] |      3.140      |     10.600    |
+|   11  | right_knee              |   73.200  |  4.220  |  0.000   |      0.000      |      0.000       |      0.000       | [-0.354, 1.548] |      3.140      |     10.600    |
+|   12  | left_ankle              |   73.200  |  4.220  |  0.000   |      0.000      |      0.000       |      0.000       | [-1.806, 0.568] |      3.140      |     10.600    |
+|   13  | right_ankle             |   73.200  |  4.220  |  0.000   |      0.000      |      0.000       |      0.000       | [-1.806, 0.568] |      3.140      |     10.600    |
++-------+-------------------------+-----------+---------+----------+-----------------+------------------+------------------+-----------------+-----------------+---------------+
+[INFO]: Time taken for simulation start Last: 0.446355 s, Mean: 0.446355 s, Std: 0.000000 s, N: 1
+[INFO]: Event Manager: <EventManager> contains 1 active terms.
++---------------------------------------+
+| Active Event Terms in Mode: 'startup' |
++-----------+---------------------------+
+|   Index   | Name                      |
++-----------+---------------------------+
+|     0     | foot_friction             |
+|     1     | body_mass                 |
+|     2     | base_com                  |
++-----------+---------------------------+
+
+[INFO]: Completed setting up the environment...
+[ARTI-D1 VEL] 32 envs, policy obs 39, critic 48, 10 leg actions, scale 0.5, arms held at {'left_arm_m8': 0.0, 'right_arm_m8': 0.0, 'left_arm_m8crank_plate': 0.0, 'right_arm_m8crank_plate': 0.0}
+[VEL-PUSH] checkpoint=logs/skrl/arti_d1_vel_walk/2026-11-11_16-47-59_ppo_torch/checkpoints/agent_36000.pt envs=32 fell before the push=0
+[VEL-PUSH] push 0.20 m/s: fell 0/8 | survivors foot lifts 0.0
+[VEL-PUSH] push 0.30 m/s: fell 0/8 | survivors foot lifts 0.2
+[VEL-PUSH] push 0.40 m/s: fell 0/8 | survivors foot lifts 1.2
+[VEL-PUSH] push 0.50 m/s: fell 2/8 | survivors foot lifts 1.7
+[VEL-PUSH] total fell 2/32
+[INFO]: SimulationContext cleared

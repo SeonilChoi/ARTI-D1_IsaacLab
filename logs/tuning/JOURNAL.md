@@ -1513,3 +1513,12 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
 
 - 11-11 16:5x user: "MICRODUCK 방식만 돌려" -> duck shuffle s3 stopped at ~25k (PID 1246203 verified, killed; last ckpt
   agent_24000, not evaluated). Duck imitation track closed. Only vel v14 (PID 1248291) runs; cron 306221e3 -> v14 only.
+
+- 11-11 17:2x v14 check (PID 1248291 alive, 40k/240k, ~29 it/s alone). TB: episode length 1199 (max ~1200), air_time
+  reward .54 -> 1.6 (the shorter window pays), swing height penalty shrinking, pose .68, tracking lin .79 / ang 1.34.
+  agent_36000 (eval_v14_36000_score/push.log, video vel_v14_36000.mp4): falls 0/64, standpush 2/32. Shuffle reached:
+  4.91 touchdowns/s (v12 42k 2.06), swing .22 s (.35), peak 15.4 mm (23.2), never both feet down while walking, both up
+  11 % (v12 7 %; contact = lowest sole corner < 6 mm, so low swings may count as "up"), stance slip 48 mm/s (29), stand
+  still 0 lifts/s, torso gyro fwd .10 / .13 / .07 (v12 .17 / .12 / .07; duck runs .3-1.3). Tracking: fwd .046 of .12
+  (v12 .040), back -.069 of -.10, side .005 of .06 (not learned, as v12), diag .031 / -.003, turn .289 of .30.
+  Video: upright, quick small steps. Best gait so far. Improving -> continue.
