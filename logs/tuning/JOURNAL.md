@@ -1533,3 +1533,10 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   v15 = v14 + air_time_single_stance: a foot's air time only pays while the other foot is down. From v14 agent_84000,
   curriculum offset 894000. Run 2026-11-11_17-51-33_ppo_torch, PID 1254584, log
   logs/train/train_vel_microduck_v15_stance.log, cron 13/43.
+
+- 11-11 18:2x v15 check (PID 1254584 alive, 38k/240k, ~27 it/s). TB: episode length 1169-1186, air_time 1.53 -> 1.59,
+  pose .71 -> .74, track lin .75, ang 1.35 (slowly rising).
+  agent_36000 (eval_v15_36000_*, video vel_v15_36000.mp4): falls 0/64, standpush 1/32; flight halved: both up 5 % (v14
+  84k: 12 %), 4.48 touchdowns/s, swing .22 s, peak 13.4 mm, slip 55 mm/s, stand still 0 lifts, gyro .10 / .11 / .07.
+  Tracking: fwd .037 of .12 (v14 .051), back -.086 of -.10 (-.074), side .013, diag .022, turn .289. Video: upright,
+  quick small steps. Improving -> continue.
