@@ -1466,3 +1466,11 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   shuffle1_92000.mp4): falls 16/64 (64k: 26; 9 at 5.98-6.25 s after the stop), standpush 14/32, fwd .034 of .06, stand
   -.011 / -.002, back -.013 of -.05, turn .123, 1.95 touchdowns/s, swing .08 s, peak 15.5 mm, both down 80 %, gyro
   .43 / .35 / .29. Still the stop-transition falls; s2 proposal (stand_still ramp + 3-6 s resample) awaits approval.
+
+- 11-11 15:4x (A) shuffle s1 FINISHED at 120k (PID 1226450 exited on its own); final check agent_120000
+  (ARTI_D1_DUCK_REF=shuffle; eval_shuffle1_120000_*, video shuffle1_120000.mp4): falls 33/64 (92k: 16; 9 in the first
+  4.6 s, 13 at 5.8-7.3 s after the stop), standpush 14/32; tracking best so far: fwd .066 of .06, back -.037 of -.05,
+  stand -.025 / +.007, turn .138; 2.09 touchdowns/s, swing .10 s, peak 17 mm, both down 80 %; gyro .47 / .43 / .35.
+  Plateau / worse at the end -> closed. Best s1 checkpoint: 92k (16/64). Both duck runs done, cron d45cf976 deleted,
+  GPU idle. Pending approval: shuffle s2 from s1 92k (stand_still ramped in over 1 s after a zero command with the
+  zero-velocity reference kept, command resample 6-10 s -> 3-6 s).
