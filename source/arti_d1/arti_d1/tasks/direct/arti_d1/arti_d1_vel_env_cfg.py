@@ -41,15 +41,17 @@ ARTI_D1_VEL_PROFILE = os.environ.get("ARTI_D1_VEL_PROFILE", "v10")
 #        reference): air-time window 0.15-0.45 -> 0.06-0.22 s, swing target 30 -> 12 mm
 #   v15: v14 + air-time reward only in single stance (v14 ran with 12 % both-feet-up flight)
 #   v16: v15 + forward / backward tracking weight 2 -> 3 (v15 240k: fwd .059 of .12, back -.065 of -.10)
-_PROFILES = ("v10", "v11", "v12", "v13", "v14", "v15", "v16")
+#   v17: v16 + the v13 realism (real pelvis mass 3.24 kg +-10 %, pelvis CoM +-15 mm, TPU-like compliant contact) for the
+#        real robot (v16 converged: 138k fwd .076 / back -.080 / turn .276, 0/64 falls)
+_PROFILES = ("v10", "v11", "v12", "v13", "v14", "v15", "v16", "v17")
 if ARTI_D1_VEL_PROFILE not in _PROFILES:
     raise ValueError(f"ARTI_D1_VEL_PROFILE must be one of {_PROFILES}, got {ARTI_D1_VEL_PROFILE}")
-_V13 = ARTI_D1_VEL_PROFILE == "v13"
-_V16 = ARTI_D1_VEL_PROFILE == "v16"
-_V15 = ARTI_D1_VEL_PROFILE in ("v15", "v16")  # v16 builds on v15
-_V14 = ARTI_D1_VEL_PROFILE in ("v14", "v15", "v16")  # v15 builds on v14
-_V12 = ARTI_D1_VEL_PROFILE in ("v12", "v13", "v14", "v15", "v16")  # v13 / v14 build on v12
-_V11 = ARTI_D1_VEL_PROFILE in ("v11", "v12", "v13", "v14", "v15", "v16")  # v12 builds on v11
+_V13 = ARTI_D1_VEL_PROFILE in ("v13", "v17")  # v17 adds the v13 realism
+_V16 = ARTI_D1_VEL_PROFILE in ("v16", "v17")  # v17 builds on v16
+_V15 = ARTI_D1_VEL_PROFILE in ("v15", "v16", "v17")  # v16 builds on v15
+_V14 = ARTI_D1_VEL_PROFILE in ("v14", "v15", "v16", "v17")  # v15 builds on v14
+_V12 = ARTI_D1_VEL_PROFILE in ("v12", "v13", "v14", "v15", "v16", "v17")  # v13 / v14 build on v12
+_V11 = ARTI_D1_VEL_PROFILE in ("v11", "v12", "v13", "v14", "v15", "v16", "v17")  # v12 builds on v11
 ARTI_D1_VEL_ACTION_HISTORY = 1 if _V11 else 3
 # actor: base ang vel (3) + projected gravity (3) + leg joint pos rel (10) + leg joint vel (10) + last N actions (10 N)
 # + command (3, always last)

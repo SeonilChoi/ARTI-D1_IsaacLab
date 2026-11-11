@@ -1592,3 +1592,12 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   kept: 4.44 touchdowns/s, swing .22 s, peak 12.5 mm, both up 1 %, touchdown 250 mm/s (softest), gyro .12 / .11 / .07.
   Video: upright, low quick steps. Best tracking so far; turn slipping a little. TB nearly flat -> watch next check;
   if flat, close v16 with the best of 96k / later as the deploy candidate.
+
+- 11-11 22:3x v16 final check (PID 1269144 alive, 144k/240k): TB flat since ~50k (track_lin 1.32-1.36, pose .865,
+  track_ang 1.28-1.29). agent_138000 (eval_v16_138000_*, video vel_v16_138000.mp4): falls 0/64, standpush 2/32, fwd
+  .076 of .12, back -.080, side .035, diag .057 / -.013, turn .276, 4.44 touchdowns/s, swing .22 s, peak 12.4 mm, both
+  up 2 %, touchdown 239 mm/s (softest), gyro .12 / .11 / .07. Best all-round so far -> deploy candidate v16 138k (v15
+  240k if turning matters more). Plateau -> v16 stopped at 144k (PID 1269144 verified, killed).
+  v17 = v16 + the v13 realism for the real robot (pelvis 3.24 kg +-10 % abs, pelvis CoM +-15 mm, TPU-like compliant
+  ground contact 4e4 / 400). From v16 agent_138000, offset 1272000. Run 2026-11-11_22-30-29_ppo_torch, PID 1280809,
+  log logs/train/train_vel_microduck_v17_real.log, cron 13/43.
