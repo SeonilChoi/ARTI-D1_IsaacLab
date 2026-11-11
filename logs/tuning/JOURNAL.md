@@ -1661,3 +1661,12 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   v19 = v18 + track_lat_vel_weight 1.0 (std .06), from v18 agent_114000, offset 1506000. Run
   2026-11-12_01-30-22_ppo_torch, PID 1297853, log logs/train/train_vel_microduck_v19_lat.log, cron 13/43.
   Deploy candidate now: v18 114k (realistic model, 0/64, 0/32 push), caveat the slow side step.
+
+- 11-12 02:0x v19 check (PID 1297853 alive, 26k/240k, ~27 it/s). TB: track_lat .51 -> .57, track_lin 1.33 -> 1.45,
+  track_ang 1.12 -> 1.04, air_time 1.13 -> .99 (dropping), pose .84, episode length 1172.
+  agent_24000 (eval_v19_24000_*, video vel_v19_24000.mp4): falls 0/64, standpush 0/32 (0/8 each), and the play video
+  shows no fall at ~12 s any more (all 4 envs upright through the slow side step). But: score side .012 of .06 (no
+  better), turn .140 of .30 (v18 .265, much worse), fwd .073, back -.060, diag .056 / -.020; gait drifting from the
+  shuffle: 3.22 touchdowns/s (4.36), both down 31 % (0-3 %), slip 51 mm/s; torso roll gyro .21 (.11).
+  Early (24k); the lateral reward is reshaping the gait. Watch turn / roll / touchdowns next check; if they don't
+  recover, fall back to v18 114k and try a smaller lateral weight (.3-.5).
