@@ -1714,3 +1714,6 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   0/64 falls, 0/32 stand pushes up to 0.5 m/s, no side-step fall in the play video, fwd .077, back -.060, side .018,
   turn .256, 4.4 steps/s, 14 mm swings, torso gyro .08-.13). Proposed to the user: export + deploy v20 84k
   (needs the user's go: outward-facing). GPU idle; cron deleted.
+  CORRECTION (v21 24k video): the line above was written before the contact sheet was read - the sheet shows one env
+  FALLING at ~12 s (the slow side step), i.e. v21 also brought back the v18 side-step fall. Strengthens the verdict:
+  v20 84k final.
