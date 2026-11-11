@@ -1679,3 +1679,11 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   Lateral weight 1.0 trades turning / shuffle / roll for the side-step fix. v20 = v18 + track_lat_vel_weight 0.3,
   from v18 agent_114000 (offset 1506000). Run 2026-11-12_02-23-11_ppo_torch, PID 1302658, log
   logs/train/train_vel_microduck_v20_lat03.log, cron 13/43.
+
+- 11-12 03:0x v20 check (PID 1302658 alive, 45k/240k, ~25 it/s). TB: track_lat (x.3) .15, track_lin 1.17 -> 1.26,
+  track_ang 1.04 -> 1.07, air_time 1.35 -> 1.24, pose .85, episode length ~1165.
+  agent_42000 (eval_v20_42000_*, video vel_v20_42000.mp4): falls 0/64, standpush 1/32 (0.5: 1/8), fwd .083 of .12
+  (v18 .070), back -.062, side .015, diag .068 / -.016, turn .273 (kept), 4.15 touchdowns/s, both down 9 %, swing
+  .22 s, peak 13.7 mm, both up 1 %, slip 74 mm/s, gyro .14 / .11 / .08. Play video: all 4 upright through the slow
+  side step at ~12 s (no fall). Best compromise so far: side-step fall gone, turn and shuffle kept (both down 9 % vs
+  v18 0-3 %, v19 33 %). Continue.
