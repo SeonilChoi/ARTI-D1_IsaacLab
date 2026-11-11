@@ -1456,3 +1456,13 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   default pose at once; stops happen only at command resamples (every 6-10 s, 20 % zero) -> few stop events to learn
   from. Proposal (needs approval), s2 from s1 64k: stand_still ramped in over 1 s after a zero command (imitation of
   the zero-velocity clip kept during the ramp), command resample 6-10 s -> 3-6 s. Runs left going meanwhile.
+
+- 11-11 15:0x check. (B) duck v4 FINISHED at 120k (PID 1212578 exited on its own); final check agent_120000
+  (eval_duck4_120000_*, video duck4_120000.mp4; first score run hit the kit exit-139 crash, rerun OK): falls 21/64
+  (10 at 5.8-7.0 s after the stop), standpush 19/32, stand +.018 / .000, back -.033, turn .161, 3.36 touchdowns/s,
+  swing .10 s, peak 15 mm, gyro .62 / .52 / .36. Plateau since ~70k, falls 17-21/64: v4 closed (not continued).
+  Best v4: 68k-92k. GPU now only s1.
+  (A) shuffle s1 (PID 1226450 alive, 93k/120k, plateau) agent_92000 (eval_shuffle1_92000_*, video
+  shuffle1_92000.mp4): falls 16/64 (64k: 26; 9 at 5.98-6.25 s after the stop), standpush 14/32, fwd .034 of .06, stand
+  -.011 / -.002, back -.013 of -.05, turn .123, 1.95 touchdowns/s, swing .08 s, peak 15.5 mm, both down 80 %, gyro
+  .43 / .35 / .29. Still the stop-transition falls; s2 proposal (stand_still ramp + 3-6 s resample) awaits approval.
