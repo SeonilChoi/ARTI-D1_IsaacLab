@@ -1584,3 +1584,11 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   (v15 .059), back -.080 of -.10 (-.065), side .028, diag .050, turn .281; gait kept: 4.43 touchdowns/s, swing .22 s,
   peak 12.1 mm, both up 1 %, touchdown 266 mm/s; gyro .12 / .11 / .07 (roll a bit up from .09). Video: upright, low
   quick steps. Tracking better, gait intact, slight cost in push / roll -> continue.
+
+- 11-11 22:0x v16 check (PID 1269144 alive, 101k/240k, ~30 it/s). TB: track_lin 1.33-1.37 (flat since ~50k), pose
+  .87, air_time 1.57, track_ang 1.39 -> 1.29 (slowly down), episode length 1198.
+  agent_96000 (eval_v16_96000_*, video vel_v16_96000.mp4): falls 0/64, standpush 1/32 (54k 3), fwd .073 of .12 (v15
+  240k .059), back -.082 (-.065), diag .056 / -.022 (.043 / -.009), side .025, turn .257 of .30 (.284, down), gait
+  kept: 4.44 touchdowns/s, swing .22 s, peak 12.5 mm, both up 1 %, touchdown 250 mm/s (softest), gyro .12 / .11 / .07.
+  Video: upright, low quick steps. Best tracking so far; turn slipping a little. TB nearly flat -> watch next check;
+  if flat, close v16 with the best of 96k / later as the deploy candidate.
