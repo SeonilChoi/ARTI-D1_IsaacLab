@@ -1474,3 +1474,11 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   Plateau / worse at the end -> closed. Best s1 checkpoint: 92k (16/64). Both duck runs done, cron d45cf976 deleted,
   GPU idle. Pending approval: shuffle s2 from s1 92k (stand_still ramped in over 1 s after a zero command with the
   zero-velocity reference kept, command resample 6-10 s -> 3-6 s).
+
+- 11-11 15:3x shuffle s2 launched (user: "물어보지 말고 진행하라고" -> config changes / next runs on my judgment from
+  now on). From s1 agent_92000 (best s1). Stop fix: zero_time = time since the command became zero; stand_still
+  weight ramps 0 -> 1 over duck_stop_ramp_s = 1.0 s and the imitation term (zero-velocity reference = shuffling in
+  place) fades out over the same second instead of switching off (v4 / s1: imitation off and stand_still full at once
+  -> snap to the default pose mid-stride -> falls 0.8-2 s after a stop). Reset counts as already stopped. Command
+  resample 6-10 s -> 3-6 s (more stop / start events). Run 2026-11-11_15-29-43_ppo_torch, PID 1239957, log
+  logs/train/train_duck_shuffle_s2.log, ARTI_D1_DUCK_REF=shuffle, cron 13/43.

@@ -39,6 +39,9 @@ class ArtiD1DuckEnv(ArtiD1VelEnv):
         self.ref_scale = 1.0 / span
         self.phase = torch.zeros(n, device=dev)
         self.vel_filt = torch.zeros(n, 3, device=dev)  # duck v4: low-passed (vx, vy, wz) in the base frame for tracking
+        # shuffle s2: time since the command became zero (stand_still ramps in over cfg.duck_stop_ramp_s, the zero-velocity
+        # reference is imitated meanwhile, so the policy can shuffle to a stop instead of snapping to the default pose)
+        self.zero_time = torch.full((n,), float(cfg.duck_stop_ramp_s), device=dev)
         self.ref = torch.zeros(n, self.ref_table.shape[-1], device=dev)
         self.motor_targets = self.default_joint_pos[:, self.leg_ids].clone()
         # per-env kp factor (Open Duck kp x0.9-1.1)
@@ -169,6 +172,12 @@ class ArtiD1DuckEnv(ArtiD1VelEnv):
         ql, qdl = q[:, self.leg_ids], qd_all[:, self.leg_ids]
         cmd = self.commands
         moving = self._moving().float()
+        self.zero_time = torch.where(moving > 0.5, torch.zeros_like(self.zero_time), self.zero_time + self.step_dt)
+        if cfg.duck_stop_ramp_s > 0.0:
+            stop_w = torch.clamp(self.zero_time / cfg.duck_stop_ramp_s, 0.0, 1.0) * (1.0 - moving)
+        else:
+            stop_w = 1.0 - moving
+        imit_w = 1.0 - stop_w  # = moving, plus the ramp-out after a stop
 
         # tracking (Open Duck rewards.py): x squared, y with a tolerance; yaw rate
         # duck v4: on a low-passed velocity (tau duck_tracking_filter_s). The quick gait rocks the trunk (instantaneous
@@ -190,7 +199,7 @@ class ArtiD1DuckEnv(ArtiD1VelEnv):
         c_tau = torch.sum(torch.square(tau), dim=1)
         c_rate = torch.sum(torch.square(self.actions - self.prev_actions), dim=1)
         c_stand = (torch.sum(torch.abs(ql - self.default_joint_pos[:, self.leg_ids]), dim=1)
-                   + torch.sum(torch.abs(qdl), dim=1)) * (1.0 - moving)
+                   + torch.sum(torch.abs(qdl), dim=1)) * stop_w
 
         # imitation (Open Duck custom_rewards.py), heading-frame velocities
         ref = self.ref
@@ -213,7 +222,7 @@ class ArtiD1DuckEnv(ArtiD1VelEnv):
               + 0.5 * torch.exp(-2.0 * torch.square(ang_h[:, 2] - ref[:, 27]))
               - cfg.duck_imitation_joint_pos * torch.sum(torch.square(ql - ref[:, 0:10]), dim=1)
               - cfg.duck_imitation_joint_vel * torch.sum(torch.square(qdl - ref[:, 10:20]), dim=1)
-              + torch.sum((contact == ref[:, 20:22]).float(), dim=1)) * moving
+              + torch.sum((contact == ref[:, 20:22]).float(), dim=1)) * imit_w
         del yaw_q
 
         terms = {
@@ -257,3 +266,4 @@ class ArtiD1DuckEnv(ArtiD1VelEnv):
             self.motor_targets[env_ids] = self.default_joint_pos[env_ids][:, self.leg_ids]
             self.air_time[env_ids] = 0.0
             self.vel_filt[env_ids] = 0.0
+            self.zero_time[env_ids] = float(self.cfg.duck_stop_ramp_s)  # a standing start is already stopped

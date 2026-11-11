@@ -96,7 +96,7 @@ class ArtiD1DuckEnvCfg(ArtiD1VelEnvCfg):
     command_lin_x_range = (-0.05, 0.07)
     command_lin_y_range = (-0.05, 0.05)
     command_yaw_range = (-0.32, 0.32) if DUCK_REF == "shuffle" else (-0.33, 0.33)
-    command_resample_s = (6.0, 10.0)  # Open Duck: every 500 steps (10 s)
+    command_resample_s = (3.0, 6.0)  # shuffle s2: more stop / start events (v1-v4, s1: 6-10 s; Open Duck 10 s)
     zero_command_fraction = 0.2  # duck v4 (v3: 0.1, Open Duck)
 
     # ---- observation noise, uniform +- (duck v3: ARTI-D1 sensor levels; Open Duck gyro .1, gravity .1, joint pos
@@ -126,6 +126,7 @@ class ArtiD1DuckEnvCfg(ArtiD1VelEnvCfg):
     duck_torques = -7.5e-5  # Open Duck -1e-3 with ~2.9 Nm servos -> x (2.9 / 10.6)^2
     duck_action_rate = -0.5
     duck_stand_still = -1.0  # duck v4 (v3: -0.2)
+    duck_stop_ramp_s = 1.0  # shuffle s2: stand_still ramps in over 1 s after a zero command (v4 / s1: 0 = at once)
     duck_ang_vel_xy = -0.5  # duck v4: trunk roll / pitch rate^2 (v3 torso gyro std 1.1-1.3 rad/s, v12 .17)
     duck_alive = 20.0
     duck_imitation = 1.0
