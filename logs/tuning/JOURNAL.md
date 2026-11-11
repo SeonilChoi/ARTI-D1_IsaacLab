@@ -1401,3 +1401,16 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   Proposal duck v4 (needs approval), from the v3 92k checkpoint or scratch: tracking sigma lin .0022 -> .006 / ang
   .0011 -> .004 (err .05 m/s still pays ~.66), stand_still -0.2 -> -1.0 with the zero-command fraction .1 -> .2;
   optionally gyro / angular velocity penalty for the torso shake.
+
+- 11-11 12:2x duck v4 launched (user: "너의 판단으로 진행해"), resumed from v3 agent_120000 (v3 ran to the end).
+  Root cause of the v3 forward drift: Duck/lin_vel_err was .28 m/s with commands <= .07 -> the quick gait rocks the
+  trunk, the instantaneous tracking term exp(-err^2 / .0022) paid ~0 whatever the policy did. v4: tracking on a 0.3 s
+  low-passed (vx, vy, wz) (duck_tracking_filter_s), sigma lin .006 / ang .004, stand_still -1.0 (v3 -.2), zero
+  commands 20 % (10 %), new trunk roll / pitch rate^2 penalty -0.5 (ang_vel_xy). Logs Duck/lin_vel_err_filt,
+  yaw_rate_err_filt, ang_vel_xy_rms. Run 2026-11-11_12-28-14_ppo_torch, PID 1212578, log logs/train/train_duck_v4.log,
+  cron 56a7084d.
+  User asked why the v2 "잔발" look is gone. Measured: v2 24k swing .12 s, peak 19 mm (short, low, fast swings; from
+  the large action noise just before the collapse, not from the reference) vs v3 swing .20 s, peak 33 mm, step 47 mm
+  (follows the 0.25 s reference timing but lifts higher / steps longer than its 15 mm / ~2 cm). Feasible quicker
+  references (knee <= 4.8 rad/s): single support .18 s / 10 mm (period .43 s, 4.3 rad/s), .15 s / 8 mm (period .36 s,
+  4.2 rad/s). Offered to the user.

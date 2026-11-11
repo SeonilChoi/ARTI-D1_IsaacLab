@@ -90,7 +90,7 @@ class ArtiD1DuckEnvCfg(ArtiD1VelEnvCfg):
     command_lin_y_range = (-0.05, 0.05)
     command_yaw_range = (-0.33, 0.33)
     command_resample_s = (6.0, 10.0)  # Open Duck: every 500 steps (10 s)
-    zero_command_fraction = 0.1
+    zero_command_fraction = 0.2  # duck v4 (v3: 0.1, Open Duck)
 
     # ---- observation noise, uniform +- (duck v3: ARTI-D1 sensor levels; Open Duck gyro .1, gravity .1, joint pos
     # .03-.08, joint vel 2.5 made duck v2 lurch)
@@ -110,12 +110,16 @@ class ArtiD1DuckEnvCfg(ArtiD1VelEnvCfg):
     # ---- rewards (Open Duck scales; sigmas scaled to the ARTI-D1 command coverage)
     duck_tracking_lin_vel = 2.5
     duck_tracking_ang_vel = 6.0
-    duck_tracking_sigma_lin = 0.0022  # Open Duck 0.01 for +-0.15 m/s -> x (0.07 / 0.15)^2
-    duck_tracking_sigma_ang = 0.0011  # Open Duck 0.01 for +-1.0 rad/s -> x 0.33^2
+    # duck v4: tracking on a 0.3 s low-passed velocity with wider sigmas (v3: instantaneous, .0022 / .0011 -> the term
+    # paid ~0 and the policy kept a +.02-.03 m/s forward drift on stand / back commands)
+    duck_tracking_filter_s = 0.3
+    duck_tracking_sigma_lin = 0.006  # err .05 m/s -> .66
+    duck_tracking_sigma_ang = 0.004  # err .1 rad/s -> .08, .05 -> .54
     duck_tracking_y_tol = 0.03  # Open Duck 0.1 for +-0.2 m/s
     duck_torques = -7.5e-5  # Open Duck -1e-3 with ~2.9 Nm servos -> x (2.9 / 10.6)^2
     duck_action_rate = -0.5
-    duck_stand_still = -0.2
+    duck_stand_still = -1.0  # duck v4 (v3: -0.2)
+    duck_ang_vel_xy = -0.5  # duck v4: trunk roll / pitch rate^2 (v3 torso gyro std 1.1-1.3 rad/s, v12 .17)
     duck_alive = 20.0
     duck_imitation = 1.0
     duck_imitation_joint_pos = 15.0

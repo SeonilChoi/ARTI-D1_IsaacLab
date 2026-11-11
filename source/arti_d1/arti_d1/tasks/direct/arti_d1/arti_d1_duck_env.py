@@ -38,6 +38,7 @@ class ArtiD1DuckEnv(ArtiD1VelEnv):
                              cfg.command_yaw_range[1] - cfg.command_yaw_range[0]], device=dev)
         self.ref_scale = 1.0 / span
         self.phase = torch.zeros(n, device=dev)
+        self.vel_filt = torch.zeros(n, 3, device=dev)  # duck v4: low-passed (vx, vy, wz) in the base frame for tracking
         self.ref = torch.zeros(n, self.ref_table.shape[-1], device=dev)
         self.motor_targets = self.default_joint_pos[:, self.leg_ids].clone()
         # per-env kp factor (Open Duck kp x0.9-1.1)
@@ -170,10 +171,17 @@ class ArtiD1DuckEnv(ArtiD1VelEnv):
         moving = self._moving().float()
 
         # tracking (Open Duck rewards.py): x squared, y with a tolerance; yaw rate
-        ex = torch.square(cmd[:, 0] - lin_b[:, 0])
-        ey = torch.square((torch.abs(lin_b[:, 1] - cmd[:, 1]) - cfg.duck_tracking_y_tol).clamp_min(0.0))
+        # duck v4: on a low-passed velocity (tau duck_tracking_filter_s). The quick gait rocks the trunk (instantaneous
+        # |vx err| ~.28 m/s with commands <= .07), so the instantaneous term paid ~0 whatever the policy did (v3).
+        a = min(1.0, self.step_dt / max(cfg.duck_tracking_filter_s, 1e-6))
+        v_now = torch.stack((lin_b[:, 0], lin_b[:, 1], ang_b[:, 2]), dim=-1)
+        self.vel_filt += a * (v_now - self.vel_filt)
+        vf = self.vel_filt
+        ex = torch.square(cmd[:, 0] - vf[:, 0])
+        ey = torch.square((torch.abs(vf[:, 1] - cmd[:, 1]) - cfg.duck_tracking_y_tol).clamp_min(0.0))
         r_lin = torch.exp(-(ex + ey) / cfg.duck_tracking_sigma_lin)
-        r_ang = torch.exp(-torch.square(cmd[:, 2] - ang_b[:, 2]) / cfg.duck_tracking_sigma_ang)
+        r_ang = torch.exp(-torch.square(cmd[:, 2] - vf[:, 2]) / cfg.duck_tracking_sigma_ang)
+        c_angxy = torch.sum(torch.square(ang_b[:, :2]), dim=1)  # duck v4: trunk roll / pitch rate (shake)
 
         # torques of the drive (PD on the delayed / played target, as applied)
         kp = self.robot.data.joint_stiffness.torch
@@ -214,6 +222,7 @@ class ArtiD1DuckEnv(ArtiD1VelEnv):
             "torques": cfg.duck_torques * c_tau,
             "action_rate": cfg.duck_action_rate * c_rate,
             "stand_still": cfg.duck_stand_still * c_stand,
+            "ang_vel_xy": cfg.duck_ang_vel_xy * c_angxy,
             "alive": cfg.duck_alive * torch.ones_like(r_lin),
             "imitation": cfg.duck_imitation * im,
         }
@@ -229,6 +238,9 @@ class ArtiD1DuckEnv(ArtiD1VelEnv):
             "Duck/contact_match": (contact == ref[:, 20:22]).float().mean(),
             "Duck/lin_vel_err": torch.abs(cmd[:, 0] - lin_b[:, 0]).mean(),
             "Duck/yaw_rate_err": torch.abs(cmd[:, 2] - ang_b[:, 2]).mean(),
+            "Duck/lin_vel_err_filt": torch.abs(cmd[:, 0] - vf[:, 0]).mean(),
+            "Duck/yaw_rate_err_filt": torch.abs(cmd[:, 2] - vf[:, 2]).mean(),
+            "Duck/ang_vel_xy_rms": torch.sqrt(c_angxy.mean()),
             "Duck/moving": moving.mean(),
         })
         self.extras["log"] = log
@@ -244,3 +256,4 @@ class ArtiD1DuckEnv(ArtiD1VelEnv):
             self.phase[env_ids] = 0.0
             self.motor_targets[env_ids] = self.default_joint_pos[env_ids][:, self.leg_ids]
             self.air_time[env_ids] = 0.0
+            self.vel_filt[env_ids] = 0.0
