@@ -1540,3 +1540,10 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   84k: 12 %), 4.48 touchdowns/s, swing .22 s, peak 13.4 mm, slip 55 mm/s, stand still 0 lifts, gyro .10 / .11 / .07.
   Tracking: fwd .037 of .12 (v14 .051), back -.086 of -.10 (-.074), side .013, diag .022, turn .289. Video: upright,
   quick small steps. Improving -> continue.
+
+- 11-11 18:5x v15 check (PID 1254584 alive, 84k/240k). TB: episode length ~1190-1199, pose .71 -> .78 (rising), total
+  6.21 -> 6.35, tracking flat (lin .73-.76, ang 1.33-1.36).
+  agent_78000 (eval_v15_78000_*, video vel_v15_78000.mp4): falls 0/64, standpush 2/32, both up 4 % (36k 5 %, v14 12 %),
+  4.37 touchdowns/s, swing .23 s, peak 13.3 mm, slip 59 mm/s, stand still 0 lifts, gyro .10 / .12 / .08; fwd .044 of
+  .12, back -.083, side .021 (first sign of lateral), diag .029, turn .281. Video: upright, quick low steps.
+  Mostly converged; pose still rising -> continue to the end of the run, then decide (export candidate: v15 36k-78k).
