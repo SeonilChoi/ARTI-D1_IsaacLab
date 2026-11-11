@@ -1547,3 +1547,10 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   4.37 touchdowns/s, swing .23 s, peak 13.3 mm, slip 59 mm/s, stand still 0 lifts, gyro .10 / .12 / .08; fwd .044 of
   .12, back -.083, side .021 (first sign of lateral), diag .029, turn .281. Video: upright, quick low steps.
   Mostly converged; pose still rising -> continue to the end of the run, then decide (export candidate: v15 36k-78k).
+
+- 11-11 19:2x v15 check (PID 1254584 alive, 128k/240k). TB: pose .78 -> .83 (rising), air_time 1.65, total 6.42,
+  tracking flat (lin .75-.78, ang 1.34-1.37), episode length ~1197.
+  agent_126000 (eval_v15_126000_*, video vel_v15_126000.mp4): falls 0/64, standpush 4/32 (78k 2), both up 2 % (78k 4 %),
+  4.41 touchdowns/s, swing .22 s, peak 12.3 mm, touchdown speed 286 mm/s (softer: 78k 331), slip 67 mm/s, gyro
+  .09 / .11 / .08; fwd .054 of .12 (best of v14/v15), back -.070, side .032 of .06 (78k .021), diag .036, turn .272.
+  Video: upright, low quick steps. Still improving (flight, side, softer landings) -> continue.
