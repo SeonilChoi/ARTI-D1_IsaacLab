@@ -1628,3 +1628,12 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   all falls at pushes above the 0.25 m/s trained. v18 = v17 + training pushes 0.25 -> 0.4 m/s, from v17 agent_120000,
   offset 1392000. Run 2026-11-11_23-58-49_ppo_torch, PID 1288431, log logs/train/train_vel_microduck_v18_push.log,
   cron 13/43. Deploy candidates meanwhile: v17 36k (realistic model, 2/32) / v16 138k.
+
+- 11-12 00:2x v18 check (PID 1288431 alive, 34k/240k, ~19-21 it/s). TB: episode length 1045 -> 1163 (recovering
+  from the harder pushes), tracking rewards falling (lin 1.56 -> 1.12, ang 1.37 -> 1.04; pushes disturb tracking),
+  air_time 1.34, pose .85.
+  agent_30000 (eval_v18_30000_*, video vel_v18_30000.mp4, v18 = v17 model): falls 0/64, standpush 0/32 (0.2 / 0.3 /
+  0.4 / 0.5 m/s: 0/8 each; v17 120k 0, 0, 1, 4/8) with recovery steps (1.8 / 1.4 lifts at .4 / .5). Tracking a bit
+  lower: fwd .068 (v17 .077), back -.066, side .021, diag .053, turn .254 (.281). Gait: 4.24 touchdowns/s, swing
+  .22 s, peak 13.6 mm, both up 1 %, both down 6 %, touchdown 246 mm/s, gyro .11 / .12 / .08. Video: upright, quick
+  low steps. First 0/64 + 0/32 checkpoint on the realistic model. Continue; watch tracking.
