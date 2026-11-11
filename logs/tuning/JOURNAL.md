@@ -1650,3 +1650,14 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   push in the stand segment; the score eval's side segment (vy .06, no pushes) passes on 64 envs. Same moment leaned in
   v17 120k and fell in v18 30k -> slow side stepping on the realistic model (after a shove) is the weak spot.
   Continue; if v18 plateaus, next fix targets lateral stability.
+
+- 11-12 01:3x v18 final check -> plateau, stopped at ~116k (PID 1288431 verified, killed). TB flat since ~30k
+  (episode length 1137-1168, track_lin 1.10, track_ang 1.02, air_time 1.39, pose .84).
+  agent_114000 (eval_v18_114000_*, video vel_v18_114000.mp4): falls 0/64, standpush 0/32 (0/8 at .2 / .3 / .4 / .5),
+  fwd .070, back -.063, side .014, diag .055 / -.018, turn .265, 4.36 touchdowns/s, swing .22 s, peak 14 mm, both up
+  0 %, touchdown 227 mm/s, gyro .11 / .12 / .08. Video: one env falls at ~12 s again. Re-recorded with --no_push
+  (vel_v18_114000_nopush.mp4): same env still falls at ~12 s -> not the play pushes; it is the slow side step (play
+  segment 3, vy .016 m/s, ~1.5 s in) on the realistic model (lateral was never rewarded: track_lat_vel_weight 0).
+  v19 = v18 + track_lat_vel_weight 1.0 (std .06), from v18 agent_114000, offset 1506000. Run
+  2026-11-12_01-30-22_ppo_torch, PID 1297853, log logs/train/train_vel_microduck_v19_lat.log, cron 13/43.
+  Deploy candidate now: v18 114k (realistic model, 0/64, 0/32 push), caveat the slow side step.
