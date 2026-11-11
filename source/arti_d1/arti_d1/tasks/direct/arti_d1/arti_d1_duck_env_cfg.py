@@ -129,7 +129,7 @@ class ArtiD1DuckEnvCfg(ArtiD1VelEnvCfg):
     duck_stop_ramp_s = 1.0  # shuffle s2: stand_still ramps in over 1 s after a zero command (v4 / s1: 0 = at once)
     duck_ang_vel_xy = -0.5  # duck v4: trunk roll / pitch rate^2 (v3 torso gyro std 1.1-1.3 rad/s, v12 .17)
     duck_alive = 20.0
-    duck_imitation = 1.0
+    duck_imitation = 3.0  # shuffle s3 (v1-s2: 1.0): imitation was 0.033 per step vs alive 0.333 and action_rate -0.034 -> the policy stood with both feet down 80 % instead of shuffling
     duck_imitation_joint_pos = 15.0
     duck_imitation_joint_vel = 1.0e-3
     duck_command_eps = 0.01

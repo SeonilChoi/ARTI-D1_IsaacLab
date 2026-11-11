@@ -1491,3 +1491,14 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   stand -.005 / -.005, side .012 of .03, turn .149 of .15. 2.26 touchdowns/s, swing .10 s, peak 17 mm, both down 78 %,
   stand 0.01 lifts/s, gyro .49 / .38 / .34. Improving -> keep going. Next suspects: start-up falls (reset pose /
   first steps), side stepping.
+
+- 11-11 16:2x shuffle s2 check -> plateau, stopped at 67k (PID 1239957 verified, killed; cron bc7d7dda replaced).
+  TB flat since ~27k (episode length 915-951, lin err filt .041-.044, contact match .49, imitation err 5.8 deg).
+  agent_64000 (eval_shuffle2_64000_*, video shuffle2_64000.mp4): falls 14/64 (best shuffle so far; 3 right after the
+  stop, 4 in the first 4 s), standpush 17/32, fwd .041, back -.032, stand -.005, turn .136, 2.18 touchdowns/s, both
+  down 80 %, swing .10 s, peak 16 mm, gyro .42 / .35 / .29.
+  Diagnosis: not really shuffling (reference = 4.6 steps/s, policy 2.2 with both feet down 80 %, contact match .49).
+  Per-step reward means: alive .333, tracking .03 + .05, imitation only .033, action_rate -.034 -> imitating the
+  quick steps pays about what the action-rate penalty takes away; standing still and pushing off now and then wins.
+  Shuffle s3: duck_imitation 1.0 -> 3.0 (all imitation terms: joint pos / vel, base vel, contact), rest as s2. From s2
+  agent_64000. Run 2026-11-11_16-27-31_ppo_torch, PID 1246203, log logs/train/train_duck_shuffle_s3.log, cron 13/43.
