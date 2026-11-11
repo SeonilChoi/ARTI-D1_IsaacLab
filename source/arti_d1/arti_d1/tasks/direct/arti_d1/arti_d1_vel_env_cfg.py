@@ -40,14 +40,16 @@ ARTI_D1_VEL_PROFILE = os.environ.get("ARTI_D1_VEL_PROFILE", "v10")
 #   v14: v12 + "잔발" (user 2026-11-11: short quick steps like the shuffle reference, learned the microduck way, no
 #        reference): air-time window 0.15-0.45 -> 0.06-0.22 s, swing target 30 -> 12 mm
 #   v15: v14 + air-time reward only in single stance (v14 ran with 12 % both-feet-up flight)
-_PROFILES = ("v10", "v11", "v12", "v13", "v14", "v15")
+#   v16: v15 + forward / backward tracking weight 2 -> 3 (v15 240k: fwd .059 of .12, back -.065 of -.10)
+_PROFILES = ("v10", "v11", "v12", "v13", "v14", "v15", "v16")
 if ARTI_D1_VEL_PROFILE not in _PROFILES:
     raise ValueError(f"ARTI_D1_VEL_PROFILE must be one of {_PROFILES}, got {ARTI_D1_VEL_PROFILE}")
 _V13 = ARTI_D1_VEL_PROFILE == "v13"
-_V15 = ARTI_D1_VEL_PROFILE == "v15"
-_V14 = ARTI_D1_VEL_PROFILE in ("v14", "v15")  # v15 builds on v14
-_V12 = ARTI_D1_VEL_PROFILE in ("v12", "v13", "v14", "v15")  # v13 / v14 build on v12
-_V11 = ARTI_D1_VEL_PROFILE in ("v11", "v12", "v13", "v14", "v15")  # v12 builds on v11
+_V16 = ARTI_D1_VEL_PROFILE == "v16"
+_V15 = ARTI_D1_VEL_PROFILE in ("v15", "v16")  # v16 builds on v15
+_V14 = ARTI_D1_VEL_PROFILE in ("v14", "v15", "v16")  # v15 builds on v14
+_V12 = ARTI_D1_VEL_PROFILE in ("v12", "v13", "v14", "v15", "v16")  # v13 / v14 build on v12
+_V11 = ARTI_D1_VEL_PROFILE in ("v11", "v12", "v13", "v14", "v15", "v16")  # v12 builds on v11
 ARTI_D1_VEL_ACTION_HISTORY = 1 if _V11 else 3
 # actor: base ang vel (3) + projected gravity (3) + leg joint pos rel (10) + leg joint vel (10) + last N actions (10 N)
 # + command (3, always last)
@@ -170,7 +172,7 @@ class ArtiD1VelEnvCfg(DirectRLEnvCfg):
     command_threshold = 0.01  # microduck command_threshold for gait terms / pose walking_threshold
 
     # ---- rewards (weights x step_dt, like mjlab's RewardManager)
-    track_lin_vel_weight = 2.0
+    track_lin_vel_weight = 3.0 if _V16 else 2.0
     track_lin_vel_std = 0.08  # m/s; microduck sqrt(0.1)=0.32 for +-0.4 commands, scaled by the command range (v3/v4: 0.06, no tracking learned)
     # v3: extra lateral term (v1/v2 never learned lin y: a 0.06 m/s miss still paid exp(-.56)=.57 of the joint xy term)
     track_lat_vel_weight = 0.0  # off (= v7 cont1 deployed policy); v8 1.0 fine-tune from v7c1 240k and v3-v5 1.0 from scratch never tracked lateral

@@ -1568,3 +1568,12 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   4.45 touchdowns/s, swing .22 s, peak 12.6 mm, touchdown 261 mm/s (softest yet), slip 73 mm/s, gyro .09 / .10 / .07;
   fwd .054 of .12, back -.069, side .026, diag .040, turn .274. Video: upright, low quick steps.
   Converged; flight essentially gone. Plan: final check at 240k, then close v15 (best candidates 168k / 210k).
+
+- 11-11 20:4x v15 FINISHED (240k). Final check agent_240000 (eval_v15_240000_*, video vel_v15_240000.mp4): falls 0/64,
+  standpush 1/32, both up 1 %, 4.42 touchdowns/s, swing .22 s, peak 12.3 mm, touchdown 262 mm/s, slip 75 mm/s, gyro
+  .09 / .11 / .07, fwd .059 of .12 (best), back -.065, side .020, diag .043, turn .284, stand 0 lifts. Video: upright,
+  low quick steps. v15 240k = current best / deploy candidate (with 168k, 210k). TB converged.
+  Remaining weakness: speed tracking (fwd ~50 %, back ~65 % of the command): with ~12 mm steps at 4.4/s the policy
+  trades speed for the gait terms. v16 = v15 + track_lin_vel_weight 2 -> 3 (std .08 kept), from v15 agent_240000,
+  curriculum offset 1134000. Run 2026-11-11_20-48-57_ppo_torch, PID 1269144, log
+  logs/train/train_vel_microduck_v16_track.log, cron 13/43. If it hurts the gait / stability, v15 240k stays final.
