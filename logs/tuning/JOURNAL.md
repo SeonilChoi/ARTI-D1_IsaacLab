@@ -1424,3 +1424,21 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   Same rewards / noise as duck v4, from scratch (phase period changed). Run 2026-11-11_12-52-34_ppo_torch, PID
   1226450, log logs/train/train_duck_shuffle_s1.log. Duck v4 (PID 1212578) keeps running next to it (GPU 8.4 / 16 GB,
   ~11 it/s each). One cron for both: e.g. ARTI_D1_DUCK_REF=shuffle on every s1 eval.
+
+- 11-11 13:4x check of both duck runs (both alive; GPU shared, ~10-12 it/s each).
+  (A) shuffle s1 (run 12-52-34, 41k): TB improving: episode length 958-992, lin err filt .043, yaw err filt .077,
+  trunk rate rms .70 (falling), contact match .51, imitation err 6.3 deg, entropy -.059.
+  agent_40000 (ARTI_D1_DUCK_REF=shuffle; eval_shuffle1_40000_score/push.log, video shuffle1_40000.mp4): tracking now
+  right: stand -.005 / .000, back -.05 got -.024, fwd +.050 of .06, turn .118 of .15; but falls 18/64 (11 of them at
+  5.8-6.6 s), standpush 18/32. Not shuffling yet: 1.43 touchdowns/s, both down 79 %, swing .10 s, peak 17.5 mm; stand
+  still 0.02 lifts/s (holds still), torso gyro fwd .49 / .39 / .35 (v3 1.2). Video: several falls / crouches.
+  (B) duck v4 (run 12-28-14, 69k): TB improving: episode length 915, lin err filt .049, yaw err filt .074, trunk rate
+  rms .86, contact match .53, imitation err 6.9 deg.
+  agent_68000 (eval_duck4_68000_score/push.log, video duck4_68000.mp4): forward drift fixed: stand +.004 / +.002, back
+  -.035 of -.05, turn .149 of .15, fwd .043 of .06; stand still 0.02 lifts/s; quick low steps 3.39/s, swing .10 s,
+  peak 14 mm; torso gyro .62 / .62 / .39 (v3 1.28). But falls 17/64 (v3 92k: 5; 9 of them at 5.9-6.7 s), standpush
+  15/32 (v3 3).
+  Both: the fall cluster at ~6 s is the forward -> stand switch in the score sequence. Likely the v4 stand_still -1.0
+  (|q - default| + |qd| with zero command) makes the policy snap to the default pose mid-stride. Both still improving;
+  left running. Possible fix if it persists (needs approval): stand_still -1.0 -> -0.5, or ramp it in over ~0.5 s
+  after a zero command.
