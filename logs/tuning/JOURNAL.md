@@ -1618,3 +1618,13 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   .12, back -.061, side .014, diag .068 / -.022, turn .273, 4.47 touchdowns/s, swing .22 s, peak 12.9 mm, both up 1 %,
   touchdown 259 mm/s, slip 85 mm/s, gyro .11 / .10 / .07. Video: upright, low quick steps.
   Mixed vs 36k (fwd / diag up; back, push down; side still weak). Keep going.
+
+- 11-11 23:5x v17 check -> plateau, stopped at ~121k (PID 1280809 verified, killed). TB flat (episode length ~1190,
+  track_lin 1.26-1.28, track_ang 1.26-1.28, pose .83-.84, air_time 1.45).
+  agent_120000 (eval_v17_120000_*, video vel_v17_120000.mp4, v17 model): falls 0/64, standpush 5/32 (0.2: 0/8, 0.3:
+  0/8, 0.4: 1/8, 0.5: 4/8; 36k: 0, 0, 0, 2/8), fwd .077, back -.068, side .023, diag .061, turn .281, 4.50
+  touchdowns/s, swing .22 s, peak 13.3 mm, both up 1 %, touchdown 253 mm/s, slip 87 mm/s, gyro .10 / .11 / .08.
+  Video: mostly upright quick low steps, one robot leaning at ~12 s. Push robustness eroding over v17 (2 -> 4 -> 5/32),
+  all falls at pushes above the 0.25 m/s trained. v18 = v17 + training pushes 0.25 -> 0.4 m/s, from v17 agent_120000,
+  offset 1392000. Run 2026-11-11_23-58-49_ppo_torch, PID 1288431, log logs/train/train_vel_microduck_v18_push.log,
+  cron 13/43. Deploy candidates meanwhile: v17 36k (realistic model, 2/32) / v16 138k.
