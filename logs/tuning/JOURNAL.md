@@ -1703,3 +1703,14 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   v21 = v20 + track_lat_vel_weight 0.3 -> 0.5 (side still .018-.019 of .06), from v20 agent_84000, offset 1590000.
   Run 2026-11-12_03-59-25_ppo_torch, PID 1310367, log logs/train/train_vel_microduck_v21_lat05.log, cron 13/43.
   If v21 costs turn / shuffle / roll (as v19 at 1.0), v20 84k is final.
+
+- 11-12 04:3x v21 check -> regression, stopped at ~25k (PID 1310367 verified, killed). TB: every tracking term
+  falling (lin 1.49 -> 1.36, ang 1.18 -> 1.08, lat (x.5) .28 -> .26), pose .88 -> .84.
+  agent_24000 (eval_v21_24000_*, video vel_v21_24000.mp4): falls 0/64, standpush 1/32 (0.5: 1/8), side .009 of .06
+  (v20 84k .018: worse), fwd .086, back -.060, diag .065 / -.025, turn .256, 3.94 touchdowns/s, both down 14 % (v20 5
+  %), roll gyro .16 (.13) - the v19 drift starting again. Video: all upright, no 12 s fall.
+  Conclusion: more lateral weight does not buy side speed on this gait, it only erodes the shuffle / roll. No further
+  change with a clear expected gain -> training stopped; v20 agent_84000 is the final candidate (realistic model:
+  0/64 falls, 0/32 stand pushes up to 0.5 m/s, no side-step fall in the play video, fwd .077, back -.060, side .018,
+  turn .256, 4.4 steps/s, 14 mm swings, torso gyro .08-.13). Proposed to the user: export + deploy v20 84k
+  (needs the user's go: outward-facing). GPU idle; cron deleted.
