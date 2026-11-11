@@ -1442,3 +1442,17 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   (|q - default| + |qd| with zero command) makes the policy snap to the default pose mid-stride. Both still improving;
   left running. Possible fix if it persists (needs approval): stand_still -1.0 -> -0.5, or ramp it in over ~0.5 s
   after a zero command.
+
+- 11-11 14:2x check of both duck runs (both alive). TB nearly flat for both (episode length s1 940-970, v4 907-950;
+  filtered tracking errors and trunk rate rms only creeping down).
+  (A) shuffle s1 agent_64000 (eval_shuffle1_64000_*, video shuffle1_64000.mp4): falls 26/64 (40k: 18), 17 of them at
+  5.8-7.0 s = 0.8-2 s after the forward -> stand switch; standpush 16/32; stand -.023 / -.005, back -.014 of -.05,
+  turn .123; 1.98 touchdowns/s, both down 81 %, swing .10 s, peak 17 mm; torso gyro .47 / .36 / .30.
+  (B) duck v4 agent_92000 (eval_duck4_92000_*, video duck4_92000.mp4): falls 18/64 (68k: 17), 12 at 5.8-6.9 s;
+  standpush 17/32; stand +.016 / +.006, back -.038, turn .162; 3.39 touchdowns/s, swing .10 s, peak 15 mm; gyro
+  .63 / .54 / .36.
+  Verdict: tracking fixed by v4's rewards, but stopping from a walk is the failure mode and it is not getting better.
+  With a zero command the imitation term switches off and stand_still (-1.0 x (|q - q0| + |qd|)) pulls the legs to the
+  default pose at once; stops happen only at command resamples (every 6-10 s, 20 % zero) -> few stop events to learn
+  from. Proposal (needs approval), s2 from s1 64k: stand_still ramped in over 1 s after a zero command (imitation of
+  the zero-velocity clip kept during the ramp), command resample 6-10 s -> 3-6 s. Runs left going meanwhile.
