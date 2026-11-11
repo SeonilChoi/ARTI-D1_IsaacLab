@@ -1502,3 +1502,11 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   quick steps pays about what the action-rate penalty takes away; standing still and pushing off now and then wins.
   Shuffle s3: duck_imitation 1.0 -> 3.0 (all imitation terms: joint pos / vel, base vel, contact), rest as s2. From s2
   agent_64000. Run 2026-11-11_16-27-31_ppo_torch, PID 1246203, log logs/train/train_duck_shuffle_s3.log, cron 13/43.
+
+- 11-11 16:4x user: "이런식으로 걷는데 MICRODUCK 학습 방식처럼 금방 걷는걸 배울 순 없어?" -> v14 = the microduck velocity
+  recipe (Template-Arti-D1-Vel-Direct-v0, no reference, learned stable walking on the first try, v12 42k: 0/64 falls)
+  shaped for the shuffle: profile ARTI_D1_VEL_PROFILE=v14 = v12 + air-time reward window 0.15-0.45 -> 0.06-0.22 s
+  (shuffle reference single support 0.18 s) + swing target height 30 -> 12 mm. Resumed from v12 agent_42000
+  (run 2026-11-10_13-08-29, curriculum offset 810000 -> action rate already at its final -1.0), so it starts from a
+  walking policy and only has to shorten / lower the steps. Run 2026-11-11_16-47-59_ppo_torch, PID 1248291, log
+  logs/train/train_vel_microduck_v14_shuffle.log. Duck shuffle s3 keeps running next to it. One cron for both.

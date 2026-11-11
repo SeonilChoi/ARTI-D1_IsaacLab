@@ -37,12 +37,15 @@ ARTI_D1_VEL_PROFILE = os.environ.get("ARTI_D1_VEL_PROFILE", "v10")
 #   v12: v11 + joint play (backlash, total 1-3 deg per env / leg joint, user 2026-11-10) + torso ang vel penalty x4
 #   v13: v12 + the real mass (robot weighed 5.34 kg vs URDF 5.79: pelvis 3.69 -> 3.24 kg, +-10%), pelvis CoM +-15 mm,
 #        TPU-like compliant foot / ground contact (user 2026-11-10: soles are slightly elastic TPU)
-_PROFILES = ("v10", "v11", "v12", "v13")
+#   v14: v12 + "잔발" (user 2026-11-11: short quick steps like the shuffle reference, learned the microduck way, no
+#        reference): air-time window 0.15-0.45 -> 0.06-0.22 s, swing target 30 -> 12 mm
+_PROFILES = ("v10", "v11", "v12", "v13", "v14")
 if ARTI_D1_VEL_PROFILE not in _PROFILES:
     raise ValueError(f"ARTI_D1_VEL_PROFILE must be one of {_PROFILES}, got {ARTI_D1_VEL_PROFILE}")
 _V13 = ARTI_D1_VEL_PROFILE == "v13"
-_V12 = ARTI_D1_VEL_PROFILE in ("v12", "v13")  # v13 builds on v12
-_V11 = ARTI_D1_VEL_PROFILE in ("v11", "v12", "v13")  # v12 builds on v11
+_V14 = ARTI_D1_VEL_PROFILE == "v14"
+_V12 = ARTI_D1_VEL_PROFILE in ("v12", "v13", "v14")  # v13 / v14 build on v12
+_V11 = ARTI_D1_VEL_PROFILE in ("v11", "v12", "v13", "v14")  # v12 builds on v11
 ARTI_D1_VEL_ACTION_HISTORY = 1 if _V11 else 3
 # actor: base ang vel (3) + projected gravity (3) + leg joint pos rel (10) + leg joint vel (10) + last N actions (10 N)
 # + command (3, always last)
@@ -193,12 +196,12 @@ class ArtiD1VelEnvCfg(DirectRLEnvCfg):
     action_rate_stages = ((0, -0.1), (500 * 24, -0.2), (750 * 24, -0.4), (1000 * 24, -0.6), (1250 * 24, -0.8), (1500 * 24, -1.0))
     air_time_weight = 3.0
     # microduck window [0.125, 0.300] s; ARTI-D1 swings are slower (servo speed), policy swings measured 0.25-0.32 s
-    air_time_min = 0.15
-    air_time_max = 0.45
+    air_time_min = 0.06 if _V14 else 0.15  # v14: quick short swings (shuffle reference single support 0.18 s)
+    air_time_max = 0.22 if _V14 else 0.45
     foot_clearance_weight = -2.0
     foot_swing_height_weight = -0.25
     # microduck 0.02 m on a 25 cm robot; the ARTI-D1 demo swings 28 mm
-    swing_target_height = 0.03
+    swing_target_height = 0.012 if _V14 else 0.03  # v14: low shuffle swing (reference 10 mm)
     foot_slip_weight = -0.1
 
     # ---- feet (sole frame and contact from the lowest sole corner, as in the AMP task; no contact sensor on the USD)
