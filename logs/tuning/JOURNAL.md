@@ -1695,3 +1695,11 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   .22 s, peak 13.7 mm, slip 85 mm/s, gyro .13 / .12 / .08. Play video: all 4 upright, no fall at 12 s.
   v20 84k = new best all-round on the realistic model (0/64, 0/32, no side-step fall, shuffle kept). Near plateau;
   one more check, then close v20 and propose / do the export.
+
+- 11-12 04:0x v20 final check -> plateau, stopped at ~126k (PID 1302658 verified, killed). TB flat since ~40k.
+  agent_120000 (eval_v20_120000_*, video vel_v20_120000.mp4): falls 0/64, standpush 0/32, play video all upright (no
+  12 s fall), fwd .066, back -.061, side .019, diag .053 / -.015, turn .264, 4.41 touchdowns/s, both down 3 %, peak
+  13.5 mm, gyro .13 / .12 / .08. Best v20 = 84k (fwd .077, diag .062; else equal) -> deploy candidate #1.
+  v21 = v20 + track_lat_vel_weight 0.3 -> 0.5 (side still .018-.019 of .06), from v20 agent_84000, offset 1590000.
+  Run 2026-11-12_03-59-25_ppo_torch, PID 1310367, log logs/train/train_vel_microduck_v21_lat05.log, cron 13/43.
+  If v21 costs turn / shuffle / roll (as v19 at 1.0), v20 84k is final.
