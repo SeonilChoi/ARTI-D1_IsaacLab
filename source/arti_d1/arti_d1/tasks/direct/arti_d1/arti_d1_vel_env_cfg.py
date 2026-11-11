@@ -46,17 +46,20 @@ ARTI_D1_VEL_PROFILE = os.environ.get("ARTI_D1_VEL_PROFILE", "v10")
 #   v18: v17 + training pushes 0.25 -> 0.4 m/s (v17 standpush falls only at 0.4 / 0.5 m/s: 120k 1/8, 4/8)
 #   v19: v18 + lateral velocity tracking reward 1.0 (v18: side .014 of .06; play video env falls ~1.5 s into a slow
 #        .016 m/s side step on the realistic model, with or without pushes)
-_PROFILES = ("v10", "v11", "v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19")
+#   v20: v18 + lateral tracking 0.3 (v19 with 1.0 fixed the play-video side-step fall but halved turning, .265 -> .115,
+#        doubled torso roll and lost the shuffle: 3.2 touchdowns/s, both feet down 33 %)
+_PROFILES = ("v10", "v11", "v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20")
 if ARTI_D1_VEL_PROFILE not in _PROFILES:
     raise ValueError(f"ARTI_D1_VEL_PROFILE must be one of {_PROFILES}, got {ARTI_D1_VEL_PROFILE}")
+_V20 = ARTI_D1_VEL_PROFILE == "v20"
 _V19 = ARTI_D1_VEL_PROFILE == "v19"
-_V18 = ARTI_D1_VEL_PROFILE in ("v18", "v19")  # v19 builds on v18
-_V13 = ARTI_D1_VEL_PROFILE in ("v13", "v17", "v18", "v19")  # v17 adds the v13 realism
-_V16 = ARTI_D1_VEL_PROFILE in ("v16", "v17", "v18", "v19")  # v17 builds on v16
-_V15 = ARTI_D1_VEL_PROFILE in ("v15", "v16", "v17", "v18", "v19")  # v16 builds on v15
-_V14 = ARTI_D1_VEL_PROFILE in ("v14", "v15", "v16", "v17", "v18", "v19")  # v15 builds on v14
-_V12 = ARTI_D1_VEL_PROFILE in ("v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19")  # v13 / v14 build on v12
-_V11 = ARTI_D1_VEL_PROFILE in ("v11", "v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19")  # v12 builds on v11
+_V18 = ARTI_D1_VEL_PROFILE in ("v18", "v19", "v20")  # v19 builds on v18
+_V13 = ARTI_D1_VEL_PROFILE in ("v13", "v17", "v18", "v19", "v20")  # v17 adds the v13 realism
+_V16 = ARTI_D1_VEL_PROFILE in ("v16", "v17", "v18", "v19", "v20")  # v17 builds on v16
+_V15 = ARTI_D1_VEL_PROFILE in ("v15", "v16", "v17", "v18", "v19", "v20")  # v16 builds on v15
+_V14 = ARTI_D1_VEL_PROFILE in ("v14", "v15", "v16", "v17", "v18", "v19", "v20")  # v15 builds on v14
+_V12 = ARTI_D1_VEL_PROFILE in ("v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20")  # v13 / v14 build on v12
+_V11 = ARTI_D1_VEL_PROFILE in ("v11", "v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20")  # v12 builds on v11
 ARTI_D1_VEL_ACTION_HISTORY = 1 if _V11 else 3
 # actor: base ang vel (3) + projected gravity (3) + leg joint pos rel (10) + leg joint vel (10) + last N actions (10 N)
 # + command (3, always last)
@@ -182,7 +185,7 @@ class ArtiD1VelEnvCfg(DirectRLEnvCfg):
     track_lin_vel_weight = 3.0 if _V16 else 2.0
     track_lin_vel_std = 0.08  # m/s; microduck sqrt(0.1)=0.32 for +-0.4 commands, scaled by the command range (v3/v4: 0.06, no tracking learned)
     # v3: extra lateral term (v1/v2 never learned lin y: a 0.06 m/s miss still paid exp(-.56)=.57 of the joint xy term)
-    track_lat_vel_weight = 1.0 if _V19 else 0.0  # v19: 1.0; off (= v7 cont1 deployed policy); v8 1.0 fine-tune from v7c1 240k and v3-v5 1.0 from scratch never tracked lateral
+    track_lat_vel_weight = 1.0 if _V19 else 0.3 if _V20 else 0.0  # v19: 1.0, v20: 0.3; off (= v7 cont1 deployed policy); v8 1.0 fine-tune from v7c1 240k and v3-v5 1.0 from scratch never tracked lateral
     track_lat_vel_std = 0.06  # v3/v4: 0.03
     # v3: alive bonus (per s) + one-off termination penalty (seed 42 v2 run collapsed into "fall early" optimum)
     alive_weight = 0.0  # v6 off (v3-v5: 1.0)

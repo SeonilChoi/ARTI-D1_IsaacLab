@@ -1670,3 +1670,12 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   shuffle: 3.22 touchdowns/s (4.36), both down 31 % (0-3 %), slip 51 mm/s; torso roll gyro .21 (.11).
   Early (24k); the lateral reward is reshaping the gait. Watch turn / roll / touchdowns next check; if they don't
   recover, fall back to v18 114k and try a smaller lateral weight (.3-.5).
+
+- 11-12 02:2x v19 check -> regression, stopped at ~67k (PID 1297853 verified, killed). TB: track_lat .51 -> .60,
+  track_lin 1.53, track_ang ~1.03, air_time .95 (v18 1.39).
+  agent_66000 (eval_v19_66000_*, video vel_v19_66000.mp4): falls 0/64, standpush 0/32, play video: no fall at 12 s
+  (fix holds); but score side still .011 of .06, turn .115 of .30 (v18 .265), fwd .089 (better), back -.063, diag .072
+  / -.028; gait away from the shuffle: 3.16 touchdowns/s, both down 33 %, roll gyro .24 (v18 .11).
+  Lateral weight 1.0 trades turning / shuffle / roll for the side-step fix. v20 = v18 + track_lat_vel_weight 0.3,
+  from v18 agent_114000 (offset 1506000). Run 2026-11-12_02-23-11_ppo_torch, PID 1302658, log
+  logs/train/train_vel_microduck_v20_lat03.log, cron 13/43.
