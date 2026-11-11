@@ -1717,3 +1717,10 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   CORRECTION (v21 24k video): the line above was written before the contact sheet was read - the sheet shows one env
   FALLING at ~12 s (the slow side step), i.e. v21 also brought back the v18 side-step fall. Strengthens the verdict:
   v20 84k final.
+
+## 2026-11-12 Deploy: v20 agent_84000 -> humanoid_controller (arti-d1-2830k 576059d, f7f11eb)
+- Export: `ARTI_D1_VEL_PROFILE=v20 scripts/vel/pt_to_onnx_vel.py` -> logs/tuning/agent_vel_v20_84000.onnx; obs 39
+  (action history 1), action_scale 0.5, same default pose / gains as v12 -> no controller config change.
+  torch vs onnx max |diff| 2.9e-6.
+- ONNX closed loop (eval_v20_84000_onnx_score.log): 0/64 falls, fwd .074, back -.060, side .016, diag (.059, -.020),
+  turn .255, 4.29 touchdowns/s, swing .22 s, peak 13.8 mm, both down 6 %, gyro fwd .129/.109/.076 = torch run.
