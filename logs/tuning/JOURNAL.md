@@ -1724,3 +1724,14 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   torch vs onnx max |diff| 2.9e-6.
 - ONNX closed loop (eval_v20_84000_onnx_score.log): 0/64 falls, fwd .074, back -.060, side .016, diag (.059, -.020),
   turn .255, 4.29 touchdowns/s, swing .22 s, peak 13.8 mm, both down 6 %, gyro fwd .129/.109/.076 = torch run.
+
+## 2026-11-12 Real robot: v20 84k buzzes standing (~10 Hz), v12 42k too
+- Real logs (controller 3b61100 v20, 9fd41d8 v12): zero command, trunk gyro std ~1 rad/s, action 6-step (10 Hz)
+  limit cycle, |da| .14/step (sim standing: gyro .02, |da| .003). Earlier real logs (11-10, v10-v12) show the same
+  7-13 Hz buzz while standing, smaller (v12 11-10: gyro .45). Controller replays ONNX exactly (diff 1e-6); loop dt
+  16.67 ms, q_des->pos lag 4-5 steps (sim 3.7, eval_vel --mode lag), gains same as v12.
+- Sim does not reproduce it: v12/v20 ckpt x v12/v20 model, actuator delay 45/60/75 ms (EVAL_CFG) -> no buzz.
+- Decomposition of the real 10 Hz action (scratchpad decomp.py): gyro term ~50 %, previous action ~30 %, qpos/qvel ~0.
+  Real gyro carries 0.6 rad/s rms at 7-13 Hz -> structural vibration in the IMU feeds the policy's gyro feedback loop.
+- Next (v22): low-pass gyro obs (same filter in the controller) + 7-13 Hz gyro vibration injection + high-freq action
+  penalty, so the policy does not amplify IMU vibration.

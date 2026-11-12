@@ -8,11 +8,12 @@
     python scripts/vel/eval_vel.py --mode score --checkpoint <agent.pt> --num_envs 64
 """
 import argparse
+import os
 
 from isaaclab.app import AppLauncher
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--mode", choices=("score", "standpush"), required=True)
+parser.add_argument("--mode", choices=("score", "standpush", "lag"), required=True)
 parser.add_argument("--checkpoint", type=str, required=True)
 parser.add_argument("--num_envs", type=int, default=64)
 parser.add_argument("--physics", type=str, default="isaacsim_physx")
@@ -108,6 +109,11 @@ def make_env(seconds):
     cfg.command_resample_s = (1e9, 1e9)
     cfg.episode_length_s = seconds + 2.0
     cfg.reset_xy_range = 0.0
+    # EVAL_CFG="actuator_delay_ms=40;actuator_delay_jitter_ms=(0.0,10.0)": override env cfg fields (sim2real what-ifs)
+    for kv in filter(None, os.environ.get("EVAL_CFG", "").split(";")):
+        k, v = kv.split("=", 1)
+        setattr(cfg, k.strip(), eval(v))
+        print(f"[EVAL_CFG] {k.strip()} = {getattr(cfg, k.strip())}")
     env = gym.make(TASK, cfg=cfg)
     return env, env.unwrapped
 
@@ -265,6 +271,7 @@ def run_standpush(env, u, policy):
     heading = torch.rand(n, device=u.device) * 2 * math.pi
     lifts = torch.zeros(n, device=u.device)
     last_c = None
+    gyro_log, act_log = [], []
     for i in range(int((SETTLE_S + OBSERVE_S) / dt)):
         if i == int(SETTLE_S / dt):
             fell_before = int((~alive).sum())
@@ -275,7 +282,10 @@ def run_standpush(env, u, policy):
         o = obs["policy"].clone()
         o[:, -3:] = 0.0
         with torch.no_grad():
-            obs, _, term, _, _ = env.step(policy(o))
+            a = policy(o)
+            obs, _, term, _, _ = env.step(a)
+        gyro_log.append(o[:, 0:3].cpu())
+        act_log.append(a.cpu())
         alive &= ~term
         _, _, h = u._feet()
         c = h < u.cfg.contact_height
@@ -288,6 +298,51 @@ def run_standpush(env, u, policy):
         print(f"[VEL-PUSH] push {s:.2f} m/s: fell {int((~alive & m).sum())}/{int(m.sum())} | survivors foot lifts "
               f"{lifts[m & alive].mean().item() if (m & alive).any() else float('nan'):.1f}")
     print(f"[VEL-PUSH] total fell {int((~alive).sum())}/{n}")
+    # standing buzz (real ARTI-D1 v20: ~10 Hz trunk / action limit cycle at zero command, gyro std ~1 rad/s): observed
+    # gyro (obs, with noise) and actions over the settle window before the push and the last 1.5 s after it
+    G, A = torch.stack(gyro_log, 1).numpy(), torch.stack(act_log, 1).numpy()  # [env, step, k]
+    al = alive.cpu().numpy()
+    for name, sl in (("settle", slice(int(0.5 / dt), int(SETTLE_S / dt))), ("after push", slice(-int(1.5 / dt), None))):
+        g, a = G[al, sl], A[al, sl]
+        f = np.fft.rfftfreq(g.shape[1], dt)
+        def hf(x):
+            P = np.abs(np.fft.rfft(x - x.mean(1, keepdims=True), axis=1)) ** 2
+            return float((P[:, (f >= 7) & (f < 13)].sum(1) / np.maximum(P[:, f > 0.3].sum(1), 1e-12)).mean())
+        print(f"[VEL-PUSH] buzz {name}: gyro std x {g[..., 0].std(1).mean():.3f} y {g[..., 1].std(1).mean():.3f} "
+              f"z {g[..., 2].std(1).mean():.3f} rad/s (max env x {g[..., 0].std(1).max():.3f}) | 7-13 Hz share gyro "
+              f"{hf(g[..., 0]):.2f} action {hf(a):.2f} | action step |da| {np.abs(np.diff(a, axis=1)).mean():.3f}")
+
+
+LAG_S = 8.0
+
+
+def run_lag(env, u, policy):
+    """Servo response lag as the real logs show it: steps between the policy joint target (q_des) and the measured
+    joint position at peak cross-correlation, walking forward 0.08 m/s (real ARTI-D1 2026-11-10/12: 4-5 steps)."""
+    n = u.num_envs
+    obs, _ = env.reset()
+    qd_log, q_log = [], []
+    for i in range(int(LAG_S / u.step_dt)):
+        o = obs["policy"].clone()
+        o[:, -3:] = torch.tensor([0.08, 0.0, 0.0], device=u.device)
+        u.commands[:] = o[:, -3:]
+        with torch.no_grad():
+            obs, _, _, _, _ = env.step(policy(o))
+        if i * u.step_dt > 2.0:
+            qd_log.append(u.joint_target[:, u.leg_mask].cpu())
+            q_log.append(u.robot.data.joint_pos.torch[:, u.leg_mask].cpu() if hasattr(u.robot.data.joint_pos, "torch")
+                         else u.robot.data.joint_pos[:, u.leg_mask].cpu())
+    QD, Q = torch.stack(qd_log, 1).numpy(), torch.stack(q_log, 1).numpy()
+    lags = np.zeros((n, QD.shape[2]), int)
+    gains = np.zeros((n, QD.shape[2]))
+    for e in range(n):
+        for j in range(QD.shape[2]):
+            a, b = QD[e, :, j] - QD[e, :, j].mean(), Q[e, :, j] - Q[e, :, j].mean()
+            cc = [np.corrcoef(a[: len(a) - k], b[k:])[0, 1] for k in range(9)]
+            lags[e, j] = int(np.nanargmax(cc))
+            gains[e, j] = np.polyfit(a[: len(a) - lags[e, j]], b[lags[e, j]:], 1)[0]
+    print(f"[VEL-LAG] q_des->pos lag steps per leg joint (median over envs): {np.median(lags, 0).tolist()} "
+          f"mean {lags.mean():.2f} | gain {np.median(gains, 0).round(2).tolist()}")
 
 
 device = "cuda:0"
@@ -295,6 +350,9 @@ policy = load_policy(args_cli.checkpoint, device)
 if args_cli.mode == "score":
     env, u = make_env(SEG_S * len(SEQUENCE))
     run_score(env, u, policy)
+elif args_cli.mode == "lag":
+    env, u = make_env(LAG_S)
+    run_lag(env, u, policy)
 else:
     env, u = make_env(SETTLE_S + OBSERVE_S)
     run_standpush(env, u, policy)
