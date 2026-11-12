@@ -1798,3 +1798,10 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   Plateau: tracking up, shuffle drifting off (touchdowns 4.01 @126k -> 3.60, both down 13 -> 20 %). Best = 126k.
   Next (after v22 ends): v23 = v22 + air_time_weight 3 -> 4 from v22 agent_126000, to win back the v20 shuffle under
   the vibration model (the vibration makes double support pay). Buzz test stays the gate.
+
+- 11-12 20:4x v22 finished 240k (PID 1377353 exited normally). agent_240000: score 0/64, fwd .076, back -.062,
+  side .010, turn .261, 4.20 touchdowns/s, 14.4 mm, both down 9 % (best v22 gait), standpush 0/32, buzz k=2.5 1/32
+  (0.5 m/s: 1/8), gyro .021/.041/.021, |da| .003. BUT video vel_v22_240000.mp4 (sheet read): the front robot is down
+  at 22 s and stays down through 30 s (the 22.5 s scheduled push) -> less robust than 126k. Best v22 = 126k.
+- v23 launched: v22 + air_time_weight 3 -> 4, from v22 agent_126000, offset 1506000, seed 7, 240k.
+  Run 2026-11-12_20-45-12_ppo_torch, PID 1398887, log logs/train/train_vel_microduck_v23_air4.log.

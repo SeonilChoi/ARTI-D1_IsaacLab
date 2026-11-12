@@ -49,20 +49,21 @@ ARTI_D1_VEL_PROFILE = os.environ.get("ARTI_D1_VEL_PROFILE", "v10")
 #   v20: v18 + lateral tracking 0.3 (v19 with 1.0 fixed the play-video side-step fall but halved turning, .265 -> .115,
 #        doubled torso roll and lost the shuffle: 3.2 touchdowns/s, both feet down 33 %)
 #   v21: v20 + lateral tracking 0.3 -> 0.5 (v20 converged: side .018-.019 of .06, no side-step fall, turn kept)
-_PROFILES = ("v10", "v11", "v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22")
+_PROFILES = ("v10", "v11", "v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23")
 if ARTI_D1_VEL_PROFILE not in _PROFILES:
     raise ValueError(f"ARTI_D1_VEL_PROFILE must be one of {_PROFILES}, got {ARTI_D1_VEL_PROFILE}")
 _V21 = ARTI_D1_VEL_PROFILE == "v21"
-_V22 = ARTI_D1_VEL_PROFILE == "v22"
-_V20 = ARTI_D1_VEL_PROFILE in ("v20", "v21", "v22")  # v21 / v22 build on v20
+_V23 = ARTI_D1_VEL_PROFILE == "v23"
+_V22 = ARTI_D1_VEL_PROFILE in ("v22", "v23")  # v23 builds on v22
+_V20 = ARTI_D1_VEL_PROFILE in ("v20", "v21", "v22", "v23")  # v21 / v22 build on v20
 _V19 = ARTI_D1_VEL_PROFILE == "v19"
-_V18 = ARTI_D1_VEL_PROFILE in ("v18", "v19", "v20", "v21", "v22")  # v19 builds on v18
-_V13 = ARTI_D1_VEL_PROFILE in ("v13", "v17", "v18", "v19", "v20", "v21", "v22")  # v17 adds the v13 realism
-_V16 = ARTI_D1_VEL_PROFILE in ("v16", "v17", "v18", "v19", "v20", "v21", "v22")  # v17 builds on v16
-_V15 = ARTI_D1_VEL_PROFILE in ("v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22")  # v16 builds on v15
-_V14 = ARTI_D1_VEL_PROFILE in ("v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22")  # v15 builds on v14
-_V12 = ARTI_D1_VEL_PROFILE in ("v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22")  # v13 / v14 build on v12
-_V11 = ARTI_D1_VEL_PROFILE in ("v11", "v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22")  # v12 builds on v11
+_V18 = ARTI_D1_VEL_PROFILE in ("v18", "v19", "v20", "v21", "v22", "v23")  # v19 builds on v18
+_V13 = ARTI_D1_VEL_PROFILE in ("v13", "v17", "v18", "v19", "v20", "v21", "v22", "v23")  # v17 adds the v13 realism
+_V16 = ARTI_D1_VEL_PROFILE in ("v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23")  # v17 builds on v16
+_V15 = ARTI_D1_VEL_PROFILE in ("v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23")  # v16 builds on v15
+_V14 = ARTI_D1_VEL_PROFILE in ("v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23")  # v15 builds on v14
+_V12 = ARTI_D1_VEL_PROFILE in ("v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23")  # v13 / v14 build on v12
+_V11 = ARTI_D1_VEL_PROFILE in ("v11", "v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23")  # v12 builds on v11
 ARTI_D1_VEL_ACTION_HISTORY = 1 if _V11 else 3
 # actor: base ang vel (3) + projected gravity (3) + leg joint pos rel (10) + leg joint vel (10) + last N actions (10 N)
 # + command (3, always last)
@@ -211,7 +212,7 @@ class ArtiD1VelEnvCfg(DirectRLEnvCfg):
     body_ang_vel_weight = -0.2 if _V12 else -0.05  # v12 x4 (real torso rocked 6x sim)
     dof_pos_limits_weight = -1.0
     action_rate_stages = ((0, -0.1), (500 * 24, -0.2), (750 * 24, -0.4), (1000 * 24, -0.6), (1250 * 24, -0.8), (1500 * 24, -1.0))
-    air_time_weight = 3.0
+    air_time_weight = 4.0 if _V23 else 3.0  # v23: win back the v20 shuffle under the v22 gyro vibration model
     # microduck window [0.125, 0.300] s; ARTI-D1 swings are slower (servo speed), policy swings measured 0.25-0.32 s
     air_time_min = 0.06 if _V14 else 0.15  # v14: quick short swings (shuffle reference single support 0.18 s)
     air_time_max = 0.22 if _V14 else 0.45
