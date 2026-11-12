@@ -111,6 +111,12 @@ class ArtiD1VelEnv(DirectRLEnv):
         self.prev_imu = torch.zeros(n, 6, device=dev)
         # IMU readings, newest first: index d = d control steps old
         self.imu_hist = torch.zeros(n, self.cfg.imu_delay_max_steps + 1, 6, device=dev)
+        # v22 structural gyro vibration: first-order high-pass of the pelvis gyro, gain per env (cfg.gyro_hf_gain_range)
+        tau = 1.0 / (2.0 * math.pi * self.cfg.gyro_hf_cutoff_hz)
+        self.gyro_hp_a = tau / (tau + self.step_dt)
+        self.gyro_hp_y = torch.zeros(n, 3, device=dev)
+        self.gyro_hp_x = torch.zeros(n, 3, device=dev)
+        self.gyro_hf_gain = torch.empty(n, 1, device=dev).uniform_(*self.cfg.gyro_hf_gain_range)
         self.imu_hist[..., 5] = -1.0
         self.prev_joint_vel = torch.zeros(n, nl, device=dev)
 
@@ -287,7 +293,10 @@ class ArtiD1VelEnv(DirectRLEnv):
         dev = self.device
 
         # actor: IMU misalignment, 0..1 step lag, noise; encoder bias; joint vel one step old; noise
-        imu = torch.cat((quat_apply(self.imu_misalign, ang_b), quat_apply(self.imu_misalign, grav_b)), dim=-1)
+        self.gyro_hp_y = self.gyro_hp_a * (self.gyro_hp_y + ang_b - self.gyro_hp_x)
+        self.gyro_hp_x = ang_b.clone()
+        gyro = ang_b + self.gyro_hf_gain * self.gyro_hp_y
+        imu = torch.cat((quat_apply(self.imu_misalign, gyro), quat_apply(self.imu_misalign, grav_b)), dim=-1)
         self.imu_hist = torch.roll(self.imu_hist, 1, dims=1)
         self.imu_hist[:, 0] = imu
         lag = self.imu_lag
@@ -458,6 +467,9 @@ class ArtiD1VelEnv(DirectRLEnv):
         self.prev_imu[env_ids] = 0.0
         self.prev_imu[env_ids, 5] = -1.0
         self.imu_hist[env_ids] = 0.0
+        self.gyro_hp_y[env_ids] = 0.0
+        self.gyro_hp_x[env_ids] = 0.0
+        self.gyro_hf_gain[env_ids] = torch.empty(k, 1, device=dev).uniform_(*self.cfg.gyro_hf_gain_range)
         self.imu_hist[env_ids, :, 5] = -1.0
         self.prev_joint_vel[env_ids] = 0.0
         self.imu_lag[env_ids] = torch.randint(0, self.cfg.imu_delay_max_steps + 1, (k,), device=dev)

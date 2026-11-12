@@ -13,13 +13,16 @@ import os
 from isaaclab.app import AppLauncher
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--mode", choices=("score", "standpush", "lag"), required=True)
+parser.add_argument("--mode", choices=("score", "standpush", "lag", "replay"), required=True)
 parser.add_argument("--checkpoint", type=str, required=True)
 parser.add_argument("--num_envs", type=int, default=64)
 parser.add_argument("--physics", type=str, default="isaacsim_physx")
 parser.add_argument("--train_step", type=int, default=0, help="curriculum step the checkpoint was at (logging only)")
 parser.add_argument("--task", type=str, default="Template-Arti-D1-Vel-Direct-v0")
 parser.add_argument("--cmd_scale", type=float, default=1.0, help="scale the scored command sequence (duck task: 0.5)")
+parser.add_argument("--real_csv", type=str, default="", help="replay: humanoid_controller log whose actions are replayed")
+parser.add_argument("--t0", type=float, default=0.0, help="replay: start time in the real log (s)")
+parser.add_argument("--t1", type=float, default=1e9, help="replay: end time in the real log (s)")
 AppLauncher.add_app_launcher_args(parser)
 args_cli = parser.parse_args()
 simulation_app = AppLauncher(args_cli).app
@@ -112,8 +115,12 @@ def make_env(seconds):
     # EVAL_CFG="actuator_delay_ms=40;actuator_delay_jitter_ms=(0.0,10.0)": override env cfg fields (sim2real what-ifs)
     for kv in filter(None, os.environ.get("EVAL_CFG", "").split(";")):
         k, v = kv.split("=", 1)
-        setattr(cfg, k.strip(), eval(v))
-        print(f"[EVAL_CFG] {k.strip()} = {getattr(cfg, k.strip())}")
+        *path, leaf = k.strip().split(".")
+        obj = cfg
+        for a in path:
+            obj = getattr(obj, a)
+        setattr(obj, leaf, eval(v))
+        print(f"[EVAL_CFG] {k.strip()} = {getattr(obj, leaf)}")
     env = gym.make(TASK, cfg=cfg)
     return env, env.unwrapped
 
@@ -314,6 +321,52 @@ def run_standpush(env, u, policy):
 
 
 LAG_S = 8.0
+LEG_ORDER = ("left_hip_yaw", "right_hip_yaw", "left_hip_roll", "right_hip_roll", "left_hip_pitch", "right_hip_pitch",
+             "left_knee", "right_knee", "left_ankle", "right_ankle")
+
+
+def band_rms(x, dt, lo, hi):
+    """rms of the lo-hi Hz band of x [..., time, k] (mean over k)."""
+    X = np.fft.rfft(x - x.mean(-2, keepdims=True), axis=-2)
+    f = np.fft.rfftfreq(x.shape[-2], dt)
+    X[..., (f < lo) | (f >= hi), :] = 0
+    return np.sqrt((np.fft.irfft(X, n=x.shape[-2], axis=-2) ** 2).mean(axis=(-2, -1)))
+
+
+def run_replay(env, u, real):
+    """real2sim: replay a real log's policy actions open loop (every env the same sequence; per-env randomised servo
+    model / joint play / masses as in training) from the default standing pose and compare the trunk gyro and joint
+    position response with the real one, per frequency band."""
+    n, dt = u.num_envs, u.step_dt
+    env.reset()
+    u.commands[:] = 0.0
+    A = torch.tensor(real[["action_" + j for j in LEG_ORDER]].values, dtype=torch.float32, device=u.device)
+    zero = torch.zeros(n, A.shape[1], device=u.device)
+    for _ in range(int(1.0 / dt)):  # settle on the default pose
+        env.step(zero)
+    g_log, q_log, alive = [], [], torch.ones(n, dtype=torch.bool, device=u.device)
+    for k in range(len(A)):
+        obs, _, term, _, _ = env.step(A[k][None].expand(n, -1))
+        alive &= ~term
+        g_log.append(obs["policy"][:, 0:3].cpu())  # the gyro the policy sees (v22: + structural vibration model)
+        q_log.append((u.robot.data.joint_pos.torch - u.default_joint_pos)[:, u.leg_ids].cpu())
+    G, Q = torch.stack(g_log, 1).numpy(), torch.stack(q_log, 1).numpy()
+    al = alive.cpu().numpy()
+    rg = real[["obs_0", "obs_1", "obs_2"]].values[None]
+    rq = real[[f"obs_{i}" for i in range(6, 16)]].values[None]
+    rqd = real[["q_des_" + j for j in LEG_ORDER]].values[None]
+    sqd = (u.default_joint_pos[0, u.leg_ids].cpu().numpy() + u.cfg.action_scale * A.cpu().numpy())[None]
+    print(f"[REPLAY] {len(A)} steps, envs alive {int(al.sum())}/{n}")
+    for lo, hi in ((0.3, 3.0), (3.0, 7.0), (7.0, 13.0), (13.0, 30.0)):
+        sg, rg_ = band_rms(G[al], dt, lo, hi), band_rms(rg, dt, lo, hi)[0]
+        sq, rq_ = band_rms(Q[al], dt, lo, hi), band_rms(rq, dt, lo, hi)[0]
+        tq_s = sq / np.maximum(band_rms(sqd, dt, lo, hi)[0], 1e-9)
+        tq_r = rq_ / max(band_rms(rqd, dt, lo, hi)[0], 1e-9)
+        print(f"[REPLAY] {lo:4.1f}-{hi:4.1f} Hz: gyro rms real {rg_:.3f} sim {sg.mean():.3f} (p10 {np.percentile(sg, 10):.3f} "
+              f"p90 {np.percentile(sg, 90):.3f}) | joint pos rms real {rq_:.4f} sim {sq.mean():.4f} | pos/q_des real "
+              f"{tq_r:.2f} sim {tq_s.mean():.2f}")
+
+
 
 
 def run_lag(env, u, policy):
@@ -346,10 +399,17 @@ def run_lag(env, u, policy):
 
 
 device = "cuda:0"
-policy = load_policy(args_cli.checkpoint, device)
+policy = load_policy(args_cli.checkpoint, device) if args_cli.mode != "replay" else None
 if args_cli.mode == "score":
     env, u = make_env(SEG_S * len(SEQUENCE))
     run_score(env, u, policy)
+elif args_cli.mode == "replay":
+    import pandas as pd
+
+    real = pd.read_csv(args_cli.real_csv)
+    real = real[(real.t >= args_cli.t0) & (real.t < args_cli.t1)].reset_index(drop=True)
+    env, u = make_env(len(real) * 0.0167 + 3.0)
+    run_replay(env, u, real)
 elif args_cli.mode == "lag":
     env, u = make_env(LAG_S)
     run_lag(env, u, policy)

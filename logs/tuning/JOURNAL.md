@@ -1735,3 +1735,17 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   Real gyro carries 0.6 rad/s rms at 7-13 Hz -> structural vibration in the IMU feeds the policy's gyro feedback loop.
 - Next (v22): low-pass gyro obs (same filter in the controller) + 7-13 Hz gyro vibration injection + high-freq action
   penalty, so the policy does not amplify IMU vibration.
+
+## 2026-11-12 17:3x real2sim of the standing buzz -> v22 (user: "real 2 sim 진행해야지", "ppo로, 잔발 느낌으로")
+- eval_vel --mode replay: the real log's actions (171837, t 19-34 s, v20 buzz) replayed open loop on 16 envs.
+  Joint position response matches (7-13 Hz rms real .0108 / sim .0106 without joint play, .0093 with), but the trunk
+  gyro is 2.4x lower in sim (.60 vs .25; 3-7 Hz .44 vs .26, 13-30 Hz .28 vs .12). Not explained by contact stiffness
+  (1e4 / 4e4 / rigid), pelvis mass 2.0 kg or joint play 0-6 deg -> flex / play outside the encoders + IMU mount.
+- Model (v22): gyro seen = gyro + k * highpass_3Hz(gyro), k ~ U per env / episode. Replay at k=1.5: 3-7 Hz .54,
+  7-13 Hz .48, 13-30 Hz .28 (real .44 / .60 / .28).
+- Closed loop standpush on that model reproduces the robot: v20 84k at k=2.5 after the push gyro std 1.10/1.23/1.21,
+  action |da| .125/step, 8/32 fell (real: ~1 rad/s, .14); k=1.5: .23-.31, 5/32 fell. v12 42k k=1.5: 5/32 fell.
+- v22 = v20 (short quick steps, PPO microduck recipe unchanged) + gyro_hf_gain_range (0.5, 3.0), from v20 agent_84000,
+  offset 1506000, seed 7, 240k. Run 2026-11-12_17-36-16_ppo_torch, PID 1377353, log
+  logs/train/train_vel_microduck_v22_gyrohf.log. Check: standpush buzz at k=2.5 (EVAL_CFG) + score/video as usual.
+  Controller: no change (the real robot is the vibration).

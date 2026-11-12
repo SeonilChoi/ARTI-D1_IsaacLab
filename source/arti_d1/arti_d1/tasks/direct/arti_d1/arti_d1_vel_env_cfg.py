@@ -49,19 +49,20 @@ ARTI_D1_VEL_PROFILE = os.environ.get("ARTI_D1_VEL_PROFILE", "v10")
 #   v20: v18 + lateral tracking 0.3 (v19 with 1.0 fixed the play-video side-step fall but halved turning, .265 -> .115,
 #        doubled torso roll and lost the shuffle: 3.2 touchdowns/s, both feet down 33 %)
 #   v21: v20 + lateral tracking 0.3 -> 0.5 (v20 converged: side .018-.019 of .06, no side-step fall, turn kept)
-_PROFILES = ("v10", "v11", "v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21")
+_PROFILES = ("v10", "v11", "v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22")
 if ARTI_D1_VEL_PROFILE not in _PROFILES:
     raise ValueError(f"ARTI_D1_VEL_PROFILE must be one of {_PROFILES}, got {ARTI_D1_VEL_PROFILE}")
 _V21 = ARTI_D1_VEL_PROFILE == "v21"
-_V20 = ARTI_D1_VEL_PROFILE in ("v20", "v21")  # v21 builds on v20
+_V22 = ARTI_D1_VEL_PROFILE == "v22"
+_V20 = ARTI_D1_VEL_PROFILE in ("v20", "v21", "v22")  # v21 / v22 build on v20
 _V19 = ARTI_D1_VEL_PROFILE == "v19"
-_V18 = ARTI_D1_VEL_PROFILE in ("v18", "v19", "v20", "v21")  # v19 builds on v18
-_V13 = ARTI_D1_VEL_PROFILE in ("v13", "v17", "v18", "v19", "v20", "v21")  # v17 adds the v13 realism
-_V16 = ARTI_D1_VEL_PROFILE in ("v16", "v17", "v18", "v19", "v20", "v21")  # v17 builds on v16
-_V15 = ARTI_D1_VEL_PROFILE in ("v15", "v16", "v17", "v18", "v19", "v20", "v21")  # v16 builds on v15
-_V14 = ARTI_D1_VEL_PROFILE in ("v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21")  # v15 builds on v14
-_V12 = ARTI_D1_VEL_PROFILE in ("v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21")  # v13 / v14 build on v12
-_V11 = ARTI_D1_VEL_PROFILE in ("v11", "v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21")  # v12 builds on v11
+_V18 = ARTI_D1_VEL_PROFILE in ("v18", "v19", "v20", "v21", "v22")  # v19 builds on v18
+_V13 = ARTI_D1_VEL_PROFILE in ("v13", "v17", "v18", "v19", "v20", "v21", "v22")  # v17 adds the v13 realism
+_V16 = ARTI_D1_VEL_PROFILE in ("v16", "v17", "v18", "v19", "v20", "v21", "v22")  # v17 builds on v16
+_V15 = ARTI_D1_VEL_PROFILE in ("v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22")  # v16 builds on v15
+_V14 = ARTI_D1_VEL_PROFILE in ("v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22")  # v15 builds on v14
+_V12 = ARTI_D1_VEL_PROFILE in ("v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22")  # v13 / v14 build on v12
+_V11 = ARTI_D1_VEL_PROFILE in ("v11", "v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22")  # v12 builds on v11
 ARTI_D1_VEL_ACTION_HISTORY = 1 if _V11 else 3
 # actor: base ang vel (3) + projected gravity (3) + leg joint pos rel (10) + leg joint vel (10) + last N actions (10 N)
 # + command (3, always last)
@@ -239,6 +240,12 @@ class ArtiD1VelEnvCfg(DirectRLEnvCfg):
     imu_delay_per_step = not _V11  # v10 (Open Duck Mini 0-3 steps every step); False = drawn per episode
     joint_vel_delay_steps = 1  # Dynamixel present velocity is ~1 control period old
     encoder_bias_range = 0.015  # rad, per env, actor joint pos only
+    # v22 real2sim (2026-11-12): replaying the real robot's actions open loop gives the same joint motion in sim (7-13 Hz
+    # rms .0106 vs .0108 rad) but 2.4x less trunk gyro (.25 vs .60 rad/s): flex / play outside the encoders and the IMU
+    # mount. The policy fed that back (gyro ~50 % of its 10 Hz action) -> ~10 Hz standing buzz on the robot (v12, v20).
+    # Model: gyro seen = gyro + k * highpass(gyro, gyro_hf_cutoff_hz), k ~ U(range) per env and episode.
+    gyro_hf_gain_range = (0.5, 3.0) if _V22 else (0.0, 0.0)  # real fit k ~1.5-2.5 (replay + closed-loop buzz)
+    gyro_hf_cutoff_hz = 3.0
     imu_misalign_deg = 6.0  # random-axis IMU mounting rotation per env, actor only
 
     # ---- events
