@@ -1774,3 +1774,11 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   ONNX exported (logs/tuning/agent_vel_v22_90000.onnx, torch/onnx 4.3e-6), not deployed: needs the user's go.
   Gait vs v20 84k: 3.8 vs 4.4 touchdowns/s, both down 17 vs 5 %, side .005 vs .018 (robustness trade). Training left
   running; proposing v22 90k for the real buzz test.
+
+- 11-12 19:1x v22 check (PID 1377353 verified, 130k/240k). TB slowly up: track_ang 1.02 -> 1.06, air_time 1.12 ->
+  1.15, action_rate -.146 -> -.140, total 119 -> 122.
+  agent_126000: score 0/64, fwd .075, back -.057, side .009, diag .061/-.017, turn .269, 4.01 touchdowns/s (90k 3.79,
+  v20 4.36), swing .22 s, 14.6 mm, both down 13 % (90k 17 %, v20 5 %), gyro .129/.126/.084. standpush 0/32
+  (0/8 each). buzz k=2.5: 0/32, after push gyro .021/.040/.022, |da| .003. Video vel_v22_126000.mp4 (sheet read):
+  all upright to 33 s incl. 12 s. Gait recovering toward v20 -> continue. New deploy candidate exported:
+  logs/tuning/agent_vel_v22_126000.onnx.
