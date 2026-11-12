@@ -1814,3 +1814,10 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   Video vel_v23_54000.mp4 (sheet + end frames read): all upright to 33 s; the front robot walks toward the camera at
   the end (upright). Shuffle back at v20 level with the buzz fix kept -> new best candidate; ONNX exported
   (logs/tuning/agent_vel_v23_54000.onnx). Continue.
+
+- 11-12 21:4x v23 check (PID 1398887 verified, 96k/240k). TB: air_time 2.01 -> 2.10, track_lin 1.08 -> .97,
+  track_ang 1.0 -> .93, action_rate -.172 -> -.192 (tracking slowly traded for air time).
+  agent_96000: score 0/64, fwd .074, back -.053, side .019, diag .061/-.023, turn .260, 4.50 touchdowns/s, 15.5 mm,
+  both down 1 %, slip 88.6, gyro .139/.114/.076. standpush 0/32; buzz k=2.5 0/32, gyro .023/.045/.024, |da| .003.
+  Video vel_v23_96000.mp4 (sheet read): the front robot is DOWN at 22 s (after the 17.5 / 22.5 s pushes area), still
+  down at 30 s -> same failure as v22 240k. Best stays v23 54k (video clean). Continue; watch for recovery.
