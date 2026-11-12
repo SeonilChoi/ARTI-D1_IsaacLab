@@ -1790,3 +1790,11 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   |da| .004. Video vel_v22_168000.mp4 (sheet read): all upright to 33 s incl. 12 s.
   Gait about 90k-126k level (126k: 4.01 touchdowns/s, both down 13 %) -> plateau; best candidate stays 126k. Run
   left to finish 240k (~45 min); final check then.
+
+- 11-12 20:1x v22 check (PID 1377353 verified, 209k/240k, ends ~20:35). agent_204000: score 0/64, fwd .078,
+  back -.060, side .007, diag .063/-.012, turn .248, 3.60 touchdowns/s, 14.5 mm, both down 20 %, gyro
+  .132/.123/.087. standpush 0/32 (0/8 each). buzz k=2.5: 0/32, gyro .022/.042/.021, |da| .003. Video
+  vel_v22_204000.mp4 (sheet read): all upright to 33 s incl. 12 s.
+  Plateau: tracking up, shuffle drifting off (touchdowns 4.01 @126k -> 3.60, both down 13 -> 20 %). Best = 126k.
+  Next (after v22 ends): v23 = v22 + air_time_weight 3 -> 4 from v22 agent_126000, to win back the v20 shuffle under
+  the vibration model (the vibration makes double support pay). Buzz test stays the gate.
