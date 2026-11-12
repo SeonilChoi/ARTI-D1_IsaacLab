@@ -1756,3 +1756,11 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   (v20 84k: 1.10/1.23/1.21, .125, 8/32 fell) -> buzz gone already. standpush at k=2.5 per speed 0/8 each.
   score: 0/64 falls, fwd .068, back -.044, side .003, diag .056/-.016, turn .244, 3.46 touchdowns/s, swing .22 s,
   14.3 mm, both down 24 % (v20 5 %), gyro .126/.132/.092. Gait not back to v20 yet -> continue. Video skipped at 6k.
+
+- 11-12 18:1x v22 check (PID 1377353 verified, 52k/240k). TB flat since ~10k: track_lin 1.27, track_ang 1.03,
+  track_lat .15, air_time 1.06-1.15, action_rate -.146, body_ang_vel -.017.
+  agent_48000: score 0/64 falls, fwd .067, back -.050, side .001 (v20 .018), diag .053/-.023, turn .288 (v20 .256),
+  3.81 touchdowns/s (6k 3.46, v20 4.36), swing .22 s, 14.7 mm, both down 16 % (6k 24 %, v20 5 %), gyro .151/.117/.083.
+  standpush (default k range) 0/32 (0.2-0.5: 0/8 each); buzz k=2.5: 0/32 fell, after push gyro .027/.048/.028,
+  |da| .004 (v20 84k 1.10-1.23, .125). Video vel_v22_48000.mp4 (sheet read): all 4 envs upright through 33 s,
+  including the 12 s slow side step; short steps visible. Gait drifting back toward v20 -> continue.
