@@ -72,6 +72,13 @@ class ArtiD1VelEnv(DirectRLEnv):
             play = torch.empty(n, nj, device=dev).uniform_(lo_b, hi_b) * (math.pi / 180.0) / 2.0
             self.act_backlash = play * self.leg_mask.float()[None, :]
         self.act_q_stick = torch.zeros(n, nj, device=dev)
+        # series compliance outside the encoder (v24 real2sim): per env / joint type the link sees kp * s, the encoder
+        # (motor side) reads q + (1 - s) * (target - q)
+        self.act_series = torch.ones(n, nj, device=dev)
+        for jt, (lo_s, hi_s) in self.cfg.actuator_series_scale.items():
+            cols = [i for i, j in enumerate(names) if _joint_type(j) == jt]
+            self.act_series[:, cols] = torch.empty(n, 1, device=dev).uniform_(lo_s, hi_s).expand(n, len(cols))
+        self.act_enc_offset = torch.zeros(n, nj, device=dev)
         self.effort_limit = torch.tensor([self.cfg.joint_effort_limit[j] for j in names], device=dev)
 
         # pose reward stds over the leg joints
@@ -117,6 +124,13 @@ class ArtiD1VelEnv(DirectRLEnv):
         self.gyro_hp_y = torch.zeros(n, 3, device=dev)
         self.gyro_hp_x = torch.zeros(n, 3, device=dev)
         self.gyro_hf_gain = torch.empty(n, 1, device=dev).uniform_(*self.cfg.gyro_hf_gain_range)
+        # trunk shake (v24 real2sim): band 3-6 Hz pelvis torque standing in for the unmodelled roll / yaw rocking of the
+        # real robot while stepping (frames / sole roll; real walking replay: 3x the sim trunk roll / yaw rate)
+        self.pelvis_id = self.robot.find_bodies("pelvis")[0][0]
+        self.shake_amp = torch.zeros(n, 3, device=dev)
+        self.shake_freq = torch.zeros(n, 1, device=dev)
+        self.shake_phase = torch.zeros(n, 3, device=dev)
+        self._resample_shake(torch.arange(n, device=dev))
         self.imu_hist[..., 5] = -1.0
         self.prev_joint_vel = torch.zeros(n, nl, device=dev)
 
@@ -199,7 +213,28 @@ class ArtiD1VelEnv(DirectRLEnv):
         target[:, self.leg_ids] += self.cfg.action_scale * self.actions
         self.joint_target = torch.clamp(target, self.q_lower, self.q_upper)
 
+    def _resample_shake(self, ids: torch.Tensor):
+        k, dev = len(ids), self.device
+        lo, hi = self.cfg.trunk_shake_torque
+        w = torch.tensor(self.cfg.trunk_shake_axes, device=dev)
+        self.shake_amp[ids] = torch.empty(k, 1, device=dev).uniform_(lo, hi) * w * torch.empty(k, 3, device=dev).uniform_(0.5, 1.0)
+        self.shake_freq[ids] = torch.empty(k, 1, device=dev).uniform_(*self.cfg.trunk_shake_freq_hz)
+        self.shake_phase[ids] = torch.empty(k, 3, device=dev).uniform_(0.0, 2.0 * math.pi)
+
+    def _apply_shake(self):
+        if self.cfg.trunk_shake_torque[1] <= 0.0:
+            return
+        self.shake_phase += 2.0 * math.pi * self.shake_freq * self.cfg.sim.dt
+        torque = self.shake_amp * torch.sin(self.shake_phase)
+        if self.cfg.trunk_shake_walk_only:
+            torque = torque * (self.commands.norm(dim=-1, keepdim=True) > self.cfg.trunk_shake_cmd_min).float()
+        self.robot.instantaneous_wrench_composer.add_forces_and_torques_index(
+            forces=torch.zeros_like(torque).unsqueeze(1), torques=torque.unsqueeze(1), body_ids=[self.pelvis_id],
+            is_global=False,
+        )
+
     def _apply_action(self):
+        self._apply_shake()
         # per physics step: bus delay, Coulomb friction with stiction, voltage saturation of the drive term
         steps = self.act_buffer.shape[0]
         self.act_head = (self.act_head + 1) % steps
@@ -212,6 +247,8 @@ class ArtiD1VelEnv(DirectRLEnv):
         # joint play: no position torque inside +-backlash of the target (the link is free there)
         e0 = delayed - q
         delayed = q + torch.sign(e0) * (e0.abs() - self.act_backlash).clamp_min(0.0)
+        # play outside the encoder: the encoder reads the motor side (link + the part of the play that is taken up)
+        play_enc = torch.clamp(e0, -self.act_backlash, self.act_backlash) if self.cfg.backlash_outside_encoder else 0.0
         err = delayed - q
         moving = qd.abs() > self.cfg.actuator_stick_velocity
         stick = ~moving & (kp * err.abs() <= self.act_coulomb)
@@ -221,6 +258,8 @@ class ArtiD1VelEnv(DirectRLEnv):
         target = torch.where(stick, self.act_q_stick, delayed - direction * self.act_coulomb / kp)
         reach = self.effort_limit / kp
         target = q + torch.clamp(target - q, -reach, reach)
+        self.act_enc_offset = (1.0 - self.act_series) * (target - q) + play_enc
+        target = q + self.act_series * (target - q)
         self.robot.actuators.target_command.set_position_index(value=target)
 
     # ------------------------------------------------------------------ commands
@@ -288,7 +327,7 @@ class ArtiD1VelEnv(DirectRLEnv):
         _, lin_b, ang_b, grav_b = self._base()
         q = self.robot.data.joint_pos.torch
         qd = self.robot.data.joint_vel.torch
-        q_rel = (q - self.default_joint_pos)[:, self.leg_ids]
+        q_rel = (q + self.act_enc_offset - self.default_joint_pos)[:, self.leg_ids]
         qd = qd[:, self.leg_ids]
         dev = self.device
 
@@ -455,6 +494,7 @@ class ArtiD1VelEnv(DirectRLEnv):
 
         self.act_buffer[:, env_ids] = joint_pos.unsqueeze(0)
         self.act_stuck[env_ids] = False
+        self.act_enc_offset[env_ids] = 0.0
         self.joint_target = getattr(self, "joint_target", self.default_joint_pos.clone())
         self.joint_target[env_ids] = joint_pos
         self.actions[env_ids] = 0.0
@@ -470,6 +510,7 @@ class ArtiD1VelEnv(DirectRLEnv):
         self.gyro_hp_y[env_ids] = 0.0
         self.gyro_hp_x[env_ids] = 0.0
         self.gyro_hf_gain[env_ids] = torch.empty(k, 1, device=dev).uniform_(*self.cfg.gyro_hf_gain_range)
+        self._resample_shake(env_ids if isinstance(env_ids, torch.Tensor) else torch.as_tensor(env_ids, device=dev))
         self.imu_hist[env_ids, :, 5] = -1.0
         self.prev_joint_vel[env_ids] = 0.0
         self.imu_lag[env_ids] = torch.randint(0, self.cfg.imu_delay_max_steps + 1, (k,), device=dev)

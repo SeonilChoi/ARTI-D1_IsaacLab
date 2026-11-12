@@ -1832,3 +1832,19 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   tracking of the clean checkpoints: fwd .078, side .023, turn .281, 4.53 touchdowns/s, both down 0 %, buzz-free,
   video clean); 132k is the fallback (also clean). ONNX: logs/tuning/agent_vel_v23_54000.onnx. Deploy needs the user.
   (H1 PID 1366864 had already exited on its own; not touched.)
+
+## 2026-11-13 real v23 54k test -> real2sim walking -> v24 (trunk shake)
+Real logs (humanoid_controller e6f0d11 run 081625, cf3c3da run 083120):
+- Standing: buzz gone (gyro std .00-.003, |da| .001; v20 had 1.1-1.2 / .13). The v22/v23 gyro HF model worked.
+- Walking (cmd .04-.07): steps at ~3.5 Hz (sim 2.3 Hz), torso gyro std x 1.2-1.5 / y .6-.9 / z .8-1.0 rad/s (sim closed
+  loop .17/.13/.08). Run 081625 fell after ~3 s; run 083120 walked ~33 s rocking hard. All older real walk logs: same 0.7-1.6.
+Replay (eval_vel --mode replay, now also tilt / per-axis gyro / per-joint output) of real walk actions, 3-7 Hz band:
+- joint encoders real ~= sim (hip roll .038/.041 vs .042/.041), trunk gyro roll 3x, yaw 2.5x, pitch ~1x; real gyro and
+  Xsens orientation are consistent (dgrav/dt vs -w x g corr .84-.91): the trunk really rotates.
+- Not reproduced by: foot friction 0-0.3, contact 1e4 / 3e3 / 1e3 N/m, play 6 deg (inside or outside the encoder, new
+  backlash_outside_encoder), hip roll / yaw series compliance (new actuator_series_scale; lowers roll), pelvis 1.5 kg,
+  closed loop k=4, delay 40 ms, IMU delay 3.
+- Reproduced by a pelvis torque 3-6 Hz (new trunk_shake_*): 8-10 Nm roll gives replay roll .71-.84 (real .83-1.32);
+  closed loop v23 54k with 10 Nm (axes 1/.15/.3, walking only): torso gyro forward 1.03/.47/.85 (= real), falls 7/64.
+v24 = v23 + trunk_shake_torque U(0,10) Nm, axes roll 1 / pitch .15 / yaw .3, 3-6 Hz, while |cmd| > .015.
+Run logs/skrl/arti_d1_vel_walk/2026-11-13_08-42-15_ppo_torch/ from v23 agent_54000, seed 7, curriculum offset 1506000, PID 1471598.

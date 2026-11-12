@@ -118,9 +118,12 @@ def make_env(seconds):
         *path, leaf = k.strip().split(".")
         obj = cfg
         for a in path:
-            obj = getattr(obj, a)
-        setattr(obj, leaf, eval(v))
-        print(f"[EVAL_CFG] {k.strip()} = {getattr(obj, leaf)}")
+            obj = obj[a] if isinstance(obj, dict) else getattr(obj, a)
+        if isinstance(obj, dict):
+            obj[leaf] = eval(v)
+        else:
+            setattr(obj, leaf, eval(v))
+        print(f"[EVAL_CFG] {k.strip()} = {obj[leaf] if isinstance(obj, dict) else getattr(obj, leaf)}")
     env = gym.make(TASK, cfg=cfg)
     return env, env.unwrapped
 
@@ -344,14 +347,17 @@ def run_replay(env, u, real):
     zero = torch.zeros(n, A.shape[1], device=u.device)
     for _ in range(int(1.0 / dt)):  # settle on the default pose
         env.step(zero)
-    g_log, q_log, alive = [], [], torch.ones(n, dtype=torch.bool, device=u.device)
+    g_log, q_log, gr_log, alive = [], [], [], torch.ones(n, dtype=torch.bool, device=u.device)
     for k in range(len(A)):
         obs, _, term, _, _ = env.step(A[k][None].expand(n, -1))
         alive &= ~term
         g_log.append(obs["policy"][:, 0:3].cpu())  # the gyro the policy sees (v22: + structural vibration model)
-        q_log.append((u.robot.data.joint_pos.torch - u.default_joint_pos)[:, u.leg_ids].cpu())
+        gr_log.append(obs["policy"][:, 3:5].cpu())  # projected gravity x / y (trunk tilt)
+        q_log.append((u.robot.data.joint_pos.torch + u.act_enc_offset - u.default_joint_pos)[:, u.leg_ids].cpu())
     G, Q = torch.stack(g_log, 1).numpy(), torch.stack(q_log, 1).numpy()
+    GR = torch.stack(gr_log, 1).numpy()
     al = alive.cpu().numpy()
+    rgr = real[["obs_3", "obs_4"]].values[None]
     rg = real[["obs_0", "obs_1", "obs_2"]].values[None]
     rq = real[[f"obs_{i}" for i in range(6, 16)]].values[None]
     rqd = real[["q_des_" + j for j in LEG_ORDER]].values[None]
@@ -364,7 +370,14 @@ def run_replay(env, u, real):
         tq_r = rq_ / max(band_rms(rqd, dt, lo, hi)[0], 1e-9)
         print(f"[REPLAY] {lo:4.1f}-{hi:4.1f} Hz: gyro rms real {rg_:.3f} sim {sg.mean():.3f} (p10 {np.percentile(sg, 10):.3f} "
               f"p90 {np.percentile(sg, 90):.3f}) | joint pos rms real {rq_:.4f} sim {sq.mean():.4f} | pos/q_des real "
-              f"{tq_r:.2f} sim {tq_s.mean():.2f}")
+              f"{tq_r:.2f} sim {tq_s.mean():.2f} | tilt rms real {band_rms(rgr, dt, lo, hi)[0]:.4f} sim "
+              f"{band_rms(GR[al], dt, lo, hi).mean():.4f}")
+        ax = lambda x: [band_rms(x[..., i:i + 1], dt, lo, hi) for i in range(3)]
+        print(f"[REPLAY]   gyro per axis x/y/z real {np.round([v[0] for v in ax(rg)], 3).tolist()} sim "
+              f"{np.round([v.mean() for v in ax(G[al])], 3).tolist()}")
+        jq = lambda x: [band_rms(x[..., i:i + 1], dt, lo, hi) for i in range(10)]
+        print(f"[REPLAY]   joint pos rms real {np.round([v[0] for v in jq(rq)], 4).tolist()}\n[REPLAY]   joint pos rms sim  "
+              f"{np.round([v.mean() for v in jq(Q[al])], 4).tolist()}")
 
 
 

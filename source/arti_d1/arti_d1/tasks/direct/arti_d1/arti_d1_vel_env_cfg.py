@@ -49,21 +49,25 @@ ARTI_D1_VEL_PROFILE = os.environ.get("ARTI_D1_VEL_PROFILE", "v10")
 #   v20: v18 + lateral tracking 0.3 (v19 with 1.0 fixed the play-video side-step fall but halved turning, .265 -> .115,
 #        doubled torso roll and lost the shuffle: 3.2 touchdowns/s, both feet down 33 %)
 #   v21: v20 + lateral tracking 0.3 -> 0.5 (v20 converged: side .018-.019 of .06, no side-step fall, turn kept)
-_PROFILES = ("v10", "v11", "v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23")
+#   v24: v23 + trunk shake (real2sim 2026-11-13: v23 on the real robot stands buzz-free but rocks at ~3.5 Hz while
+#        stepping, trunk roll / yaw rate 3x / 2.5x the sim for the same replayed joint motion; no friction / contact /
+#        play / compliance / mass setting reproduces it, a 3-6 Hz pelvis torque of ~10 Nm roll does)
+_PROFILES = ("v10", "v11", "v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24")
 if ARTI_D1_VEL_PROFILE not in _PROFILES:
     raise ValueError(f"ARTI_D1_VEL_PROFILE must be one of {_PROFILES}, got {ARTI_D1_VEL_PROFILE}")
 _V21 = ARTI_D1_VEL_PROFILE == "v21"
-_V23 = ARTI_D1_VEL_PROFILE == "v23"
-_V22 = ARTI_D1_VEL_PROFILE in ("v22", "v23")  # v23 builds on v22
-_V20 = ARTI_D1_VEL_PROFILE in ("v20", "v21", "v22", "v23")  # v21 / v22 build on v20
+_V24 = ARTI_D1_VEL_PROFILE == "v24"
+_V23 = ARTI_D1_VEL_PROFILE in ("v23", "v24")  # v24 builds on v23
+_V22 = ARTI_D1_VEL_PROFILE in ("v22", "v23", "v24")  # v23 builds on v22
+_V20 = ARTI_D1_VEL_PROFILE in ("v20", "v21", "v22", "v23", "v24")  # v21 / v22 build on v20
 _V19 = ARTI_D1_VEL_PROFILE == "v19"
-_V18 = ARTI_D1_VEL_PROFILE in ("v18", "v19", "v20", "v21", "v22", "v23")  # v19 builds on v18
-_V13 = ARTI_D1_VEL_PROFILE in ("v13", "v17", "v18", "v19", "v20", "v21", "v22", "v23")  # v17 adds the v13 realism
-_V16 = ARTI_D1_VEL_PROFILE in ("v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23")  # v17 builds on v16
-_V15 = ARTI_D1_VEL_PROFILE in ("v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23")  # v16 builds on v15
-_V14 = ARTI_D1_VEL_PROFILE in ("v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23")  # v15 builds on v14
-_V12 = ARTI_D1_VEL_PROFILE in ("v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23")  # v13 / v14 build on v12
-_V11 = ARTI_D1_VEL_PROFILE in ("v11", "v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23")  # v12 builds on v11
+_V18 = ARTI_D1_VEL_PROFILE in ("v18", "v19", "v20", "v21", "v22", "v23", "v24")  # v19 builds on v18
+_V13 = ARTI_D1_VEL_PROFILE in ("v13", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24")  # v17 adds the v13 realism
+_V16 = ARTI_D1_VEL_PROFILE in ("v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24")  # v17 builds on v16
+_V15 = ARTI_D1_VEL_PROFILE in ("v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24")  # v16 builds on v15
+_V14 = ARTI_D1_VEL_PROFILE in ("v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24")  # v15 builds on v14
+_V12 = ARTI_D1_VEL_PROFILE in ("v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24")  # v13 / v14 build on v12
+_V11 = ARTI_D1_VEL_PROFILE in ("v11", "v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24")  # v12 builds on v11
 ARTI_D1_VEL_ACTION_HISTORY = 1 if _V11 else 3
 # actor: base ang vel (3) + projected gravity (3) + leg joint pos rel (10) + leg joint vel (10) + last N actions (10 N)
 # + command (3, always last)
@@ -247,6 +251,18 @@ class ArtiD1VelEnvCfg(DirectRLEnvCfg):
     # Model: gyro seen = gyro + k * highpass(gyro, gyro_hf_cutoff_hz), k ~ U(range) per env and episode.
     gyro_hf_gain_range = (0.5, 3.0) if _V22 else (0.0, 0.0)  # real fit k ~1.5-2.5 (replay + closed-loop buzz)
     gyro_hf_cutoff_hz = 3.0
+    # series compliance outside the encoder per joint type: (lo, hi) of the effective kp fraction s per env; the encoder
+    # reads the motor side (real2sim v24, 2026-11-13: real walking replay, same hip roll encoder motion, 3x trunk roll)
+    actuator_series_scale = {}
+    # joint play (actuator_backlash_deg) between the encoder and the link (frames / horns) instead of inside the servo
+    backlash_outside_encoder = False
+    # trunk shake: per episode a pelvis torque amp * axes * U(0.5, 1) * sin(2 pi f t + phase), f in trunk_shake_freq_hz,
+    # body frame, only while the command norm > trunk_shake_cmd_min (the real rocking comes with stepping)
+    trunk_shake_torque = (0.0, 10.0) if _V24 else (0.0, 0.0)  # Nm amplitude range (replay fit ~8-10 Nm roll)
+    trunk_shake_freq_hz = (3.0, 6.0)
+    trunk_shake_axes = (1.0, 0.15, 0.3)  # roll, pitch, yaw weights (real walking replay: roll 3x, yaw 2.5x, pitch 1x)
+    trunk_shake_walk_only = True
+    trunk_shake_cmd_min = 0.015
     imu_misalign_deg = 6.0  # random-axis IMU mounting rotation per env, actor only
 
     # ---- events
