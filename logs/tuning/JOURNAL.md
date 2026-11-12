@@ -1782,3 +1782,11 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   (0/8 each). buzz k=2.5: 0/32, after push gyro .021/.040/.022, |da| .003. Video vel_v22_126000.mp4 (sheet read):
   all upright to 33 s incl. 12 s. Gait recovering toward v20 -> continue. New deploy candidate exported:
   logs/tuning/agent_vel_v22_126000.onnx.
+
+- 11-12 19:4x v22 check (PID 1377353 verified, 169k/240k). TB: track_lin 1.25 -> 1.31, track_ang 1.04 -> 1.09,
+  air_time 1.12 flat, total 122 -> 123.
+  agent_168000: score 0/64, fwd .072, back -.059, side .007, diag .060/-.017, turn .251, 3.82 touchdowns/s, 14.4 mm,
+  both down 16 %, gyro .138/.124/.078. standpush 0/32 (0/8 each). buzz k=2.5: 0/32, after push gyro .023/.051/.022,
+  |da| .004. Video vel_v22_168000.mp4 (sheet read): all upright to 33 s incl. 12 s.
+  Gait about 90k-126k level (126k: 4.01 touchdowns/s, both down 13 %) -> plateau; best candidate stays 126k. Run
+  left to finish 240k (~45 min); final check then.
