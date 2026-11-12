@@ -1749,3 +1749,10 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   offset 1506000, seed 7, 240k. Run 2026-11-12_17-36-16_ppo_torch, PID 1377353, log
   logs/train/train_vel_microduck_v22_gyrohf.log. Check: standpush buzz at k=2.5 (EVAL_CFG) + score/video as usual.
   Controller: no change (the real robot is the vibration).
+
+- 11-12 17:45 v22 check (PID 1377353 verified train.py v22, 11k/240k, ~27 it/s). TB: track_lin .84 -> 1.26,
+  track_ang .64 -> 1.03, action_rate -.32 -> -.15, body_ang_vel -.067 -> -.019 (recovering from the new gyro model).
+  agent_6000: buzz test k=2.5 (eval_v22_6000_buzz25.log): 0/32 fell, after push gyro std .026/.041/.023, |da| .004
+  (v20 84k: 1.10/1.23/1.21, .125, 8/32 fell) -> buzz gone already. standpush at k=2.5 per speed 0/8 each.
+  score: 0/64 falls, fwd .068, back -.044, side .003, diag .056/-.016, turn .244, 3.46 touchdowns/s, swing .22 s,
+  14.3 mm, both down 24 % (v20 5 %), gyro .126/.132/.092. Gait not back to v20 yet -> continue. Video skipped at 6k.
