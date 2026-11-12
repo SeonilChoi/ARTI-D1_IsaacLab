@@ -1764,3 +1764,13 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   standpush (default k range) 0/32 (0.2-0.5: 0/8 each); buzz k=2.5: 0/32 fell, after push gyro .027/.048/.028,
   |da| .004 (v20 84k 1.10-1.23, .125). Video vel_v22_48000.mp4 (sheet read): all 4 envs upright through 33 s,
   including the 12 s slow side step; short steps visible. Gait drifting back toward v20 -> continue.
+
+- 11-12 18:4x v22 check (PID 1377353 verified, 90k/240k). TB flat since ~10k (track_lin 1.26, track_ang 1.04,
+  lat .149, air_time 1.10, action_rate -.144, body_ang_vel -.017) -> plateau.
+  agent_90000: score 0/64, fwd .073, back -.050, side .005, diag .058/-.029, turn .269, 3.79 touchdowns/s, swing .22 s,
+  14.6 mm, both down 17 %, gyro .135/.137/.077. standpush 0/32 (0/8 each 0.2-0.5). buzz k=2.5: 0/32,
+  after push gyro .037/.065/.043, |da| .005. Video vel_v22_90000.mp4 (sheet read): all upright to 33 s, incl. 12 s.
+  Policy gyro gain on the real buzz states (|d action / d gyro| spectral, median): v12 .268, v20 .233, v22 .105.
+  ONNX exported (logs/tuning/agent_vel_v22_90000.onnx, torch/onnx 4.3e-6), not deployed: needs the user's go.
+  Gait vs v20 84k: 3.8 vs 4.4 touchdowns/s, both down 17 vs 5 %, side .005 vs .018 (robustness trade). Training left
+  running; proposing v22 90k for the real buzz test.
