@@ -1821,3 +1821,14 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   both down 1 %, slip 88.6, gyro .139/.114/.076. standpush 0/32; buzz k=2.5 0/32, gyro .023/.045/.024, |da| .003.
   Video vel_v23_96000.mp4 (sheet read): the front robot is DOWN at 22 s (after the 17.5 / 22.5 s pushes area), still
   down at 30 s -> same failure as v22 240k. Best stays v23 54k (video clean). Continue; watch for recovery.
+
+- 11-12 22:1x v23 check (PID 1398887 verified train.py, profile v23 from v22 126k; 136k/240k). TB: air_time flat
+  ~2.06, track_lin 1.02 -> .98, track_ang .97 -> .92, action_rate -.183 -> -.197 -> plateau, slow tracking decline.
+  agent_132000: score 0/64, fwd .067, back -.050, side .020, diag .053/-.021, turn .254, 4.52 touchdowns/s, 15.4 mm,
+  both down 0 %, slip 84.3, gyro .133/.125/.077. standpush 0/32; buzz k=2.5 0/32, gyro .024/.044/.024, |da| .004.
+  Video vel_v23_132000.mp4 (sheet read): all upright to 33 s (the 96k fall is gone).
+- Decision: v23 stopped at 136k (kill 1398887 after checking args + env ARTI_D1_VEL_PROFILE=v23; cron ef21f60d
+  deleted). No meaningful reward change left; the open question is the real robot. Best = v23 agent_54000 (best
+  tracking of the clean checkpoints: fwd .078, side .023, turn .281, 4.53 touchdowns/s, both down 0 %, buzz-free,
+  video clean); 132k is the fallback (also clean). ONNX: logs/tuning/agent_vel_v23_54000.onnx. Deploy needs the user.
+  (H1 PID 1366864 had already exited on its own; not touched.)
