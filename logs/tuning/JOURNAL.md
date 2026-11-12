@@ -1805,3 +1805,12 @@ NOTE: the system clock jumped back; run dirs named 2026-10-30_17-* sort BEFORE o
   at 22 s and stays down through 30 s (the 22.5 s scheduled push) -> less robust than 126k. Best v22 = 126k.
 - v23 launched: v22 + air_time_weight 3 -> 4, from v22 agent_126000, offset 1506000, seed 7, 240k.
   Run 2026-11-12_20-45-12_ppo_torch, PID 1398887, log logs/train/train_vel_microduck_v23_air4.log.
+
+- 11-12 21:2x v23 check (PID 1398887 verified train.py v23, 57k/240k). TB: air_time 1.29 -> 2.06 (x4/3 weight),
+  track_lin 1.47 -> 1.0, track_ang 1.16 -> .94, action_rate -.124 -> -.186 (first logged values carry the v22 policy).
+  agent_54000: score 0/64, fwd .078, back -.053, side .023 (v22 126k .009, v20 .018), diag .063/-.016, turn .281,
+  4.53 touchdowns/s (v20 4.36), swing .22 s, 14.9 mm, both down 0 % / both up 1 %, slip 86.8 mm/s (v22 126k 70),
+  gyro .139/.124/.080. standpush 0/32 (0/8 each). buzz k=2.5: 0/32, gyro .023/.044/.024, |da| .004.
+  Video vel_v23_54000.mp4 (sheet + end frames read): all upright to 33 s; the front robot walks toward the camera at
+  the end (upright). Shuffle back at v20 level with the buzz fix kept -> new best candidate; ONNX exported
+  (logs/tuning/agent_vel_v23_54000.onnx). Continue.
