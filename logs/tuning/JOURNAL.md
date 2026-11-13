@@ -1931,3 +1931,13 @@ v25 stopped at 168k (PID 1478140 verified). v26 run 2026-11-13_12-29-10 from v25
 - same failure as v26: under strong shake the policy gives up backward / turn. Not deployed, v27 60k stays.
 - v29 = v28 + body_ang_vel weight -0.2 -> -0.05 (shake-driven trunk rate made the penalty pay for walking) + turn tracking 2 -> 3;
   from v27 60k, seed 7, offset 1566000; run 2026-11-13_17-46-54_ppo_torch, log logs/train/train_vel_microduck_v29_trackfix.log
+
+## 2026-11-13 18:20 — v29 72k eval → stopped; v27 60k stays deployed
+- TB 73.7k: track_lin .73 -> .58, track_ang (weight 3) .90 -> .69: same slide as v26 / v28
+- nominal: 1/64, fwd .024, back -.021, turn .133, side drift vy +.027-.030 (worse than v28)
+- real-repro: 7/64, fwd .009, back -.044, turn .249, gyro .76/.65/.74
+- standpush 1/32, buzz 0/32
+- lighter trunk-rate penalty did not help: any trunk shake strong enough to match the real rocking (>= ~8 Nm with pitch) makes PPO trade
+  tracking for survival. Policy-side robustness has hit its limit with this model; v27 60k (shake 6 Nm roll-heavy) is the best compromise.
+- next: check the real robot hardware for the source of the trunk rocking outside the leg encoders (pelvis / hip bracket play, servo horn
+  backlash, frame flex), then re-log.
