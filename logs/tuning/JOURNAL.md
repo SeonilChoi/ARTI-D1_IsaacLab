@@ -1859,3 +1859,11 @@ outward from the new default. v24 (trunk shake proxy) stopped at 6k (PID 1471598
 Run 2026-11-13_09-38-58 from v23 agent_54000, seed 7, offset 1506000, PID 1478140.
 Deploy needs robot_vel.yaml default_pose hip_roll 0.15 / -0.15 together with the ONNX.
 - User 2026-11-13: no mechanical room beyond hip_roll 0.209 on the real robot; keep the URDF limit.
+
+## 2026-11-13 v25 36k check -> deployed
+TB: reward 94 -> 129 still rising, air_time 1.95 -> 2.03, base roll 1.2 -> .79 deg.
+score: 0/64, fwd .054 back -.061 side .006 diag .044 turn .266, 4.94 touchdowns/s, swing 15 mm, both down 1 %, both up 1 %,
+ROM hip_roll 6.5 deg (v23 13), torso gyro fwd .17/.13/.09. standpush 0/32; buzz k=2.5 0/32, gyro .02-.03, |da| .004.
+Video clean, wide flat stance. Hip roll: walking q_des clamped at 0.209 ~50 % (joint itself max 0.19, never at the stop).
+Deployed agent_36000 to humanoid_controller (ONNX + robot_vel.yaml default_pose hip_roll +/-0.15) for the real
+flat-sole test; training continues (tracking lower than v23: fwd .054 vs .078, side .006 vs .023).
