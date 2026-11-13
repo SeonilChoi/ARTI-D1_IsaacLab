@@ -1894,3 +1894,11 @@ v25 stopped at 168k (PID 1478140 verified). v26 run 2026-11-13_12-29-10 from v25
 - start point v25 168k: v25 profile fwd .059 back -.067 turn .279; same under v26 nominal eval (.060/-.067/.271) → the eval is fine, v26 training lost back/turn
 - verdict: robust but back/turn unusable → not deployed. v27 = v26 with kd x U(0.65,1.0), shake U(0,6) Nm, from v25 168k, seed 7, offset 1506000
   - run 2026-11-13_13-55-28_ppo_torch, log logs/train/train_vel_microduck_v27_mildkdshake.log
+
+## 2026-11-13 14:45 — v27 60k eval → deployed (controller 1b9a549)
+- TB 62.4k: track_lin .80 (v26 .65), track_ang .66 (v26 .48), total 120
+- nominal (kd 1, shake 0): 0/64, fwd .050, back -.040, turn .191, 4.94 steps/s, foot 13.4 mm, both down 3 %
+- real-repro (kd .7, shake 8): **0/64** (v25 96k 6/64, v26 78k 1/64), fwd .045, back -.052, turn .216, gyro .58/.31/.58
+- standpush 0/32, buzz 0/32 (gyro std .02-.04), video clean, ONNX verify 9.5e-6, hip_roll q_des clamped L .40 / R .56, joint max .211
+- nominal back/turn below the gate (-.05 / .22) but met in the real-repro condition (= the real robot's fit) and falls 6 -> 0: deployed
+  agent_vel.onnx (md5 bae5c8c5) to humanoid_controller arti-d1-2830k, default_pose / command_max unchanged. Training continues; later checkpoints may replace it.
