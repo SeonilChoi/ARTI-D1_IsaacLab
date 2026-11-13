@@ -1970,3 +1970,10 @@ v25 stopped at 168k (PID 1478140 verified). v26 run 2026-11-13_12-29-10 from v25
 - hip_yaw -0.08: 1/64, fwd .079 wz +.040, back -.048 wz +.025, turn .282
 - standpush 0/32, buzz 0/32, video clean, hip_roll q_des clamped L .24 / R .53
 - forward better, backward slightly worse (-.033 / -.039 vs 60k -.037 / -.044), falls 2 vs 1: no clear gain -> keep 60k on the robot, wait for its real log
+
+## 2026-11-14 01:45 — v30 180k eval (candidate; 60k stays)
+- nominal: 0/64, fwd .059, back -.039, turn .180, wz drift -.004 / -.003
+- real (kd .7, shake 8, hip_yaw +0.08): 1/64, fwd .066 wz -.017, back -.046 wz -.005, turn .180
+- hip_yaw -0.08: 0/64, fwd .070 wz +.009, back -.052 wz +.015, turn .222
+- standpush 0/32, buzz 0/32, video clean, hip_roll q_des clamped L .21 / R .35 (60k .28 / .53)
+- vs 60k: faster forward, same backward, smaller drift with -0.08, less hip_roll clamping, but turn .18 vs .20 -> candidate, no swap before the real 60k log
