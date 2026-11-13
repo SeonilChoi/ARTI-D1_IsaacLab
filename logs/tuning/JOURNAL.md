@@ -1977,3 +1977,11 @@ v25 stopped at 168k (PID 1478140 verified). v26 run 2026-11-13_12-29-10 from v25
 - hip_yaw -0.08: 0/64, fwd .070 wz +.009, back -.052 wz +.015, turn .222
 - standpush 0/32, buzz 0/32, video clean, hip_roll q_des clamped L .21 / R .35 (60k .28 / .53)
 - vs 60k: faster forward, same backward, smaller drift with -0.08, less hip_roll clamping, but turn .18 vs .20 -> candidate, no swap before the real 60k log
+
+## 2026-11-14 02:45 — v30 240k (final) eval; v30 done, 60k stays deployed
+- nominal: 0/64, fwd .069, back -.032, turn .217, wz drift +.007 / -.003
+- real (kd .7, shake 8, hip_yaw +0.08): 3/64, fwd .065 wz -.003, back -.037 wz -.013, turn .185
+- hip_yaw -0.08: 0/64, fwd .071 wz +.041, back -.048 wz +.024, turn .270
+- standpush 0/32, buzz 1/32, video clean, hip_roll q_des clamped L .23 / R .27
+- backward weakest of the run and 3/64 under the real condition -> no swap. Robot keeps v30 60k (8309503); 180k is the faster-forward
+  candidate. Waiting for the real v30 60k log (heading drift).
