@@ -1962,3 +1962,11 @@ v25 stopped at 168k (PID 1478140 verified). v26 run 2026-11-13_12-29-10 from v25
 - hip_yaw offset -0.08 (kd .7): 0/64, wz +.032 / +.032, turn .275
 - standpush 0/32, buzz 0/32, video clean, ONNX verify 5.7e-6, hip_roll q_des clamped L .28 / R .53
 - nominal back -.037 a hair short of -.04, but the heading fix is what the real robot needs -> deployed agent_vel.onnx (md5 46840a01)
+
+## 2026-11-14 00:45 — v30 120k eval (not deployed; 60k stays)
+- TB 138k: track_lin .80, track_ang .62 flat, total 118
+- nominal: 0/64, fwd .061, back -.033, turn .200, wz drift -.002 / -.012
+- real (kd .7, shake 8, hip_yaw +0.08): 2/64, fwd .072 wz -.010, back -.039 wz -.018, turn .210
+- hip_yaw -0.08: 1/64, fwd .079 wz +.040, back -.048 wz +.025, turn .282
+- standpush 0/32, buzz 0/32, video clean, hip_roll q_des clamped L .24 / R .53
+- forward better, backward slightly worse (-.033 / -.039 vs 60k -.037 / -.044), falls 2 vs 1: no clear gain -> keep 60k on the robot, wait for its real log
