@@ -80,6 +80,14 @@ class ArtiD1VelEnv(DirectRLEnv):
             self.act_series[:, cols] = torch.empty(n, 1, device=dev).uniform_(lo_s, hi_s).expand(n, len(cols))
         self.act_enc_offset = torch.zeros(n, nj, device=dev)
         self.effort_limit = torch.tensor([self.cfg.joint_effort_limit[j] for j in names], device=dev)
+        # what-if gain scale on the leg joints (real2sim sweeps; 1.0 / 1.0 in training)
+        kps, kds = self.cfg.actuator_gain_whatif
+        lo_d, hi_d = self.cfg.actuator_kd_random
+        if kps != 1.0 or kds != 1.0 or (lo_d, hi_d) != (1.0, 1.0):
+            lid = self.leg_ids
+            kd_env = torch.empty(n, 1, device=dev).uniform_(lo_d, hi_d) * kds  # per env, all leg joints
+            self.robot.write_joint_stiffness_to_sim_index(stiffness=self.robot.data.joint_stiffness.torch[:, lid] * kps, joint_ids=lid)
+            self.robot.write_joint_damping_to_sim_index(damping=self.robot.data.joint_damping.torch[:, lid] * kd_env, joint_ids=lid)
 
         # pose reward stds over the leg joints
         self.pose_std_stand = per_type(self.cfg.pose_std_standing, 1.0)[self.leg_ids]

@@ -56,23 +56,28 @@ ARTI_D1_VEL_PROFILE = os.environ.get("ARTI_D1_VEL_PROFILE", "v10")
 #        roll joint) stands each sole 10 deg on its edge (URDF FK); hip_roll +/-0.15 = legs vertical, soles flat, feet
 #        0.202 m apart (was 0.136), pelvis 8.7 mm lower. Edge stance = a passive roll / yaw pivot on the TPU sole edge,
 #        the likely cause of the real 3.5 Hz roll / yaw rocking (v24 models it as a torque instead)
-_PROFILES = ("v10", "v11", "v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25")
+#   v26: v25 + real2sim from the v25 real walk (2026-11-13 112410): replay matches the real joint response only with
+#        the leg kd x0.7 (pos/q_des 3-7 Hz .52 vs real .53; x1.0 .40), the remaining trunk roll gap (2.7x) is covered by
+#        the v24 trunk shake. Closed loop v25 96k with kd x0.7 + shake 8 Nm = the real rocking (gyro .87/.47/.70, 6/64
+#        falls). Training: kd x U(0.5, 0.9), shake U(0, 10) Nm
+_PROFILES = ("v10", "v11", "v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26")
 if ARTI_D1_VEL_PROFILE not in _PROFILES:
     raise ValueError(f"ARTI_D1_VEL_PROFILE must be one of {_PROFILES}, got {ARTI_D1_VEL_PROFILE}")
 _V21 = ARTI_D1_VEL_PROFILE == "v21"
-_V25 = ARTI_D1_VEL_PROFILE == "v25"
+_V26 = ARTI_D1_VEL_PROFILE == "v26"
+_V25 = ARTI_D1_VEL_PROFILE in ("v25", "v26")  # v26 builds on v25
 _V24 = ARTI_D1_VEL_PROFILE == "v24"
-_V23 = ARTI_D1_VEL_PROFILE in ("v23", "v24", "v25")  # v24 / v25 build on v23
-_V22 = ARTI_D1_VEL_PROFILE in ("v22", "v23", "v24", "v25")  # v23 builds on v22
-_V20 = ARTI_D1_VEL_PROFILE in ("v20", "v21", "v22", "v23", "v24", "v25")  # v21 / v22 build on v20
+_V23 = ARTI_D1_VEL_PROFILE in ("v23", "v24", "v25", "v26")  # v24 / v25 build on v23
+_V22 = ARTI_D1_VEL_PROFILE in ("v22", "v23", "v24", "v25", "v26")  # v23 builds on v22
+_V20 = ARTI_D1_VEL_PROFILE in ("v20", "v21", "v22", "v23", "v24", "v25", "v26")  # v21 / v22 build on v20
 _V19 = ARTI_D1_VEL_PROFILE == "v19"
-_V18 = ARTI_D1_VEL_PROFILE in ("v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25")  # v19 builds on v18
-_V13 = ARTI_D1_VEL_PROFILE in ("v13", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25")  # v17 adds the v13 realism
-_V16 = ARTI_D1_VEL_PROFILE in ("v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25")  # v17 builds on v16
-_V15 = ARTI_D1_VEL_PROFILE in ("v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25")  # v16 builds on v15
-_V14 = ARTI_D1_VEL_PROFILE in ("v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25")  # v15 builds on v14
-_V12 = ARTI_D1_VEL_PROFILE in ("v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25")  # v13 / v14 build on v12
-_V11 = ARTI_D1_VEL_PROFILE in ("v11", "v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25")  # v12 builds on v11
+_V18 = ARTI_D1_VEL_PROFILE in ("v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26")  # v19 builds on v18
+_V13 = ARTI_D1_VEL_PROFILE in ("v13", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26")  # v17 adds the v13 realism
+_V16 = ARTI_D1_VEL_PROFILE in ("v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26")  # v17 builds on v16
+_V15 = ARTI_D1_VEL_PROFILE in ("v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26")  # v16 builds on v15
+_V14 = ARTI_D1_VEL_PROFILE in ("v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26")  # v15 builds on v14
+_V12 = ARTI_D1_VEL_PROFILE in ("v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26")  # v13 / v14 build on v12
+_V11 = ARTI_D1_VEL_PROFILE in ("v11", "v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26")  # v12 builds on v11
 ARTI_D1_VEL_ACTION_HISTORY = 1 if _V11 else 3
 # actor: base ang vel (3) + projected gravity (3) + leg joint pos rel (10) + leg joint vel (10) + last N actions (10 N)
 # + command (3, always last)
@@ -261,9 +266,11 @@ class ArtiD1VelEnvCfg(DirectRLEnvCfg):
     actuator_series_scale = {}
     # joint play (actuator_backlash_deg) between the encoder and the link (frames / horns) instead of inside the servo
     backlash_outside_encoder = False
+    actuator_gain_whatif = (1.0, 1.0)  # (kp, kd) multipliers on the leg joints at env start (eval what-ifs)
+    actuator_kd_random = (0.5, 0.9) if _V26 else (1.0, 1.0)  # per-env multiplier on the leg kd (on top of actuator_kd_scale)
     # trunk shake: per episode a pelvis torque amp * axes * U(0.5, 1) * sin(2 pi f t + phase), f in trunk_shake_freq_hz,
     # body frame, only while the command norm > trunk_shake_cmd_min (the real rocking comes with stepping)
-    trunk_shake_torque = (0.0, 10.0) if _V24 else (0.0, 0.0)  # Nm amplitude range (replay fit ~8-10 Nm roll)
+    trunk_shake_torque = (0.0, 10.0) if (_V24 or _V26) else (0.0, 0.0)  # Nm amplitude range (replay fit ~8-10 Nm roll)
     trunk_shake_freq_hz = (3.0, 6.0)
     trunk_shake_axes = (1.0, 0.15, 0.3)  # roll, pitch, yaw weights (real walking replay: roll 3x, yaw 2.5x, pitch 1x)
     trunk_shake_walk_only = True

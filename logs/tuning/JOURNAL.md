@@ -1867,3 +1867,18 @@ ROM hip_roll 6.5 deg (v23 13), torso gyro fwd .17/.13/.09. standpush 0/32; buzz 
 Video clean, wide flat stance. Hip roll: walking q_des clamped at 0.209 ~50 % (joint itself max 0.19, never at the stop).
 Deployed agent_36000 to humanoid_controller (ONNX + robot_vel.yaml default_pose hip_roll +/-0.15) for the real
 flat-sole test; training continues (tracking lower than v23: fwd .054 vs .078, side .006 vs .023).
+
+## 2026-11-13 v25 96k check, real v25 36k test, real2sim -> v26
+v25 96k: score 0/64, fwd .061 back -.067 side .008 diag .050 turn .285, 4.89 touchdowns/s, both down 1 %; standpush 0/32;
+buzz k=2.5 0/32 gyro .02-.045; video clean; walking hip_roll q_des clamped 39-44 % (joint max .198).
+Real v25 36k (humanoid_controller ab8cec0, run 112410): standing clean; walking .03-.05 torso gyro x .7-1.0 (v23 1.2-1.5,
+sim .15-.17); fell backwards at the end on a -0.1 command. No vy / yaw commands in any real log: robot_vel.yaml
+command_max vy was 0 -> set to 0.08 (controller cda56c1). Policy sideways is weak anyway (sim .008 of .06).
+Replay of v25 real walking (3-7 Hz): roll .83-1.05 real vs .14-.22 sim (flat sole cut the real roll ~30 % but the gap
+stays), joint transfer pos/q_des real .53 vs sim .40. Delay 0-10 ms and Coulomb 0: no change. kp x2: joints .50, roll .28.
+kd sweep (new actuator_gain_whatif): x0.7 -> joints .52-.53 (= real), roll .30-.34; x0.35 -> joints .68, roll .61-.68;
+x0.2 -> .74 / .66-.77. => the sim leg damping is too high (kd x0.7 fits); the rest of the roll gap (~2.7x) stays outside
+the encoders -> trunk shake. Closed loop v25 96k: kd x0.7 alone gyro .27/.19/.11, 0/64; kd x0.7 + shake 8 Nm gyro
+.87/.47/.70 (= real), falls 6/64, back -.078.
+v26 = v25 + actuator_kd_random U(0.5, 0.9) per env + trunk shake U(0, 10) Nm (axes 1/.15/.3, walking only).
+v25 stopped at 168k (PID 1478140 verified). v26 run 2026-11-13_12-29-10 from v25 agent_168000, PID 1509921.
