@@ -1954,3 +1954,11 @@ v25 stopped at 168k (PID 1478140 verified). v26 run 2026-11-13_12-29-10 from v25
 - new eval knob encoder_offset_fixed (leg order); v30 = v27 + per-env hip_yaw encoder bias U(+-0.10) rad (others +-0.015)
   from v27 60k, seed 7, offset 1566000; run 2026-11-13_22-52-08_ppo_torch, log logs/train/train_vel_microduck_v30_yawbias.log
 - user to check: at the default pose, do both feet point straight forward (both hip_yaw horns a few deg off in the same direction)?
+
+## 2026-11-13 23:45 — v30 60k eval → deployed (controller 8309503)
+- TB 64.6k: track_lin .78-.80, track_ang .61-.63 flat (no slide, unlike v26 / v28 / v29)
+- nominal: 1/64, fwd .051 wz -.002, back -.037, turn .203
+- real (kd .7, shake 8, hip_yaw offset +0.08): 1/64, fwd .052 **wz -.011**, back -.044 **wz -.009**, turn .207 (v27 60k: 4/64, wz -.30 / -.35, turn -.08)
+- hip_yaw offset -0.08 (kd .7): 0/64, wz +.032 / +.032, turn .275
+- standpush 0/32, buzz 0/32, video clean, ONNX verify 5.7e-6, hip_roll q_des clamped L .28 / R .53
+- nominal back -.037 a hair short of -.04, but the heading fix is what the real robot needs -> deployed agent_vel.onnx (md5 46840a01)
