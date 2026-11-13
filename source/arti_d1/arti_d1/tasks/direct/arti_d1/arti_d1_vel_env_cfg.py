@@ -52,22 +52,27 @@ ARTI_D1_VEL_PROFILE = os.environ.get("ARTI_D1_VEL_PROFILE", "v10")
 #   v24: v23 + trunk shake (real2sim 2026-11-13: v23 on the real robot stands buzz-free but rocks at ~3.5 Hz while
 #        stepping, trunk roll / yaw rate 3x / 2.5x the sim for the same replayed joint motion; no friction / contact /
 #        play / compliance / mass setting reproduces it, a 3-6 Hz pelvis torque of ~10 Nm roll does)
-_PROFILES = ("v10", "v11", "v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24")
+#   v25: v23 + flat-sole default pose (user 2026-11-13): the old stance (hip_roll -/+0.0247, legs 10 deg inward, no ankle
+#        roll joint) stands each sole 10 deg on its edge (URDF FK); hip_roll +/-0.15 = legs vertical, soles flat, feet
+#        0.202 m apart (was 0.136), pelvis 8.7 mm lower. Edge stance = a passive roll / yaw pivot on the TPU sole edge,
+#        the likely cause of the real 3.5 Hz roll / yaw rocking (v24 models it as a torque instead)
+_PROFILES = ("v10", "v11", "v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25")
 if ARTI_D1_VEL_PROFILE not in _PROFILES:
     raise ValueError(f"ARTI_D1_VEL_PROFILE must be one of {_PROFILES}, got {ARTI_D1_VEL_PROFILE}")
 _V21 = ARTI_D1_VEL_PROFILE == "v21"
+_V25 = ARTI_D1_VEL_PROFILE == "v25"
 _V24 = ARTI_D1_VEL_PROFILE == "v24"
-_V23 = ARTI_D1_VEL_PROFILE in ("v23", "v24")  # v24 builds on v23
-_V22 = ARTI_D1_VEL_PROFILE in ("v22", "v23", "v24")  # v23 builds on v22
-_V20 = ARTI_D1_VEL_PROFILE in ("v20", "v21", "v22", "v23", "v24")  # v21 / v22 build on v20
+_V23 = ARTI_D1_VEL_PROFILE in ("v23", "v24", "v25")  # v24 / v25 build on v23
+_V22 = ARTI_D1_VEL_PROFILE in ("v22", "v23", "v24", "v25")  # v23 builds on v22
+_V20 = ARTI_D1_VEL_PROFILE in ("v20", "v21", "v22", "v23", "v24", "v25")  # v21 / v22 build on v20
 _V19 = ARTI_D1_VEL_PROFILE == "v19"
-_V18 = ARTI_D1_VEL_PROFILE in ("v18", "v19", "v20", "v21", "v22", "v23", "v24")  # v19 builds on v18
-_V13 = ARTI_D1_VEL_PROFILE in ("v13", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24")  # v17 adds the v13 realism
-_V16 = ARTI_D1_VEL_PROFILE in ("v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24")  # v17 builds on v16
-_V15 = ARTI_D1_VEL_PROFILE in ("v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24")  # v16 builds on v15
-_V14 = ARTI_D1_VEL_PROFILE in ("v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24")  # v15 builds on v14
-_V12 = ARTI_D1_VEL_PROFILE in ("v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24")  # v13 / v14 build on v12
-_V11 = ARTI_D1_VEL_PROFILE in ("v11", "v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24")  # v12 builds on v11
+_V18 = ARTI_D1_VEL_PROFILE in ("v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25")  # v19 builds on v18
+_V13 = ARTI_D1_VEL_PROFILE in ("v13", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25")  # v17 adds the v13 realism
+_V16 = ARTI_D1_VEL_PROFILE in ("v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25")  # v17 builds on v16
+_V15 = ARTI_D1_VEL_PROFILE in ("v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25")  # v16 builds on v15
+_V14 = ARTI_D1_VEL_PROFILE in ("v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25")  # v15 builds on v14
+_V12 = ARTI_D1_VEL_PROFILE in ("v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25")  # v13 / v14 build on v12
+_V11 = ARTI_D1_VEL_PROFILE in ("v11", "v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25")  # v12 builds on v11
 ARTI_D1_VEL_ACTION_HISTORY = 1 if _V11 else 3
 # actor: base ang vel (3) + projected gravity (3) + leg joint pos rel (10) + leg joint vel (10) + last N actions (10 N)
 # + command (3, always last)
@@ -268,7 +273,7 @@ class ArtiD1VelEnvCfg(DirectRLEnvCfg):
     # ---- events
     reset_xy_range = 0.5
     # pelvis origin z with the soles on the ground (ARTI_D1_CFG init pos; the USD pelvis frame sits at foot level) + 5 mm drop
-    reset_height = 0.00445 + 0.005
+    reset_height = (-0.0042 if _V25 else 0.00445) + 0.005  # pelvis origin over the sole at the default pose
     push_interval_s = (3.0, 6.0)
     push_velocity = 0.4 if _V18 else 0.25  # v18: 0.4; m/s; microduck +-0.3 = 0.75 x its max speed (0.15 run: stand-push failed at 0.4 m/s)
 
@@ -282,6 +287,9 @@ class ArtiD1VelEnvCfg(DirectRLEnvCfg):
     curriculum_step_offset = 0
 
     def __post_init__(self):
+        if _V25:  # flat-sole stance: legs vertical
+            self.scene.robot.init_state.joint_pos = {
+                **self.scene.robot.init_state.joint_pos, "left_hip_roll": 0.15, "right_hip_roll": -0.15}
         if _V13:  # TPU-like soles: compliant contact on the ground material (~1.3 mm under the full weight on one point)
             self.scene.terrain.physics_material.compliant_contact_stiffness = 4.0e4  # N/m
             self.scene.terrain.physics_material.compliant_contact_damping = 400.0  # N s/m

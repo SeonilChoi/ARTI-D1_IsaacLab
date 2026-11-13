@@ -1848,3 +1848,13 @@ Replay (eval_vel --mode replay, now also tilt / per-axis gyro / per-joint output
   closed loop v23 54k with 10 Nm (axes 1/.15/.3, walking only): torso gyro forward 1.03/.47/.85 (= real), falls 7/64.
 v24 = v23 + trunk_shake_torque U(0,10) Nm, axes roll 1 / pitch .15 / yaw .3, 3-6 Hz, while |cmd| > .015.
 Run logs/skrl/arti_d1_vel_walk/2026-11-13_08-42-15_ppo_torch/ from v23 agent_54000, seed 7, curriculum offset 1506000, PID 1471598.
+
+## 2026-11-13 v25: flat-sole default pose (v24 stopped at 6k)
+User asked whether the slanted sole in the default pose causes the rocking. URDF FK (motion_generator pinocchio): the
+default stance hip_roll -/+0.0247 tilts each sole 10.0 deg in roll (no ankle roll joint) -> both feet stand on an edge;
+hip_roll +/-0.15 = legs vertical, soles flat (normal 0 0 1), feet 0.202 m apart (was 0.136), root 8.7 mm lower.
+An edge stance is a passive roll / yaw pivot (TPU sole edge), consistent with real roll 3x / yaw 2.5x / pitch 1x.
+v25 = v23 + init_state hip_roll +/-0.15, reset_height -0.0042 + 0.005. Note hip_roll upper limit 0.209 leaves 3.4 deg
+outward from the new default. v24 (trunk shake proxy) stopped at 6k (PID 1471598 verified), kept for reference.
+Run 2026-11-13_09-38-58 from v23 agent_54000, seed 7, offset 1506000, PID 1478140.
+Deploy needs robot_vel.yaml default_pose hip_roll 0.15 / -0.15 together with the ONNX.
