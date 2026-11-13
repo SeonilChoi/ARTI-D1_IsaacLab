@@ -1882,3 +1882,6 @@ the encoders -> trunk shake. Closed loop v25 96k: kd x0.7 alone gyro .27/.19/.11
 .87/.47/.70 (= real), falls 6/64, back -.078.
 v26 = v25 + actuator_kd_random U(0.5, 0.9) per env + trunk shake U(0, 10) Nm (axes 1/.15/.3, walking only).
 v25 stopped at 168k (PID 1478140 verified). v26 run 2026-11-13_12-29-10 from v25 agent_168000, PID 1509921.
+- 12:33 user: give up sideways, forward / back / turn only. v26 restarted (first v26 run 12-29-10 stopped at ~4k) with
+  command_lin_y_range (0, 0) and lateral_fraction 0 (lateral tracking now just keeps vy = 0). Run 2026-11-13_12-33-02,
+  PID 1510960, from v25 agent_168000. Controller command_max vy back to 0.

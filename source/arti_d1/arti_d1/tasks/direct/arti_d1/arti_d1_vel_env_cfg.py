@@ -190,11 +190,11 @@ class ArtiD1VelEnvCfg(DirectRLEnvCfg):
     # microduck lin x +-0.4, y +-0.3, yaw +-1.0 for a 25 cm robot (~1.6 / 1.2 leg lengths per s); ARTI-D1 legs are
     # ~0.26 m with servos at 3.14 rad/s.
     command_lin_x_range = (-0.12, 0.15)
-    command_lin_y_range = (-0.08, 0.08)
+    command_lin_y_range = (0.0, 0.0) if _V26 else (-0.08, 0.08)  # v26: no sideways (user 2026-11-13: forward / back / turn only)
     command_yaw_range = (-0.4, 0.4)
     command_resample_s = (3.0, 8.0)
     turn_in_place_fraction = 0.15
-    lateral_fraction = 0.15  # pure sideways commands, |vy| in [0.4, 1] x range max
+    lateral_fraction = 0.0 if _V26 else 0.15  # pure sideways commands, |vy| in [0.4, 1] x range max (v26: none)
     # standing (exactly zero command) env fraction by env step (microduck standing_envs curriculum, iter x 24)
     standing_stages = ((0, 0.02), (500 * 24, 0.05), (750 * 24, 0.1), (1000 * 24, 0.15), (1500 * 24, 0.2), (2000 * 24, 0.25))
     command_threshold = 0.01  # microduck command_threshold for gait terms / pose walking_threshold
