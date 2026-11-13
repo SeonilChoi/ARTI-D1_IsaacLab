@@ -1902,3 +1902,11 @@ v25 stopped at 168k (PID 1478140 verified). v26 run 2026-11-13_12-29-10 from v25
 - standpush 0/32, buzz 0/32 (gyro std .02-.04), video clean, ONNX verify 9.5e-6, hip_roll q_des clamped L .40 / R .56, joint max .211
 - nominal back/turn below the gate (-.05 / .22) but met in the real-repro condition (= the real robot's fit) and falls 6 -> 0: deployed
   agent_vel.onnx (md5 bae5c8c5) to humanoid_controller arti-d1-2830k, default_pose / command_max unchanged. Training continues; later checkpoints may replace it.
+
+## 2026-11-13 15:45 — v27 120k eval → v27 stopped at ~137k, 60k stays deployed
+- TB 136.8k: track_lin .77 (60k .80), track_ang .63 (.66), total 116 (flat)
+- nominal: 1/64 falls, fwd .054, back -.043, turn .177 (60k: 0/64, .050, -.040, .191)
+- real-repro: 2/64 falls, fwd .054, back -.055, turn .180, gyro .62/.31/.68 (60k: 0/64, .045, -.052, .216, .58/.31/.58)
+- standpush 0/32, buzz 0/32, video clean, hip_roll q_des clamped L .39 / R .57, joint max .196
+- 120k is worse than 60k on falls and turn; the turn tracking keeps sliding -> training stopped, controller keeps v27 60k (1b9a549).
+  Next: wait for the real log of v27 60k and re-fit (real2sim) before another run.
