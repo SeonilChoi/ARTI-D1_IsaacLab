@@ -1858,3 +1858,4 @@ v25 = v23 + init_state hip_roll +/-0.15, reset_height -0.0042 + 0.005. Note hip_
 outward from the new default. v24 (trunk shake proxy) stopped at 6k (PID 1471598 verified), kept for reference.
 Run 2026-11-13_09-38-58 from v23 agent_54000, seed 7, offset 1506000, PID 1478140.
 Deploy needs robot_vel.yaml default_pose hip_roll 0.15 / -0.15 together with the ONNX.
+- User 2026-11-13: no mechanical room beyond hip_roll 0.209 on the real robot; keep the URDF limit.
