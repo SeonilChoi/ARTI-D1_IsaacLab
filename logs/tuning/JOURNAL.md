@@ -1921,3 +1921,13 @@ v25 stopped at 168k (PID 1478140 verified). v26 run 2026-11-13_12-29-10 from v25
   - shake 10 axes (1,.5,.2): 12/64, gyro .90/.82/.71  <- new real-repro condition
 - v28 = v27 + shake U(0,8) Nm, axes (1,.55,.2) (was (1,.15,.3)); from v27 60k, seed 7, offset 1566000
   - run 2026-11-13_16-26-14_ppo_torch, log logs/train/train_vel_microduck_v28_pitchshake.log
+
+## 2026-11-13 17:45 — v28 60k / 114k eval → stopped, v29 (tracking fix)
+- TB 117k: track_lin .58 (start .74), track_ang .45 (.60)
+- nominal: 60k 0/64 fwd .045 back -.015 turn .204; 114k 0/64 .038 / -.014 / .125
+- new real-repro (kd .7, shake 10 axes (1,.5,.2)): 60k 4/64 fwd .020 back -.030 turn .127, gyro .78/.70/.77; 114k 6/64 .029 / -.022 / .135
+  (v27 60k: 12/64, .027 / -.056 / .191)
+- standpush 0/32 both; buzz 60k 0/32, 114k 1/32; videos clean
+- same failure as v26: under strong shake the policy gives up backward / turn. Not deployed, v27 60k stays.
+- v29 = v28 + body_ang_vel weight -0.2 -> -0.05 (shake-driven trunk rate made the penalty pay for walking) + turn tracking 2 -> 3;
+  from v27 60k, seed 7, offset 1566000; run 2026-11-13_17-46-54_ppo_torch, log logs/train/train_vel_microduck_v29_trackfix.log

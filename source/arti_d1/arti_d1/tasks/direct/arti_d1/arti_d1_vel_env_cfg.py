@@ -65,26 +65,29 @@ ARTI_D1_VEL_PROFILE = os.environ.get("ARTI_D1_VEL_PROFILE", "v10")
 #   v28 (2026-11-13): real v27 60k walk (161844): roll 3-7 Hz gyro 1.05 -> .70 (yaw .57 -> .35) vs v25, but pitch .26 -> .45;
 #        replay again fits kd x0.7 (pos/q_des .51-.54 vs real .54). Closed loop v27 60k, kd .7 + shake 10 Nm axes (1, .5, .2)
 #        = the real walk (gyro .90/.82/.71 vs real .85/.70/.57, 12/64 falls). From v27 60k: shake U(0, 8) Nm, axes (1, .55, .2)
-_PROFILES = ("v10", "v11", "v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28")
+#   v29 (2026-11-13): v28 60k / 114k: real-repro falls 12 -> 4-6 /64 but back -.015, turn .12-.20 (v26 again): the
+#        shake-driven trunk rate made the body_ang_vel penalty pay for walking -> body_ang_vel -0.2 -> -0.05, turn tracking 2 -> 3
+_PROFILES = ("v10", "v11", "v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29")
 if ARTI_D1_VEL_PROFILE not in _PROFILES:
     raise ValueError(f"ARTI_D1_VEL_PROFILE must be one of {_PROFILES}, got {ARTI_D1_VEL_PROFILE}")
 _V21 = ARTI_D1_VEL_PROFILE == "v21"
-_V26 = ARTI_D1_VEL_PROFILE in ("v26", "v27", "v28")  # v27 = v26 with milder kd / shake randomisation, v28 builds on v27
-_V27 = ARTI_D1_VEL_PROFILE in ("v27", "v28")
-_V28 = ARTI_D1_VEL_PROFILE == "v28"
-_V25 = ARTI_D1_VEL_PROFILE in ("v25", "v26", "v27", "v28")  # v26 builds on v25
+_V26 = ARTI_D1_VEL_PROFILE in ("v26", "v27", "v28", "v29")  # v27 = v26 with milder kd / shake randomisation, v28 builds on v27
+_V27 = ARTI_D1_VEL_PROFILE in ("v27", "v28", "v29")
+_V28 = ARTI_D1_VEL_PROFILE in ("v28", "v29")
+_V29 = ARTI_D1_VEL_PROFILE == "v29"
+_V25 = ARTI_D1_VEL_PROFILE in ("v25", "v26", "v27", "v28", "v29")  # v26 builds on v25
 _V24 = ARTI_D1_VEL_PROFILE == "v24"
-_V23 = ARTI_D1_VEL_PROFILE in ("v23", "v24", "v25", "v26", "v27", "v28")  # v24 / v25 build on v23
-_V22 = ARTI_D1_VEL_PROFILE in ("v22", "v23", "v24", "v25", "v26", "v27", "v28")  # v23 builds on v22
-_V20 = ARTI_D1_VEL_PROFILE in ("v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28")  # v21 / v22 build on v20
+_V23 = ARTI_D1_VEL_PROFILE in ("v23", "v24", "v25", "v26", "v27", "v28", "v29")  # v24 / v25 build on v23
+_V22 = ARTI_D1_VEL_PROFILE in ("v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29")  # v23 builds on v22
+_V20 = ARTI_D1_VEL_PROFILE in ("v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29")  # v21 / v22 build on v20
 _V19 = ARTI_D1_VEL_PROFILE == "v19"
-_V18 = ARTI_D1_VEL_PROFILE in ("v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28")  # v19 builds on v18
-_V13 = ARTI_D1_VEL_PROFILE in ("v13", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28")  # v17 adds the v13 realism
-_V16 = ARTI_D1_VEL_PROFILE in ("v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28")  # v17 builds on v16
-_V15 = ARTI_D1_VEL_PROFILE in ("v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28")  # v16 builds on v15
-_V14 = ARTI_D1_VEL_PROFILE in ("v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28")  # v15 builds on v14
-_V12 = ARTI_D1_VEL_PROFILE in ("v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28")  # v13 / v14 build on v12
-_V11 = ARTI_D1_VEL_PROFILE in ("v11", "v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28")  # v12 builds on v11
+_V18 = ARTI_D1_VEL_PROFILE in ("v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29")  # v19 builds on v18
+_V13 = ARTI_D1_VEL_PROFILE in ("v13", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29")  # v17 adds the v13 realism
+_V16 = ARTI_D1_VEL_PROFILE in ("v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29")  # v17 builds on v16
+_V15 = ARTI_D1_VEL_PROFILE in ("v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29")  # v16 builds on v15
+_V14 = ARTI_D1_VEL_PROFILE in ("v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29")  # v15 builds on v14
+_V12 = ARTI_D1_VEL_PROFILE in ("v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29")  # v13 / v14 build on v12
+_V11 = ARTI_D1_VEL_PROFILE in ("v11", "v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29")  # v12 builds on v11
 ARTI_D1_VEL_ACTION_HISTORY = 1 if _V11 else 3
 # actor: base ang vel (3) + projected gravity (3) + leg joint pos rel (10) + leg joint vel (10) + last N actions (10 N)
 # + command (3, always last)
@@ -221,7 +224,7 @@ class ArtiD1VelEnvCfg(DirectRLEnvCfg):
     symmetry_loss_coef = 0.2  # scripts/skrl/train.py; 0 = off (v4/v5: 0.5)
     # both start at iter 500 (from the start they made the stand-up phase collapse on 2 of 3 seeds)
     symmetry_kick_start_step = 500 * 24
-    track_ang_vel_weight = 2.0
+    track_ang_vel_weight = 3.0 if _V29 else 2.0
     track_ang_vel_std = 0.28  # rad/s; microduck sqrt(0.5)=0.71 for +-1.0
     upright_weight = 2.0
     upright_std = math.sqrt(0.05)
@@ -230,7 +233,7 @@ class ArtiD1VelEnvCfg(DirectRLEnvCfg):
     # its weight with hip_roll, the demo uses 15 deg of it)
     pose_std_standing = {"hip_yaw": 0.1, "hip_roll": 0.05, "hip_pitch": 0.15, "knee": 0.15, "ankle": 0.1}
     pose_std_walking = {"hip_yaw": 0.3, "hip_roll": 0.1, "hip_pitch": 0.4, "knee": 0.4, "ankle": 0.25}
-    body_ang_vel_weight = -0.2 if _V12 else -0.05  # v12 x4 (real torso rocked 6x sim)
+    body_ang_vel_weight = -0.05 if _V29 else -0.2 if _V12 else -0.05  # v12 x4 (real torso rocked 6x sim)
     dof_pos_limits_weight = -1.0
     action_rate_stages = ((0, -0.1), (500 * 24, -0.2), (750 * 24, -0.4), (1000 * 24, -0.6), (1250 * 24, -0.8), (1500 * 24, -1.0))
     air_time_weight = 4.0 if _V23 else 3.0  # v23: win back the v20 shuffle under the v22 gyro vibration model
