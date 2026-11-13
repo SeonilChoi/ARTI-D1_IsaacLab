@@ -67,27 +67,31 @@ ARTI_D1_VEL_PROFILE = os.environ.get("ARTI_D1_VEL_PROFILE", "v10")
 #        = the real walk (gyro .90/.82/.71 vs real .85/.70/.57, 12/64 falls). From v27 60k: shake U(0, 8) Nm, axes (1, .55, .2)
 #   v29 (2026-11-13): v28 60k / 114k: real-repro falls 12 -> 4-6 /64 but back -.015, turn .12-.20 (v26 again): the
 #        shake-driven trunk rate made the body_ang_vel penalty pay for walking -> body_ang_vel -0.2 -> -0.05, turn tracking 2 -> 3
-_PROFILES = ("v10", "v11", "v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29")
+#   v30 (2026-11-13): v27 + hip_yaw encoder bias U(+-0.10) rad. Real v27 60k (161844) turned CW at .41 / .52 rad/s on
+#        forward / back and -.32 on a +.29 turn command (= no forward / back progress, user); leg odometry of the real stride
+#        .039 / -.035 m/s = sim. Sim v27 60k with both hip_yaw encoders +0.06 rad: wz -.25 / -.29, turn +.3 -> -.03 (same)
+_PROFILES = ("v10", "v11", "v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29", "v30")
 if ARTI_D1_VEL_PROFILE not in _PROFILES:
     raise ValueError(f"ARTI_D1_VEL_PROFILE must be one of {_PROFILES}, got {ARTI_D1_VEL_PROFILE}")
 _V21 = ARTI_D1_VEL_PROFILE == "v21"
-_V26 = ARTI_D1_VEL_PROFILE in ("v26", "v27", "v28", "v29")  # v27 = v26 with milder kd / shake randomisation, v28 builds on v27
-_V27 = ARTI_D1_VEL_PROFILE in ("v27", "v28", "v29")
+_V26 = ARTI_D1_VEL_PROFILE in ("v26", "v27", "v28", "v29", "v30")  # v27 = v26 with milder kd / shake randomisation, v28 builds on v27
+_V27 = ARTI_D1_VEL_PROFILE in ("v27", "v28", "v29", "v30")
+_V30 = ARTI_D1_VEL_PROFILE == "v30"
 _V28 = ARTI_D1_VEL_PROFILE in ("v28", "v29")
 _V29 = ARTI_D1_VEL_PROFILE == "v29"
-_V25 = ARTI_D1_VEL_PROFILE in ("v25", "v26", "v27", "v28", "v29")  # v26 builds on v25
+_V25 = ARTI_D1_VEL_PROFILE in ("v25", "v26", "v27", "v28", "v29", "v30")  # v26 builds on v25
 _V24 = ARTI_D1_VEL_PROFILE == "v24"
-_V23 = ARTI_D1_VEL_PROFILE in ("v23", "v24", "v25", "v26", "v27", "v28", "v29")  # v24 / v25 build on v23
-_V22 = ARTI_D1_VEL_PROFILE in ("v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29")  # v23 builds on v22
-_V20 = ARTI_D1_VEL_PROFILE in ("v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29")  # v21 / v22 build on v20
+_V23 = ARTI_D1_VEL_PROFILE in ("v23", "v24", "v25", "v26", "v27", "v28", "v29", "v30")  # v24 / v25 build on v23
+_V22 = ARTI_D1_VEL_PROFILE in ("v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29", "v30")  # v23 builds on v22
+_V20 = ARTI_D1_VEL_PROFILE in ("v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29", "v30")  # v21 / v22 build on v20
 _V19 = ARTI_D1_VEL_PROFILE == "v19"
-_V18 = ARTI_D1_VEL_PROFILE in ("v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29")  # v19 builds on v18
-_V13 = ARTI_D1_VEL_PROFILE in ("v13", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29")  # v17 adds the v13 realism
-_V16 = ARTI_D1_VEL_PROFILE in ("v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29")  # v17 builds on v16
-_V15 = ARTI_D1_VEL_PROFILE in ("v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29")  # v16 builds on v15
-_V14 = ARTI_D1_VEL_PROFILE in ("v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29")  # v15 builds on v14
-_V12 = ARTI_D1_VEL_PROFILE in ("v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29")  # v13 / v14 build on v12
-_V11 = ARTI_D1_VEL_PROFILE in ("v11", "v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29")  # v12 builds on v11
+_V18 = ARTI_D1_VEL_PROFILE in ("v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29", "v30")  # v19 builds on v18
+_V13 = ARTI_D1_VEL_PROFILE in ("v13", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29", "v30")  # v17 adds the v13 realism
+_V16 = ARTI_D1_VEL_PROFILE in ("v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29", "v30")  # v17 builds on v16
+_V15 = ARTI_D1_VEL_PROFILE in ("v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29", "v30")  # v16 builds on v15
+_V14 = ARTI_D1_VEL_PROFILE in ("v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29", "v30")  # v15 builds on v14
+_V12 = ARTI_D1_VEL_PROFILE in ("v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29", "v30")  # v13 / v14 build on v12
+_V11 = ARTI_D1_VEL_PROFILE in ("v11", "v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29", "v30")  # v12 builds on v11
 ARTI_D1_VEL_ACTION_HISTORY = 1 if _V11 else 3
 # actor: base ang vel (3) + projected gravity (3) + leg joint pos rel (10) + leg joint vel (10) + last N actions (10 N)
 # + command (3, always last)
@@ -265,6 +269,8 @@ class ArtiD1VelEnvCfg(DirectRLEnvCfg):
     imu_delay_per_step = not _V11  # v10 (Open Duck Mini 0-3 steps every step); False = drawn per episode
     joint_vel_delay_steps = 1  # Dynamixel present velocity is ~1 control period old
     encoder_bias_range = 0.015  # rad, per env, actor joint pos only
+    encoder_offset_fixed = ()  # eval what-if: fixed leg encoder offsets (rad, leg action order), e.g. hip_yaw calibration error
+    encoder_bias_hip_yaw = 0.10 if _V30 else 0.0  # v30: per-env hip_yaw encoder bias U(+-0.10) rad (real: steady CW yaw .4-.5 rad/s = both hip_yaw zeros off ~0.06-0.1)
     # v22 real2sim (2026-11-12): replaying the real robot's actions open loop gives the same joint motion in sim (7-13 Hz
     # rms .0106 vs .0108 rad) but 2.4x less trunk gyro (.25 vs .60 rad/s): flex / play outside the encoders and the IMU
     # mount. The policy fed that back (gyro ~50 % of its 10 Hz action) -> ~10 Hz standing buzz on the robot (v12, v20).

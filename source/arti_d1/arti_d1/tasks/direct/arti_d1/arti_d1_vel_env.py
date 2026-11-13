@@ -119,6 +119,10 @@ class ArtiD1VelEnv(DirectRLEnv):
 
         # observation corruption state (actor only)
         self.encoder_bias = torch.empty(n, nl, device=dev).uniform_(-self.cfg.encoder_bias_range, self.cfg.encoder_bias_range)
+        if self.cfg.encoder_bias_hip_yaw > 0.0:  # v30: hip_yaw servo zero error (leg order 0 / 1 = left / right hip_yaw)
+            self.encoder_bias[:, :2] = torch.empty(n, 2, device=dev).uniform_(-self.cfg.encoder_bias_hip_yaw, self.cfg.encoder_bias_hip_yaw)
+        # eval what-if: fixed per-joint encoder offset (rad, leg action order) = servo calibration error; the joint sits at -offset
+        self.enc_fixed = torch.tensor(self.cfg.encoder_offset_fixed or [0.0] * nl, device=dev, dtype=torch.float).expand(n, nl)
         axis = torch.nn.functional.normalize(torch.randn(n, 3, device=dev), dim=-1)
         angle = torch.empty(n, device=dev).uniform_(0.0, math.radians(self.cfg.imu_misalign_deg))
         self.imu_misalign = quat_from_angle_axis(angle, axis)
@@ -361,7 +365,7 @@ class ArtiD1VelEnv(DirectRLEnv):
             (
                 u(imu_seen[:, :3], self.cfg.noise_ang_vel),
                 u(imu_seen[:, 3:], self.cfg.noise_gravity),
-                u(q_rel + self.encoder_bias, self.cfg.noise_joint_pos),
+                u(q_rel + self.encoder_bias + self.enc_fixed, self.cfg.noise_joint_pos),
                 u(jv_seen, self.cfg.noise_joint_vel),
                 self.act_hist.flatten(1),
                 self.commands,

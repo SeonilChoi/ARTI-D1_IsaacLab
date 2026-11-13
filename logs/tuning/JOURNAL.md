@@ -1941,3 +1941,16 @@ v25 stopped at 168k (PID 1478140 verified). v26 run 2026-11-13_12-29-10 from v25
   tracking for survival. Policy-side robustness has hit its limit with this model; v27 60k (shake 6 Nm roll-heavy) is the best compromise.
 - next: check the real robot hardware for the source of the trunk rocking outside the leg encoders (pelvis / hip bracket play, servo horn
   backlash, frame flex), then re-log.
+
+## 2026-11-13 22:50 — real v27 60k: "forward / back does not work" = steady CW yaw → v30 (hip_yaw encoder bias)
+- user: marble floor, not slippery; hardware (IMU mount, pelvis/hip play, frame flex) all fine; v27 60k does not go forward / back
+- real log 161844, mean gyro z by command: vx>0 -.41, vx<0 -.52, wz +.29 -> -.32, wz -.14 -> -.37 rad/s (stand +.03): the robot spins
+  clockwise ~25 deg/s whatever the command. Earlier logs: 083120 (v23) -.50, 112410 (v25) -.11 / +.03; 11-10 logs turn +.3 -> +.20 (ok)
+- FK leg odometry of the real stride: fwd +.039, back -.035 m/s (sim v27 .019-.038): the stride is there, the heading is not
+- trunk rate vs flat-stance-sole FK (3-7 Hz): roll IMU/FK 1.3-1.5x, pitch ~1.5x, yaw ~1x
+- low friction (effective 0.5) does not change sim v27 60k (fwd .054, back -.055)
+- sim v27 60k kd .7 + fixed encoder offsets: hip_yaw both +0.06 rad -> fwd wz -.25, back -.29, turn +.3 -> -.03 (= the real symptom);
+  hip_yaw opposite, hip_pitch L-R, knee L-R +-0.06 -> no yaw drift. kd .7 + shake 8 + hip_yaw +0.08: 4/64, wz -.30 / -.35, turn -.08
+- new eval knob encoder_offset_fixed (leg order); v30 = v27 + per-env hip_yaw encoder bias U(+-0.10) rad (others +-0.015)
+  from v27 60k, seed 7, offset 1566000; run 2026-11-13_22-52-08_ppo_torch, log logs/train/train_vel_microduck_v30_yawbias.log
+- user to check: at the default pose, do both feet point straight forward (both hip_yaw horns a few deg off in the same direction)?
