@@ -62,25 +62,29 @@ ARTI_D1_VEL_PROFILE = os.environ.get("ARTI_D1_VEL_PROFILE", "v10")
 #        falls). Training: kd x U(0.5, 0.9), shake U(0, 10) Nm
 #   v27 (2026-11-13): v26 78k kept the forward walk and cut the real-repro falls 6/64 -> 1/64, but backward fell to
 #        -.016 m/s (v25 -.067) and turn to .10 rad/s (.28): kd x U(0.65, 1.0), shake U(0, 6) Nm
-_PROFILES = ("v10", "v11", "v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27")
+#   v28 (2026-11-13): real v27 60k walk (161844): roll 3-7 Hz gyro 1.05 -> .70 (yaw .57 -> .35) vs v25, but pitch .26 -> .45;
+#        replay again fits kd x0.7 (pos/q_des .51-.54 vs real .54). Closed loop v27 60k, kd .7 + shake 10 Nm axes (1, .5, .2)
+#        = the real walk (gyro .90/.82/.71 vs real .85/.70/.57, 12/64 falls). From v27 60k: shake U(0, 8) Nm, axes (1, .55, .2)
+_PROFILES = ("v10", "v11", "v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28")
 if ARTI_D1_VEL_PROFILE not in _PROFILES:
     raise ValueError(f"ARTI_D1_VEL_PROFILE must be one of {_PROFILES}, got {ARTI_D1_VEL_PROFILE}")
 _V21 = ARTI_D1_VEL_PROFILE == "v21"
-_V26 = ARTI_D1_VEL_PROFILE in ("v26", "v27")  # v27 = v26 with milder kd / shake randomisation
-_V27 = ARTI_D1_VEL_PROFILE == "v27"
-_V25 = ARTI_D1_VEL_PROFILE in ("v25", "v26", "v27")  # v26 builds on v25
+_V26 = ARTI_D1_VEL_PROFILE in ("v26", "v27", "v28")  # v27 = v26 with milder kd / shake randomisation, v28 builds on v27
+_V27 = ARTI_D1_VEL_PROFILE in ("v27", "v28")
+_V28 = ARTI_D1_VEL_PROFILE == "v28"
+_V25 = ARTI_D1_VEL_PROFILE in ("v25", "v26", "v27", "v28")  # v26 builds on v25
 _V24 = ARTI_D1_VEL_PROFILE == "v24"
-_V23 = ARTI_D1_VEL_PROFILE in ("v23", "v24", "v25", "v26", "v27")  # v24 / v25 build on v23
-_V22 = ARTI_D1_VEL_PROFILE in ("v22", "v23", "v24", "v25", "v26", "v27")  # v23 builds on v22
-_V20 = ARTI_D1_VEL_PROFILE in ("v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27")  # v21 / v22 build on v20
+_V23 = ARTI_D1_VEL_PROFILE in ("v23", "v24", "v25", "v26", "v27", "v28")  # v24 / v25 build on v23
+_V22 = ARTI_D1_VEL_PROFILE in ("v22", "v23", "v24", "v25", "v26", "v27", "v28")  # v23 builds on v22
+_V20 = ARTI_D1_VEL_PROFILE in ("v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28")  # v21 / v22 build on v20
 _V19 = ARTI_D1_VEL_PROFILE == "v19"
-_V18 = ARTI_D1_VEL_PROFILE in ("v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27")  # v19 builds on v18
-_V13 = ARTI_D1_VEL_PROFILE in ("v13", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27")  # v17 adds the v13 realism
-_V16 = ARTI_D1_VEL_PROFILE in ("v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27")  # v17 builds on v16
-_V15 = ARTI_D1_VEL_PROFILE in ("v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27")  # v16 builds on v15
-_V14 = ARTI_D1_VEL_PROFILE in ("v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27")  # v15 builds on v14
-_V12 = ARTI_D1_VEL_PROFILE in ("v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27")  # v13 / v14 build on v12
-_V11 = ARTI_D1_VEL_PROFILE in ("v11", "v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27")  # v12 builds on v11
+_V18 = ARTI_D1_VEL_PROFILE in ("v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28")  # v19 builds on v18
+_V13 = ARTI_D1_VEL_PROFILE in ("v13", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28")  # v17 adds the v13 realism
+_V16 = ARTI_D1_VEL_PROFILE in ("v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28")  # v17 builds on v16
+_V15 = ARTI_D1_VEL_PROFILE in ("v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28")  # v16 builds on v15
+_V14 = ARTI_D1_VEL_PROFILE in ("v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28")  # v15 builds on v14
+_V12 = ARTI_D1_VEL_PROFILE in ("v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28")  # v13 / v14 build on v12
+_V11 = ARTI_D1_VEL_PROFILE in ("v11", "v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28")  # v12 builds on v11
 ARTI_D1_VEL_ACTION_HISTORY = 1 if _V11 else 3
 # actor: base ang vel (3) + projected gravity (3) + leg joint pos rel (10) + leg joint vel (10) + last N actions (10 N)
 # + command (3, always last)
@@ -273,9 +277,9 @@ class ArtiD1VelEnvCfg(DirectRLEnvCfg):
     actuator_kd_random = (0.65, 1.0) if _V27 else (0.5, 0.9) if _V26 else (1.0, 1.0)  # per-env multiplier on the leg kd (on top of actuator_kd_scale)
     # trunk shake: per episode a pelvis torque amp * axes * U(0.5, 1) * sin(2 pi f t + phase), f in trunk_shake_freq_hz,
     # body frame, only while the command norm > trunk_shake_cmd_min (the real rocking comes with stepping)
-    trunk_shake_torque = (0.0, 6.0) if _V27 else (0.0, 10.0) if (_V24 or _V26) else (0.0, 0.0)  # Nm amplitude range (replay fit ~8-10 Nm roll)
+    trunk_shake_torque = (0.0, 8.0) if _V28 else (0.0, 6.0) if _V27 else (0.0, 10.0) if (_V24 or _V26) else (0.0, 0.0)  # Nm amplitude range (replay fit ~8-10 Nm roll)
     trunk_shake_freq_hz = (3.0, 6.0)
-    trunk_shake_axes = (1.0, 0.15, 0.3)  # roll, pitch, yaw weights (real walking replay: roll 3x, yaw 2.5x, pitch 1x)
+    trunk_shake_axes = (1.0, 0.55, 0.2) if _V28 else (1.0, 0.15, 0.3)  # roll, pitch, yaw weights (real walking replay: roll 3x, yaw 2.5x, pitch 1x)
     trunk_shake_walk_only = True
     trunk_shake_cmd_min = 0.015
     imu_misalign_deg = 6.0  # random-axis IMU mounting rotation per env, actor only

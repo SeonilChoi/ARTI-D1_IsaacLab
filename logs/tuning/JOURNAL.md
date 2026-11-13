@@ -1910,3 +1910,14 @@ v25 stopped at 168k (PID 1478140 verified). v26 run 2026-11-13_12-29-10 from v25
 - standpush 0/32, buzz 0/32, video clean, hip_roll q_des clamped L .39 / R .57, joint max .196
 - 120k is worse than 60k on falls and turn; the turn tracking keeps sliding -> training stopped, controller keeps v27 60k (1b9a549).
   Next: wait for the real log of v27 60k and re-fit (real2sim) before another run.
+
+## 2026-11-13 16:25 — real v27 60k log (161844) → real2sim → v28
+- real walk (fwd/back 0.1 m/s, turn ±0.1-0.3, ~85 s): gyro std at vx .1 ≈ .85/.70/.57 (x/y/z); 3.3 Hz step rhythm
+- replay 3-7 Hz gyro, real v27 vs real v25 (112410): roll .67-.71 vs 1.05 (-33 %), yaw .31-.40 vs .57 (-40 %), **pitch .40-.52 vs .26 (up)**
+- replay again fits kd x0.7 (pos/q_des sim .51-.54 vs real .54; kd 1.0 .40). Open-loop sim gyro .26/.27/.23 -> trunk gap roll 2.7x, pitch 1.7x
+- closed loop v27 60k, kd .7 (real: .85/.70/.57):
+  - shake 8 axes (1,.6,.3): 7/64 falls, gyro .67/.74/.78
+  - shake 10 axes (1,.8,.3): 23/64, gyro .81/1.27/.97
+  - shake 10 axes (1,.5,.2): 12/64, gyro .90/.82/.71  <- new real-repro condition
+- v28 = v27 + shake U(0,8) Nm, axes (1,.55,.2) (was (1,.15,.3)); from v27 60k, seed 7, offset 1566000
+  - run 2026-11-13_16-26-14_ppo_torch, log logs/train/train_vel_microduck_v28_pitchshake.log
