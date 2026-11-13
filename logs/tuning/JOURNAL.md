@@ -1885,3 +1885,12 @@ v25 stopped at 168k (PID 1478140 verified). v26 run 2026-11-13_12-29-10 from v25
 - 12:33 user: give up sideways, forward / back / turn only. v26 restarted (first v26 run 12-29-10 stopped at ~4k) with
   command_lin_y_range (0, 0) and lateral_fraction 0 (lateral tracking now just keeps vy = 0). Run 2026-11-13_12-33-02,
   PID 1510960, from v25 agent_168000. Controller command_max vy back to 0.
+
+## 2026-11-13 13:55 — v26 78k eval → stopped, v27 (milder kd / shake)
+- v26 (kd x U(0.5,0.9), shake U(0,10) Nm, no sideways) from v25 168k, evaluated at 78k (and 30k):
+  - nominal (kd 1, shake 0): falls 0/64, fwd .053, **back -.016**, **turn .099** (30k: .035 / -.022 / .080)
+  - real-repro (kd .7, shake 8): falls **1/64** (v25 96k 6/64), gyro fwd .57/.28/.59 (v25 .87/.47/.70)
+  - standpush 0/32, buzz 0/32, video clean, hip_roll q_des clamped L .42 / R .35
+- start point v25 168k: v25 profile fwd .059 back -.067 turn .279; same under v26 nominal eval (.060/-.067/.271) → the eval is fine, v26 training lost back/turn
+- verdict: robust but back/turn unusable → not deployed. v27 = v26 with kd x U(0.65,1.0), shake U(0,6) Nm, from v25 168k, seed 7, offset 1506000
+  - run 2026-11-13_13-55-28_ppo_torch, log logs/train/train_vel_microduck_v27_mildkdshake.log
