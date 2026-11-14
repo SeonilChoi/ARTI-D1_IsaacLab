@@ -2065,3 +2065,10 @@ v25 stopped at 168k (PID 1478140 verified). v26 run 2026-11-13_12-29-10 from v25
 - Like-for-like v31c 90k meets every gate and beats v30 60k on the real condition (falls 0 vs 1/64, fwd .072 vs .052,
   back -.056 vs -.044; turn .185 vs .207, drift <= .022) -> deployed agent_vel.onnx (md5 31eb3521...), humanoid_controller
   arti-d1-2830k 8105718. Next: real log with v31c 90k (forward / back progress, heading drift).
+
+## 2026-11-14 16:25 — v31e (user: robot not available, keep training)
+- v31e = v31d settings + adr_fall_up .05 -> .08 (push .4 keeps falls at .05-.07 per env-episode; v31d never widened).
+  From v31d agent_102000 (adapted to push .4), adr_level_init .2, adr_calib_windows 4, seed 7, offset 1818000;
+  run 2026-11-14_16-24-15_ppo_torch, log logs/train/train_vel_microduck_v31e_adr.log. First window: falls .054.
+- Eval suite adds standpush at the real kd x0.7, 64 envs (like-for-like gate; the v31 default eval kd is U(.5, .95)).
+- Robot keeps v31c 90k (8105718).

@@ -332,7 +332,7 @@ class ArtiD1VelEnvCfg(DirectRLEnvCfg):
     adr_push = (0.4, 0.4)  # push velocity m/s
     adr_window_steps = 4800
     adr_step = 0.05
-    adr_fall_up = 0.05
+    adr_fall_up = 0.08  # v31e: with pushes at .4 falls sit at .05-.07 per env-episode (v31d stalled at .05)
     adr_fall_down = 0.15
     adr_lin_min = 0.70  # absolute gate (used when adr_calib_windows = 0)
     adr_ang_min = 0.52
