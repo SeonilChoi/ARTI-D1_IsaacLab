@@ -472,6 +472,8 @@ class ArtiD1VelEnv(DirectRLEnv):
         died = self.reset_terminated.float()
         ang_err = torch.square(self.commands[:, 2] - ang_b[:, 2]) + torch.sum(torch.square(ang_b[:, :2]), dim=1)
         r_ang = torch.exp(-ang_err / cfg.track_ang_vel_std**2)
+        # v34: extra track_ang weight on turn-command envs
+        w_ang = 1.0 + (cfg.turn_track_mult - 1.0) * (self.commands[:, 2].abs() > 0.15).float()
         r_up = torch.exp(-torch.sum(torch.square(grav_b[:, :2]), dim=1) / cfg.upright_std**2)
 
         q = self.robot.data.joint_pos.torch
@@ -507,7 +509,7 @@ class ArtiD1VelEnv(DirectRLEnv):
         w_rate = self._stage(cfg.action_rate_stages, step)
         terms = {
             "track_lin_vel": cfg.track_lin_vel_weight * w_lin * r_lin,
-            "track_ang_vel": cfg.track_ang_vel_weight * r_ang,
+            "track_ang_vel": cfg.track_ang_vel_weight * w_ang * r_ang,
             "track_lat_vel": cfg.track_lat_vel_weight * r_lat,
             "alive": cfg.alive_weight * (1.0 - died),
             # one-off on the falling step: weight / step_dt so that x step_dt below gives the raw weight

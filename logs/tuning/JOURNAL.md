@@ -2157,3 +2157,16 @@ v25 stopped at 168k (PID 1478140 verified). v26 run 2026-11-13_12-29-10 from v25
 - TB track_lin flat ~1.10-1.13 (x2 back weight included); track_ang keeps sliding .830 → .703 (21k) → .667 (64k) → .664 (108k),
   vs v32 .77-.81 — turn is paying for backward. If 60k/90k turn < .18 real, next run trims backward mult (1.5) and/or raises turn weight.
 - Launched evalall33.sh 90000, 60000.
+
+## 2026-11-15 ~00:35 — v33 60k / 90k eval; v33 stopped → v34 (back x1.5 + turn x1.5, 120k)
+| ckpt | nominal fall/fwd/back/turn | real fall/fwd/back/turn (fwd wz) | push/pushkd/buzz |
+|---|---|---|---|
+| v33 30k | 1/64 .061 -.051 .170 | 4/64 .066 -.072 .175 (-.019) | 1/32 0/64 0/32 |
+| v33 60k | 0/64 .073 -.041 .181 | 2/64 .074 -.052 .168 (+.002) | 0/32 0/64 1/32 |
+| v33 90k | 0/64 .076 -.038 .142 | 1/64 .077 -.049 .110 (-.042) | 0/32 0/64 1/32 |
+- The x2 backward gain at 30k washed out by 60k (real back -.072 → -.052 → -.049) while turn collapsed (.175 → .110), matching TB track_ang .83 → .66.
+  Gate fails on turn and buzz; v33 stopped at 108k (pid 1814101, args/env checked).
+- Note: track_ang_vel_weight is 3.0 only for v29 (_V29 == "v29"), so v30-v33 used 2.0.
+- v34 = v32 + track_lin x1.5 on backward-command envs + track_ang x1.5 on turn-command envs (|cmd wz| > .15). From v31c 90k,
+  offset 1716000, seed 7, 120k timesteps (every resume run peaked before 120k). PID 1835475, run 2026-11-15_00-36-08_ppo_torch,
+  log logs/train/train_vel_microduck_v34_backturn.log, eval evalall34.sh.
