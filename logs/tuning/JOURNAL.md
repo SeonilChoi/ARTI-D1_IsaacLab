@@ -2175,3 +2175,13 @@ v25 stopped at 168k (PID 1478140 verified). v26 run 2026-11-13_12-29-10 from v25
 - PID 1835475 alive (PROFILE=v34), 52 min, ETA ~40 min.
 - TB (both weighted, not comparable to v32/v33): track_lin 1.093 → 1.037 → .975 (still sliding); track_ang .933 → .854 → .842 (flat since 17k).
 - Launched evalall34.sh 30000, 60000.
+
+## 2026-11-15 ~01:45 — v34 30k / 60k eval (gate: FAIL on turn only, keep v31c 90k)
+| ckpt | nominal fall/fwd/back/turn | real fall/fwd/back/turn (fwd wz) | push/pushkd/buzz |
+|---|---|---|---|
+| v34 30k | 0/64 .071 -.042 .180 | 0/64 .060 -.069 .174 (-.006) | 1/32 0/64 0/32 |
+| v34 60k | 1/64 .070 -.042 .173 | 0/64 .065 -.065 .171 (-.019) | 0/32 0/64 0/32 |
+| v31c 90k | 0/64 .073 -.039 .196 | 0/64 .072 -.056 .185 (-.022) | 0/32 0/64 0/32 |
+- Best balance yet: real 0/64, backward -.065..-.069 (v31c -.056) held to 60k (unlike v33), pushkd/buzz clean.
+  Only miss: real turn .171-.174 < .18 (and forward .060-.065 < v31c .072). Not deployed.
+- Eval 90k / 120k when training ends (~02:10).
