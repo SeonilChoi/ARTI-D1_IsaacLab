@@ -2114,3 +2114,8 @@ v25 stopped at 168k (PID 1478140 verified). v26 run 2026-11-13_12-29-10 from v25
 - nominal 0/64, fwd .071, back -.033, turn .179. real 0/64, fwd .079 (wz -.024), back -.041, turn .163. push 0/32, pushkd 0/64, buzz 1/32.
 - Falls fixed vs 30k/60k, forward best yet, but real backward slides again (-.058 → -.050 → -.041) and turn stays <.18; buzz 1/32 on all three v32 ckpts.
 - Backward bucket alone does not stop the backward-for-stability trade. Next: eval 120k; if back keeps sliding, consider stopping v32.
+
+## 2026-11-14 22:46 — v32 hourly check (184k/240k)
+- PID 1752844 alive (PROFILE=v32), 2h08m, ETA ~40 min.
+- TB track_lin .904 (30k) → .913 (92k) → .943 (184k); track_ang .736 → .774 → .810 (best of run); total reward 127.9.
+- Launched evalall32.sh 180000, 150000, 120000 (sequential, background).
