@@ -2146,3 +2146,8 @@ v25 stopped at 168k (PID 1478140 verified). v26 run 2026-11-13_12-29-10 from v25
 - TB track_lin 1.176 → 1.09..1.14 (includes the x2 backward weight, not comparable to v32); track_ang .830 → .718 (8k) → .698 (33k),
   lower than v32 at the same point (.736-.759) — turn may be paying for backward. Watch.
 - Launched evalall33.sh 30000.
+
+## 2026-11-14 ~23:45 — v33 30k eval (gate: FAIL, keep v31c 90k)
+- nominal 1/64, fwd .061, back **-.051**, turn .170. real 4/64, fwd .066 (wz -.019), back **-.072**, turn .175. push 1/32, pushkd 0/64, buzz 0/32.
+- Backward weight works: nominal back -.051 (v31c -.039, v32 best -.040), real back -.072 (v31c -.056) — best backward of any run.
+- But real falls 4/64 and turn .175 <.18 (v32 30k also had 4/64, fixed by 90k). Continue; eval 60k/90k.
