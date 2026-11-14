@@ -2119,3 +2119,12 @@ v25 stopped at 168k (PID 1478140 verified). v26 run 2026-11-13_12-29-10 from v25
 - PID 1752844 alive (PROFILE=v32), 2h08m, ETA ~40 min.
 - TB track_lin .904 (30k) → .913 (92k) → .943 (184k); track_ang .736 → .774 → .810 (best of run); total reward 127.9.
 - Launched evalall32.sh 180000, 150000, 120000 (sequential, background).
+
+## 2026-11-14 ~23:10 — v32 120k / 150k / 180k eval (gate: FAIL, keep v31c 90k)
+| ckpt | nominal fall/fwd/back/turn | real fall/fwd/back/turn (fwd wz) | push/pushkd/buzz |
+|---|---|---|---|
+| v32 120k | 0/64 .068 -.035 .194 | 3/64 .066 -.046 .175 (-.045) | 0/32 0/64 0/32 |
+| v32 150k | 0/64 .075 -.036 .155 | 1/64 .073 -.051 .146 (-.028) | 0/32 1/64 1/32 |
+| v32 180k | 0/64 .066 -.035 .194 | 1/64 .064 -.046 .183 (-.030) | 0/32 1/64 0/32 |
+- 180k closest: passes falls/back/turn/drift/buzz but pushkd 1/64, and worse than v31c 90k on fwd/back. Backward stabilised around -.046..-.051 (no further slide after 90k).
+- Training at 205k/240k, ends ~23:40. Will eval 210k/240k, then decide next run.
