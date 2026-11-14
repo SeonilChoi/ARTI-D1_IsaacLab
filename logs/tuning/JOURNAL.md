@@ -2170,3 +2170,8 @@ v25 stopped at 168k (PID 1478140 verified). v26 run 2026-11-13_12-29-10 from v25
 - v34 = v32 + track_lin x1.5 on backward-command envs + track_ang x1.5 on turn-command envs (|cmd wz| > .15). From v31c 90k,
   offset 1716000, seed 7, 120k timesteps (every resume run peaked before 120k). PID 1835475, run 2026-11-15_00-36-08_ppo_torch,
   log logs/train/train_vel_microduck_v34_backturn.log, eval evalall34.sh.
+
+## 2026-11-15 01:28 — v34 hourly check (67k/120k)
+- PID 1835475 alive (PROFILE=v34), 52 min, ETA ~40 min.
+- TB (both weighted, not comparable to v32/v33): track_lin 1.093 → 1.037 → .975 (still sliding); track_ang .933 → .854 → .842 (flat since 17k).
+- Launched evalall34.sh 30000, 60000.
