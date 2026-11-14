@@ -321,7 +321,8 @@ class ArtiD1VelEnvCfg(DirectRLEnvCfg):
     adr_enable = _V31
     adr_level_init = 0.0
     adr_kd = ((0.65, 0.75), (0.5, 0.95))  # leg kd multiplier (real replay fit x0.7)
-    adr_shake = ((6.0, 8.0), (0.0, 10.0))  # trunk shake Nm (real closed-loop fit ~8)
+    # v31c: shake starts low (0-4 Nm): a constant 6-8 Nm start (v31b) cost backward (-.015 nominal) and it never came back
+    adr_shake = ((0.0, 4.0), (0.0, 10.0))  # trunk shake Nm (real closed-loop fit ~8; a stand-in torque, not identified physics)
     adr_gyro_hf = ((1.5, 2.5), (0.5, 3.0))  # gyro high-pass gain (real fit 1.5-2.5)
     # v31b: hip_yaw stays wide from the start - the real zero error is unknown (v31 30k at +-.03 lost the v30 drift fix:
     # real-repro wz -.07 / -.095, turn .064)
@@ -338,6 +339,7 @@ class ArtiD1VelEnvCfg(DirectRLEnvCfg):
     # the forced shake caps r_ang) reached during the first adr_calib_windows windows at the start level
     adr_calib_windows = 8
     adr_keep_frac = 0.95
+    adr_drop_frac = 0.85  # v31c: narrow when backward / turn tracking falls below this fraction of its reference
 
     def __post_init__(self):
         if _V25:  # flat-sole stance: legs vertical

@@ -134,7 +134,7 @@ class ArtiD1VelEnv(DirectRLEnv):
         self.push_vel = self.cfg.adr_push[0] if self.cfg.adr_enable else self.cfg.push_velocity
         self.adr_t, self.adr_falls, self.adr_ends, self.adr_lin, self.adr_ang = 0, 0.0, 0.0, 0.0, 0.0
         self.adr_last_fall = 0.0
-        self.adr_win, self.adr_ref_lin, self.adr_ref_yaw = 0, 0.0, 0.0  # v31b: gate thresholds calibrated at level 0
+        self.adr_win, self.adr_ref, self.adr_acc, self.adr_last = 0, {}, {}, {}  # gate references calibrated at the start level
         # IMU readings, newest first: index d = d control steps old
         self.imu_hist = torch.zeros(n, self.cfg.imu_delay_max_steps + 1, 6, device=dev)
         # v22 structural gyro vibration: first-order high-pass of the pelvis gyro, gain per env (cfg.gyro_hf_gain_range)
@@ -240,37 +240,42 @@ class ArtiD1VelEnv(DirectRLEnv):
         L = self.adr_level
         return a_lo + L * (b_lo - a_lo), a_hi + L * (b_hi - a_hi)
 
-    def _adr_update(self, lin: torch.Tensor, ang: torch.Tensor):
-        """v31: accumulate tracking per step; every adr_window_steps widen / narrow the randomization level."""
+    def _adr_update(self, metrics: dict):
+        """v31: accumulate per-step tracking metrics {name: (sum, count)}; every adr_window_steps widen / narrow the level.
+
+        v31c: lin = all envs track_lin, yaw = all envs yaw-only tracking, back = r_lin of backward-command envs, turn = yaw
+        tracking of turn-command envs (v31b lost backward while the mean lin tracking stayed flat)."""
         cfg = self.cfg
         self.adr_t += 1
-        self.adr_lin = self.adr_lin + lin.detach()
-        self.adr_ang = self.adr_ang + ang.detach()
+        for k, (sm, ct) in metrics.items():
+            a = self.adr_acc.setdefault(k, [0.0, 0.0])
+            a[0] = a[0] + sm.detach()
+            a[1] = a[1] + ct.detach()
         if self.adr_t % cfg.adr_window_steps:
             return
         w = cfg.adr_window_steps
         # falls per env-episode (ends are mostly falls inside a window; timeouts come in 20 s waves)
         fall = float(self.adr_falls) * self.max_episode_length / (self.num_envs * w)
-        lin_m, ang_m = float(self.adr_lin) / w, float(self.adr_ang) / w
+        m = {k: float(sm) / max(float(ct), 1.0) for k, (sm, ct) in self.adr_acc.items()}
         self.adr_win += 1
-        if self.adr_win <= cfg.adr_calib_windows:
-            # calibration at the start level: the gate is "keep >= adr_keep_frac of what was reached here"
-            self.adr_ref_lin, self.adr_ref_yaw = max(self.adr_ref_lin, lin_m), max(self.adr_ref_yaw, ang_m)
-            lin_min, yaw_min = float("inf"), float("inf")
-        elif cfg.adr_calib_windows > 0:
-            lin_min, yaw_min = cfg.adr_keep_frac * self.adr_ref_lin, cfg.adr_keep_frac * self.adr_ref_yaw
-        else:
-            lin_min, yaw_min = cfg.adr_lin_min, cfg.adr_ang_min
-        if fall >= cfg.adr_fall_down:
+        calib = self.adr_win <= cfg.adr_calib_windows
+        if calib:  # calibration at the start level: the gate is "keep >= adr_keep_frac of what was reached here"
+            for k, v in m.items():
+                self.adr_ref[k] = max(self.adr_ref.get(k, 0.0), v)
+        keep = (not calib) and all(v >= cfg.adr_keep_frac * self.adr_ref[k] for k, v in m.items())
+        drop = (not calib) and any(m[k] < cfg.adr_drop_frac * self.adr_ref[k] for k in ("back", "turn") if k in m)
+        if fall >= cfg.adr_fall_down or drop:
             self.adr_level = max(0.0, self.adr_level - cfg.adr_step)
-        elif fall <= cfg.adr_fall_up and lin_m >= lin_min and ang_m >= yaw_min:
+        elif fall <= cfg.adr_fall_up and keep:
             self.adr_level = min(1.0, self.adr_level + cfg.adr_step)
         a, b = cfg.adr_push
         self.push_vel = a + self.adr_level * (b - a)
         self.adr_last_fall = fall
-        print(f"[ADR] t {self.adr_t} fall {fall:.3f} ({float(self.adr_falls):.0f}/{float(self.adr_ends):.0f}) lin {lin_m:.3f} yaw {ang_m:.3f} (min {lin_min:.3f} / {yaw_min:.3f})"
+        self.adr_last = m
+        txt = " ".join(f"{k} {v:.3f}/{self.adr_ref.get(k, 0.0):.3f}" for k, v in m.items())
+        print(f"[ADR] t {self.adr_t} fall {fall:.3f} | {txt} (now/ref){' calib' if calib else ''}{' DROP' if drop else ''}"
               f" -> level {self.adr_level:.2f}", flush=True)
-        self.adr_falls, self.adr_ends, self.adr_lin, self.adr_ang = 0.0, 0.0, 0.0, 0.0
+        self.adr_falls, self.adr_ends, self.adr_acc = 0.0, 0.0, {}
 
     def _adr_reset(self, env_ids: torch.Tensor):
         """v31: per-env draws of the curriculum-ranged parameters at reset."""
@@ -533,7 +538,15 @@ class ArtiD1VelEnv(DirectRLEnv):
         })
         if self._adr_on():
             r_yaw = torch.exp(-torch.square(self.commands[:, 2] - ang_b[:, 2]) / cfg.track_ang_vel_std**2)
-            self._adr_update(terms["track_lin_vel"].mean(), r_yaw.mean())
+            n1 = torch.tensor(float(self.num_envs), device=self.device)
+            back = (self.commands[:, 0] < -0.05).float()
+            turn = (self.commands[:, 2].abs() > 0.15).float()
+            self._adr_update({
+                "lin": (r_lin.sum(), n1), "yaw": (r_yaw.sum(), n1),
+                "back": ((r_lin * back).sum(), back.sum()), "turn": ((r_yaw * turn).sum(), turn.sum()),
+            })
+            for k, v in self.adr_last.items():
+                log[f"Curriculum/adr_{k}"] = torch.tensor(v)
             log["Curriculum/dr_level"] = torch.tensor(self.adr_level)
             log["Curriculum/dr_fall_frac"] = torch.tensor(self.adr_last_fall)
         self.extras["log"] = log

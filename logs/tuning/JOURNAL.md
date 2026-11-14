@@ -2020,3 +2020,15 @@ v25 stopped at 168k (PID 1478140 verified). v26 run 2026-11-13_12-29-10 from v25
   (real back -.044, turn .207). Same pattern as v26/v28/v29: constant 6-8 Nm shake costs back / turn. Turn recovers as
   the level widens (shake low end 6 -> 3.6 Nm at L .4): 60k .087 -> 90k .121. The ADR gate looks at mean lin tracking,
   which is dominated by forward / standing -> it does not see the backward loss. Watching to 120k-150k before changing it.
+
+## 2026-11-14 12:45 — v31b 150k eval → stopped; v31c (backward / turn gates, low shake start)
+- v31b [ADR]: level .65 from ~115k, then stuck (falls .055-.064, between the .05 widen and .15 narrow gates); mean lin / yaw
+  flat (.68-.70 / .50-.51).
+- v31b 150k: nominal 0/64 fwd .063 back **-.005** turn .130; real 0/64 fwd .063 wz -.014, back **-.019** wz +.005, turn .143;
+  standpush / buzz 0/32. Backward kept degrading (60k -.015, 90k -.014, 150k -.005 nominal) while the gate saw nothing.
+- v31c: (1) gate metrics lin, yaw, back (r_lin of envs with cmd vx < -.05), turn (yaw tracking of envs with |cmd wz| > .15),
+  references = best over the first 8 windows, widen if all >= .95 ref and falls <= .05, narrow if falls >= .15 or back / turn
+  < .85 ref (adr_drop_frac); (2) shake start 0-4 Nm (end 0-10): the constant 6-8 Nm start is what cost backward;
+  kd / gyro hf / push curricula unchanged, hip_yaw +-.10 throughout. Logged Curriculum/adr_{lin,yaw,back,turn}.
+- From v30 60k, seed 7, offset 1626000; run 2026-11-14_12-45-01_ppo_torch, log logs/train/train_vel_microduck_v31c_adr.log.
+  First window (unweighted): lin .298, yaw .675, back .164, turn .584, falls .008.
