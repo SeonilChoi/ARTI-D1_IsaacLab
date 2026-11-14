@@ -2128,3 +2128,15 @@ v25 stopped at 168k (PID 1478140 verified). v26 run 2026-11-13_12-29-10 from v25
 | v32 180k | 0/64 .066 -.035 .194 | 1/64 .064 -.046 .183 (-.030) | 0/32 1/64 0/32 |
 - 180k closest: passes falls/back/turn/drift/buzz but pushkd 1/64, and worse than v31c 90k on fwd/back. Backward stabilised around -.046..-.051 (no further slide after 90k).
 - Training at 205k/240k, ends ~23:40. Will eval 210k/240k, then decide next run.
+
+## 2026-11-14 ~22:55 — v32 210k / 240k eval; v32 done (none beat v31c 90k) → v33 (backward track_lin x2)
+| ckpt | nominal fall/fwd/back/turn | real fall/fwd/back/turn (fwd wz) | push/pushkd/buzz |
+|---|---|---|---|
+| v32 210k | 0/64 .061 -.038 .198 | 0/64 .075 -.041 .174 (-.022) | 0/32 0/64 0/32 |
+| v32 240k | 0/64 .059 -.033 .189 | 4/64 .062 -.043 .192 (-.028) | 1/32 1/64 0/32 |
+- 210k passes falls / push / buzz / drift but turn .174 < .18 and back -.041 vs v31c -.056. No v32 ckpt beat v31c 90k; keep deployed.
+- v32 verdict: the 20 % backward bucket did not raise backward tracking (real back -.041..-.058, nominal -.033..-.040 ≈ v31c -.039).
+  More backward samples alone don't change the trade-off; the reward per backward sample has to be worth more.
+- v33 = v32 + track_lin reward x2 on envs with cmd vx < -0.05 (w_lin; ADR r_lin untouched). From v31c 90k, offset 1716000, seed 7.
+  PID 1814101, run 2026-11-14_22-55-56_ppo_torch, log logs/train/train_vel_microduck_v33_backw.log. Eval script evalall33.sh.
+- Running alongside an H1 training (pid 1782302, other project); GPU 9.7 GB, fits.

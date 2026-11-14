@@ -466,6 +466,8 @@ class ArtiD1VelEnv(DirectRLEnv):
 
         lin_err = torch.sum(torch.square(self.commands[:, :2] - lin_b[:, :2]), dim=1) + torch.square(lin_b[:, 2])
         r_lin = torch.exp(-lin_err / cfg.track_lin_vel_std**2)
+        # v33: extra track_lin weight on backward-command envs (r_lin itself stays unweighted for the ADR gate)
+        w_lin = 1.0 + (cfg.backward_track_mult - 1.0) * (self.commands[:, 0] < -0.05).float()
         r_lat = torch.exp(-torch.square(self.commands[:, 1] - lin_b[:, 1]) / cfg.track_lat_vel_std**2)
         died = self.reset_terminated.float()
         ang_err = torch.square(self.commands[:, 2] - ang_b[:, 2]) + torch.sum(torch.square(ang_b[:, :2]), dim=1)
@@ -504,7 +506,7 @@ class ArtiD1VelEnv(DirectRLEnv):
 
         w_rate = self._stage(cfg.action_rate_stages, step)
         terms = {
-            "track_lin_vel": cfg.track_lin_vel_weight * r_lin,
+            "track_lin_vel": cfg.track_lin_vel_weight * w_lin * r_lin,
             "track_ang_vel": cfg.track_ang_vel_weight * r_ang,
             "track_lat_vel": cfg.track_lat_vel_weight * r_lat,
             "alive": cfg.alive_weight * (1.0 - died),
