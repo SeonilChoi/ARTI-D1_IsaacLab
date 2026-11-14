@@ -2072,3 +2072,12 @@ v25 stopped at 168k (PID 1478140 verified). v26 run 2026-11-13_12-29-10 from v25
   run 2026-11-14_16-24-15_ppo_torch, log logs/train/train_vel_microduck_v31e_adr.log. First window: falls .054.
 - Eval suite adds standpush at the real kd x0.7, 64 envs (like-for-like gate; the v31 default eval kd is U(.5, .95)).
 - Robot keeps v31c 90k (8105718).
+
+## 2026-11-14 17:55 — v31e 60k / 90k eval (not deployed; v31c 90k stays)
+- [ADR] refs lin .294 yaw .673 back .153 turn .579; widened .2 -> .40 by 52.8k, one DROP at 72k (back .129 < .85 ref) -> .35,
+  back to .40 at 105.6k; falls .031-.059. The back gate is what holds the level (back .13-.14 vs drop line .130).
+- 60k: nominal 2/64 fwd .067 back -.034 turn .162; real 0/64 fwd .065 wz -.007, back -.042 wz -.007, turn .185;
+  standpush 0/32, standpush kd .7 0/64, buzz 0/32.
+- 90k: nominal 0/64 fwd .068 back -.031 turn .185; real 1/64 fwd .078 wz -.009, back -.043 wz +.011, turn .172 (< .18);
+  standpush 0/32, kd .7 0/64, buzz 0/32.
+- Both robust (pushes .4) but backward below v31c 90k (-.056) -> no swap. Training continues.
