@@ -2032,3 +2032,12 @@ v25 stopped at 168k (PID 1478140 verified). v26 run 2026-11-13_12-29-10 from v25
   kd / gyro hf / push curricula unchanged, hip_yaw +-.10 throughout. Logged Curriculum/adr_{lin,yaw,back,turn}.
 - From v30 60k, seed 7, offset 1626000; run 2026-11-14_12-45-01_ppo_torch, log logs/train/train_vel_microduck_v31c_adr.log.
   First window (unweighted): lin .298, yaw .675, back .164, turn .584, falls .008.
+
+## 2026-11-14 13:35 — v31c 30k eval (candidate, not deployed: standpush 1/32)
+- [ADR] calibration refs (unweighted): lin .342, yaw .742, back .187, turn .653, falls .006-.012; widening from 43.2k,
+  level .15 at 52.8k (falls .017-.020, back / turn at 97 % of ref).
+- 30k (level 0: shake 0-4, kd .65-.75, k 1.5-2.5, push .25): nominal 1/64 (at 2.7 s) fwd .066 back **-.045** turn .173;
+  real (kd .7, shake 8, hip_yaw +.08) **0/64** fwd .058 wz -.011, back **-.069** wz -.009, turn **.202**;
+  standpush 1/32 (the fall at 0.5 m/s; 0.2-0.4 0/8), buzz 0/32; ONNX 4.8e-6; hip_roll clamped L .17 / R .48.
+- Best backward of the v26-v31 series under the real condition (v30 60k -.044), drift kept. Gate misses only on standpush
+  1/32 -> candidate; 60k next.
