@@ -2228,3 +2228,17 @@ v25 stopped at 168k (PID 1478140 verified). v26 run 2026-11-13_12-29-10 from v25
   for the gate: evalall36.sh runs the real condition with 256 envs.
 - v36 = v35 with backward track_lin x1.25 (turn x2 kept), 60k. PID 1896538, run 2026-11-15_02-58-35_ppo_torch,
   log logs/train/train_vel_microduck_v36_back125.log.
+
+## 2026-11-15 03:40 — v36 eval (real = 256 envs); not deployed; new runs paused
+| ckpt | real 256 fall/fwd/back/turn (fwd wz / back wz) | push/pushkd/buzz |
+|---|---|---|
+| v36 24k | 9/256 .048 -.062 .194 (-.028 / -.002) | 1/32 1/64 0/32 |
+| v36 30k | 10/256 .055 -.059 .177 (-.028 / -.012) | 0/32 0/64 0/32 |
+| v36 42k | 5/256 .057 -.053 .185 (-.018 / -.030) | 0/32 1/64 0/32 |
+| v36 60k | **1/256** .068 -.047 .180 (+.004 / -.022) | 1/32 2/64 0/32 |
+| v31c 90k | 5/256 .073 -.058 .189 (-.020 / -.027) | 0/32 0/64 0/32 |
+- None passes (pushkd misses) or beats v31c 90k on fwd/back/turn together. v36 60k has the fewest real falls but gives up backward.
+- Summary v32-v36: in the current randomization every variant lands on the same fwd/back/turn/fall front as v31c 90k
+  (differences at 256 envs are within noise / trade-offs). Further sim-only reward reweighting has low expected value.
+  The open real2sim issues (real CW yaw drift -0.4..-0.5 rad/s vs sim ~-0.02 with hip_yaw +.08; trunk rate 4-6x) need real logs.
+- Decision: keep v31c 90k deployed, pause new runs, remove hourly cron, until a real log with v31c 90k / hip_yaw zero measurement arrives.
