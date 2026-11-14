@@ -2210,3 +2210,21 @@ v25 stopped at 168k (PID 1478140 verified). v26 run 2026-11-13_12-29-10 from v25
 - Turn x2 fixed turn (real .189-.191, nominal .19-.20) while keeping backward -.061..-.064 (v31c -.056).
 - 30k misses only pushkd (2/64) and forward (.061 vs .072); 48k/60k fall 3-4/64 in real, mostly at 16-21 s (backward / following stand segment).
 - Filling in 24k / 36k / 42k to find a checkpoint between.
+
+## 2026-11-15 ~03:00 — v35 24k / 36k / 42k eval + 256-env real comparison; not deployed → v36 (back x1.25)
+| ckpt | real 64 fall/fwd/back/turn | push/pushkd/buzz |
+|---|---|---|
+| v35 24k | 2/64 .073 -.061 .199 | 0/32 0/64 0/32 (gate PASS) |
+| v35 36k | 4/64 .064 -.063 .204 | 0/32 1/64 0/32 |
+| v35 42k | 1/64 .062 -.062 .204 | 0/32 0/64 0/32 (gate PASS) |
+256-env real condition, all under the v35 profile:
+| ckpt | falls | fwd (wz) | back (wz) | turn |
+|---|---|---|---|---|
+| v31c 90k (deployed) | 5/256 | .073 (-.020) | -.058 (-.027) | .189 |
+| v35 24k | 10/256 | .067 (-.019) | -.060 (-.011) | .191 |
+| v35 42k | 5/256 | .066 (-.016) | -.058 (-.010) | .196 |
+- With 256 envs the 64-env backward edge vanishes (all -.058..-.060). v35 42k ≈ v31c 90k: same falls / back, turn +.007, fwd -.007,
+  smaller backward yaw drift. Not clearly better → not deployed (robot not testable now anyway). 64-env real falls are too noisy
+  for the gate: evalall36.sh runs the real condition with 256 envs.
+- v36 = v35 with backward track_lin x1.25 (turn x2 kept), 60k. PID 1896538, run 2026-11-15_02-58-35_ppo_torch,
+  log logs/train/train_vel_microduck_v36_back125.log.
