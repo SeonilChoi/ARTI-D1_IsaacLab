@@ -2081,3 +2081,16 @@ v25 stopped at 168k (PID 1478140 verified). v26 run 2026-11-13_12-29-10 from v25
 - 90k: nominal 0/64 fwd .068 back -.031 turn .185; real 1/64 fwd .078 wz -.009, back -.043 wz +.011, turn .172 (< .18);
   standpush 0/32, kd .7 0/64, buzz 0/32.
 - Both robust (pushes .4) but backward below v31c 90k (-.056) -> no swap. Training continues.
+
+## 2026-11-14 19:40 — v31e 120k / 150k, v31c 120k / 150k eval; v31e stopped → v32 (backward bucket)
+- v31e level stuck at .40 from 105k to 182k (back .13-.14 at the drop line), backward kept sliding:
+  - 120k: real 0/64 fwd .071, back -.041, turn .189; pushes 0/32, 0/64 kd .7, buzz 0/32
+  - 150k: real 1/64 fwd .075, back -.032, turn .177; pushes 0/32, 0/64, buzz 0/32
+  -> stopped (widening + push .4 trade backward away).
+- v31c later checkpoints (level .2 throughout):
+  - 120k: real 1/64 fwd .071, back -.046, turn .157; standpush kd .7 2/64
+  - 150k: real 1/64 fwd .083, back -.052, turn .192; standpush kd .7 1/64, buzz 1/32
+  -> v31c 90k stays the best / deployed.
+- Every v26-v31 run tracks backward worst. v32 = fixed randomization at the v31c level-.2 values (kd x U(.62, .79), shake
+  U(0, 5.2) Nm, gyro hf k U(1.3, 2.6), hip_yaw +-.10, push .35) + backward_fraction .2 (pure backward commands vx in
+  [-.12, -.05]). From v31c 90k, seed 7, offset 1716000; run 2026-11-14_19-37-36_ppo_torch, log logs/train/train_vel_microduck_v32_back.log.

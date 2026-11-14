@@ -362,6 +362,11 @@ class ArtiD1VelEnv(DirectRLEnv):
         cmd[side, 0] = 0.0
         cmd[side, 1] = sway[side]
         cmd[side, 2] = 0.0
+        lo_b = lo + self.cfg.lateral_fraction
+        back = (r >= lo_b) & (r < lo_b + self.cfg.backward_fraction)
+        vback = torch.empty(k, device=dev).uniform_(self.cfg.command_lin_x_range[0], -0.05)
+        cmd[back, 0] = vback[back]
+        cmd[back, 1:] = 0.0
         cmd[r < stand_frac] = 0.0
         self.commands[ids] = cmd
         self.cmd_timer[ids] = torch.empty(k, device=dev).uniform_(*self.cfg.command_resample_s)
