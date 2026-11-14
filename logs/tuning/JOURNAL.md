@@ -2196,3 +2196,7 @@ v25 stopped at 168k (PID 1478140 verified). v26 run 2026-11-13_12-29-10 from v25
 - v35 = v34 + turn-command track_ang x2.0 (back x1.5 kept). From v31c 90k, offset 1716000, seed 7, 60k timesteps.
   PID 1862128, run 2026-11-15_02-08-35_ppo_torch, log logs/train/train_vel_microduck_v35_turn2.log, eval evalall35.sh.
   H1 training is gone; v35 runs at ~40 it/s.
+
+## 2026-11-15 02:32 — v35 hourly check (51k/60k)
+- PID 1862128 alive (PROFILE=v35), 23 min, ~40 it/s, ends ~02:36. Auto-eval 30k/60k/48k queued after exit.
+- TB (weighted): track_lin 1.092 → 1.018 → .976; track_ang 1.036 → ~1.00 (flat, unlike v33's slide). Total reward 130.
