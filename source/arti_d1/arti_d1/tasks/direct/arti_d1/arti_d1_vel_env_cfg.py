@@ -70,28 +70,32 @@ ARTI_D1_VEL_PROFILE = os.environ.get("ARTI_D1_VEL_PROFILE", "v10")
 #   v30 (2026-11-13): v27 + hip_yaw encoder bias U(+-0.10) rad. Real v27 60k (161844) turned CW at .41 / .52 rad/s on
 #        forward / back and -.32 on a +.29 turn command (= no forward / back progress, user); leg odometry of the real stride
 #        .039 / -.035 m/s = sim. Sim v27 60k with both hip_yaw encoders +0.06 rad: wz -.25 / -.29, turn +.3 -> -.03 (same)
-_PROFILES = ("v10", "v11", "v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29", "v30")
+#   v31 (2026-11-14): v30 + randomization curriculum (adr_*): start narrow at the identified real values (kd x.65-.75,
+#        shake 6-8 Nm, gyro hf k 1.5-2.5, hip_yaw +-.03, push .25) and widen to kd .5-.95, shake 0-10, k .5-3,
+#        hip_yaw +-.10, push .4 only while falls / tracking stay good. From v30 60k.
+_PROFILES = ("v10", "v11", "v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29", "v30", "v31")
 if ARTI_D1_VEL_PROFILE not in _PROFILES:
     raise ValueError(f"ARTI_D1_VEL_PROFILE must be one of {_PROFILES}, got {ARTI_D1_VEL_PROFILE}")
 _V21 = ARTI_D1_VEL_PROFILE == "v21"
-_V26 = ARTI_D1_VEL_PROFILE in ("v26", "v27", "v28", "v29", "v30")  # v27 = v26 with milder kd / shake randomisation, v28 builds on v27
-_V27 = ARTI_D1_VEL_PROFILE in ("v27", "v28", "v29", "v30")
-_V30 = ARTI_D1_VEL_PROFILE == "v30"
+_V26 = ARTI_D1_VEL_PROFILE in ("v26", "v27", "v28", "v29", "v30", "v31")  # v27 = v26 with milder kd / shake randomisation, v28 builds on v27
+_V27 = ARTI_D1_VEL_PROFILE in ("v27", "v28", "v29", "v30", "v31")
+_V30 = ARTI_D1_VEL_PROFILE in ("v30", "v31")
+_V31 = ARTI_D1_VEL_PROFILE == "v31"
 _V28 = ARTI_D1_VEL_PROFILE in ("v28", "v29")
 _V29 = ARTI_D1_VEL_PROFILE == "v29"
-_V25 = ARTI_D1_VEL_PROFILE in ("v25", "v26", "v27", "v28", "v29", "v30")  # v26 builds on v25
+_V25 = ARTI_D1_VEL_PROFILE in ("v25", "v26", "v27", "v28", "v29", "v30", "v31")  # v26 builds on v25
 _V24 = ARTI_D1_VEL_PROFILE == "v24"
-_V23 = ARTI_D1_VEL_PROFILE in ("v23", "v24", "v25", "v26", "v27", "v28", "v29", "v30")  # v24 / v25 build on v23
-_V22 = ARTI_D1_VEL_PROFILE in ("v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29", "v30")  # v23 builds on v22
-_V20 = ARTI_D1_VEL_PROFILE in ("v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29", "v30")  # v21 / v22 build on v20
+_V23 = ARTI_D1_VEL_PROFILE in ("v23", "v24", "v25", "v26", "v27", "v28", "v29", "v30", "v31")  # v24 / v25 build on v23
+_V22 = ARTI_D1_VEL_PROFILE in ("v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29", "v30", "v31")  # v23 builds on v22
+_V20 = ARTI_D1_VEL_PROFILE in ("v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29", "v30", "v31")  # v21 / v22 build on v20
 _V19 = ARTI_D1_VEL_PROFILE == "v19"
-_V18 = ARTI_D1_VEL_PROFILE in ("v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29", "v30")  # v19 builds on v18
-_V13 = ARTI_D1_VEL_PROFILE in ("v13", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29", "v30")  # v17 adds the v13 realism
-_V16 = ARTI_D1_VEL_PROFILE in ("v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29", "v30")  # v17 builds on v16
-_V15 = ARTI_D1_VEL_PROFILE in ("v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29", "v30")  # v16 builds on v15
-_V14 = ARTI_D1_VEL_PROFILE in ("v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29", "v30")  # v15 builds on v14
-_V12 = ARTI_D1_VEL_PROFILE in ("v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29", "v30")  # v13 / v14 build on v12
-_V11 = ARTI_D1_VEL_PROFILE in ("v11", "v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29", "v30")  # v12 builds on v11
+_V18 = ARTI_D1_VEL_PROFILE in ("v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29", "v30", "v31")  # v19 builds on v18
+_V13 = ARTI_D1_VEL_PROFILE in ("v13", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29", "v30", "v31")  # v17 adds the v13 realism
+_V16 = ARTI_D1_VEL_PROFILE in ("v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29", "v30", "v31")  # v17 builds on v16
+_V15 = ARTI_D1_VEL_PROFILE in ("v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29", "v30", "v31")  # v16 builds on v15
+_V14 = ARTI_D1_VEL_PROFILE in ("v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29", "v30", "v31")  # v15 builds on v14
+_V12 = ARTI_D1_VEL_PROFILE in ("v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29", "v30", "v31")  # v13 / v14 build on v12
+_V11 = ARTI_D1_VEL_PROFILE in ("v11", "v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29", "v30", "v31")  # v12 builds on v11
 ARTI_D1_VEL_ACTION_HISTORY = 1 if _V11 else 3
 # actor: base ang vel (3) + projected gravity (3) + leg joint pos rel (10) + leg joint vel (10) + last N actions (10 N)
 # + command (3, always last)
@@ -283,10 +287,10 @@ class ArtiD1VelEnvCfg(DirectRLEnvCfg):
     # joint play (actuator_backlash_deg) between the encoder and the link (frames / horns) instead of inside the servo
     backlash_outside_encoder = False
     actuator_gain_whatif = (1.0, 1.0)  # (kp, kd) multipliers on the leg joints at env start (eval what-ifs)
-    actuator_kd_random = (0.65, 1.0) if _V27 else (0.5, 0.9) if _V26 else (1.0, 1.0)  # per-env multiplier on the leg kd (on top of actuator_kd_scale)
+    actuator_kd_random = (0.5, 0.95) if _V31 else (0.65, 1.0) if _V27 else (0.5, 0.9) if _V26 else (1.0, 1.0)  # per-env multiplier on the leg kd (on top of actuator_kd_scale)
     # trunk shake: per episode a pelvis torque amp * axes * U(0.5, 1) * sin(2 pi f t + phase), f in trunk_shake_freq_hz,
     # body frame, only while the command norm > trunk_shake_cmd_min (the real rocking comes with stepping)
-    trunk_shake_torque = (0.0, 8.0) if _V28 else (0.0, 6.0) if _V27 else (0.0, 10.0) if (_V24 or _V26) else (0.0, 0.0)  # Nm amplitude range (replay fit ~8-10 Nm roll)
+    trunk_shake_torque = (0.0, 10.0) if _V31 else (0.0, 8.0) if _V28 else (0.0, 6.0) if _V27 else (0.0, 10.0) if (_V24 or _V26) else (0.0, 0.0)  # Nm amplitude range (replay fit ~8-10 Nm roll)
     trunk_shake_freq_hz = (3.0, 6.0)
     trunk_shake_axes = (1.0, 0.55, 0.2) if _V28 else (1.0, 0.15, 0.3)  # roll, pitch, yaw weights (real walking replay: roll 3x, yaw 2.5x, pitch 1x)
     trunk_shake_walk_only = True
@@ -308,6 +312,26 @@ class ArtiD1VelEnvCfg(DirectRLEnvCfg):
     lin_vel_at_trunk = True  # False = pelvis link origin (v1 behaviour)
 
     curriculum_step_offset = 0
+
+    # ---- v31 domain randomization curriculum (ADR-like, user 2026-11-14: "as real as possible, then widen slowly").
+    # One level L in [0, 1] per run: each range = start + L * (end - start), start = narrow around the identified real
+    # values, end = the wide ranges above (used as-is with adr_enable False, e.g. in eval_vel). Drawn per env at reset.
+    # Every adr_window_steps env steps: L += adr_step if falls per env-episode (20 s) <= adr_fall_up and the mean
+    # track_lin / track_ang rewards >= adr_lin_min / adr_ang_min; L -= adr_step if falls >= adr_fall_down.
+    adr_enable = _V31
+    adr_level_init = 0.0
+    adr_kd = ((0.65, 0.75), (0.5, 0.95))  # leg kd multiplier (real replay fit x0.7)
+    adr_shake = ((6.0, 8.0), (0.0, 10.0))  # trunk shake Nm (real closed-loop fit ~8)
+    adr_gyro_hf = ((1.5, 2.5), (0.5, 3.0))  # gyro high-pass gain (real fit 1.5-2.5)
+    adr_hip_yaw = (0.03, 0.10)  # hip_yaw encoder bias half-range (rad) around adr_hip_yaw_center
+    adr_hip_yaw_center = (0.0, 0.0)  # measured left / right hip_yaw zero error once known (leg order 0 / 1)
+    adr_push = (0.25, 0.4)  # push velocity m/s
+    adr_window_steps = 4800
+    adr_step = 0.05
+    adr_fall_up = 0.05
+    adr_fall_down = 0.15
+    adr_lin_min = 0.70
+    adr_ang_min = 0.52
 
     def __post_init__(self):
         if _V25:  # flat-sole stance: legs vertical

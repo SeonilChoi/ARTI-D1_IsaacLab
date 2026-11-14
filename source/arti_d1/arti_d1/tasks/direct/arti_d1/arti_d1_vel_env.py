@@ -82,6 +82,7 @@ class ArtiD1VelEnv(DirectRLEnv):
         self.effort_limit = torch.tensor([self.cfg.joint_effort_limit[j] for j in names], device=dev)
         # what-if gain scale on the leg joints (real2sim sweeps; 1.0 / 1.0 in training)
         kps, kds = self.cfg.actuator_gain_whatif
+        self.kd_base = self.robot.data.joint_damping.torch[:, self.leg_ids].clone()  # v31 curriculum redraws kd per reset
         lo_d, hi_d = self.cfg.actuator_kd_random
         if kps != 1.0 or kds != 1.0 or (lo_d, hi_d) != (1.0, 1.0):
             lid = self.leg_ids
@@ -128,6 +129,11 @@ class ArtiD1VelEnv(DirectRLEnv):
         self.imu_misalign = quat_from_angle_axis(angle, axis)
         self.imu_lag = torch.zeros(n, dtype=torch.long, device=dev)
         self.prev_imu = torch.zeros(n, 6, device=dev)
+        # v31 randomization curriculum state (cfg.adr_*)
+        self.adr_level = float(self.cfg.adr_level_init)
+        self.push_vel = self.cfg.adr_push[0] if self.cfg.adr_enable else self.cfg.push_velocity
+        self.adr_t, self.adr_falls, self.adr_ends, self.adr_lin, self.adr_ang = 0, 0.0, 0.0, 0.0, 0.0
+        self.adr_last_fall = 0.0
         # IMU readings, newest first: index d = d control steps old
         self.imu_hist = torch.zeros(n, self.cfg.imu_delay_max_steps + 1, 6, device=dev)
         # v22 structural gyro vibration: first-order high-pass of the pelvis gyro, gain per env (cfg.gyro_hf_gain_range)
@@ -218,16 +224,61 @@ class ArtiD1VelEnv(DirectRLEnv):
         ids = torch.nonzero(self.push_timer <= 0.0).flatten()
         if len(ids):
             vel = self.robot.data.root_vel_w.torch[ids].clone()
-            vel[:, :2] += torch.empty(len(ids), 2, device=self.device).uniform_(-self.cfg.push_velocity, self.cfg.push_velocity)
+            vel[:, :2] += torch.empty(len(ids), 2, device=self.device).uniform_(-self.push_vel, self.push_vel)
             self.robot.write_root_velocity_to_sim_index(root_velocity=vel, env_ids=ids)
             self.push_timer[ids] = torch.empty(len(ids), device=self.device).uniform_(*self.cfg.push_interval_s)
         target = self.default_joint_pos.clone()
         target[:, self.leg_ids] += self.cfg.action_scale * self.actions
         self.joint_target = torch.clamp(target, self.q_lower, self.q_upper)
 
+    def _adr_on(self) -> bool:
+        return bool(self.cfg.adr_enable) and hasattr(self, "adr_level")
+
+    def _adr_range(self, pair) -> tuple[float, float]:
+        (a_lo, a_hi), (b_lo, b_hi) = pair
+        L = self.adr_level
+        return a_lo + L * (b_lo - a_lo), a_hi + L * (b_hi - a_hi)
+
+    def _adr_update(self, lin: torch.Tensor, ang: torch.Tensor):
+        """v31: accumulate tracking per step; every adr_window_steps widen / narrow the randomization level."""
+        cfg = self.cfg
+        self.adr_t += 1
+        self.adr_lin = self.adr_lin + lin.detach()
+        self.adr_ang = self.adr_ang + ang.detach()
+        if self.adr_t % cfg.adr_window_steps:
+            return
+        w = cfg.adr_window_steps
+        # falls per env-episode (ends are mostly falls inside a window; timeouts come in 20 s waves)
+        fall = float(self.adr_falls) * self.max_episode_length / (self.num_envs * w)
+        lin_m, ang_m = float(self.adr_lin) / w, float(self.adr_ang) / w
+        if fall >= cfg.adr_fall_down:
+            self.adr_level = max(0.0, self.adr_level - cfg.adr_step)
+        elif fall <= cfg.adr_fall_up and lin_m >= cfg.adr_lin_min and ang_m >= cfg.adr_ang_min:
+            self.adr_level = min(1.0, self.adr_level + cfg.adr_step)
+        a, b = cfg.adr_push
+        self.push_vel = a + self.adr_level * (b - a)
+        self.adr_last_fall = fall
+        print(f"[ADR] t {self.adr_t} fall {fall:.3f} ({float(self.adr_falls):.0f}/{float(self.adr_ends):.0f}) lin {lin_m:.3f} ang {ang_m:.3f}"
+              f" -> level {self.adr_level:.2f}", flush=True)
+        self.adr_falls, self.adr_ends, self.adr_lin, self.adr_ang = 0.0, 0.0, 0.0, 0.0
+
+    def _adr_reset(self, env_ids: torch.Tensor):
+        """v31: per-env draws of the curriculum-ranged parameters at reset."""
+        cfg, k, dev = self.cfg, len(env_ids), self.device
+        lo, hi = self._adr_range(cfg.adr_kd)
+        kd = torch.empty(k, 1, device=dev).uniform_(lo, hi)
+        self.robot.write_joint_damping_to_sim_index(damping=self.kd_base[env_ids] * kd, joint_ids=self.leg_ids, env_ids=env_ids)
+        self.gyro_hf_gain[env_ids] = torch.empty(k, 1, device=dev).uniform_(*self._adr_range(cfg.adr_gyro_hf))
+        a, b = cfg.adr_hip_yaw
+        h = a + self.adr_level * (b - a)
+        nl = self.encoder_bias.shape[1]
+        self.encoder_bias[env_ids] = torch.empty(k, nl, device=dev).uniform_(-cfg.encoder_bias_range, cfg.encoder_bias_range)
+        center = torch.tensor(cfg.adr_hip_yaw_center, device=dev)
+        self.encoder_bias[env_ids, :2] = center + torch.empty(k, 2, device=dev).uniform_(-h, h)
+
     def _resample_shake(self, ids: torch.Tensor):
         k, dev = len(ids), self.device
-        lo, hi = self.cfg.trunk_shake_torque
+        lo, hi = self._adr_range(self.cfg.adr_shake) if self._adr_on() else self.cfg.trunk_shake_torque
         w = torch.tensor(self.cfg.trunk_shake_axes, device=dev)
         self.shake_amp[ids] = torch.empty(k, 1, device=dev).uniform_(lo, hi) * w * torch.empty(k, 3, device=dev).uniform_(0.5, 1.0)
         self.shake_freq[ids] = torch.empty(k, 1, device=dev).uniform_(*self.cfg.trunk_shake_freq_hz)
@@ -470,6 +521,10 @@ class ArtiD1VelEnv(DirectRLEnv):
             "Gait/base_roll_abs_deg": torch.rad2deg(roll.abs()).mean(),
             "Gait/standing_now": (1.0 - moving).mean(),
         })
+        if self._adr_on():
+            self._adr_update(terms["track_lin_vel"].mean(), terms["track_ang_vel"].mean())
+            log["Curriculum/dr_level"] = torch.tensor(self.adr_level)
+            log["Curriculum/dr_fall_frac"] = torch.tensor(self.adr_last_fall)
         self.extras["log"] = log
         return reward
 
@@ -522,6 +577,10 @@ class ArtiD1VelEnv(DirectRLEnv):
         self.gyro_hp_y[env_ids] = 0.0
         self.gyro_hp_x[env_ids] = 0.0
         self.gyro_hf_gain[env_ids] = torch.empty(k, 1, device=dev).uniform_(*self.cfg.gyro_hf_gain_range)
+        if self._adr_on():
+            self.adr_falls = self.adr_falls + self.reset_terminated[env_ids].float().sum()
+            self.adr_ends += float(k)
+            self._adr_reset(env_ids)
         self._resample_shake(env_ids if isinstance(env_ids, torch.Tensor) else torch.as_tensor(env_ids, device=dev))
         self.imu_hist[env_ids, :, 5] = -1.0
         self.prev_joint_vel[env_ids] = 0.0

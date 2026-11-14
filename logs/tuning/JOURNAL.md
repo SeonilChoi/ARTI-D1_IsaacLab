@@ -1985,3 +1985,15 @@ v25 stopped at 168k (PID 1478140 verified). v26 run 2026-11-13_12-29-10 from v25
 - standpush 0/32, buzz 1/32, video clean, hip_roll q_des clamped L .23 / R .27
 - backward weakest of the run and 3/64 under the real condition -> no swap. Robot keeps v30 60k (8309503); 180k is the faster-forward
   candidate. Waiting for the real v30 60k log (heading drift).
+
+## 2026-11-14 10:00 — v31: real-centred randomization curriculum (user: "as real as possible, then widen slowly")
+- Remaining gap (summary): joint response = real at kd x0.7; standing buzz solved; walking trunk rotation (replay) roll 2.7x /
+  pitch 1.7x only covered by the phenomenological trunk shake; real CW yaw drift -.4/-.5 rad/s (hip_yaw zero hypothesis).
+- v31 = v30 + adr_* curriculum, one level L in [0,1], ranges start + L (end - start), drawn per env at reset:
+  kd x(.65-.75 -> .5-.95), shake (6-8 -> 0-10 Nm, axes 1/.15/.3), gyro hf k (1.5-2.5 -> .5-3), hip_yaw bias +-(.03 -> .10)
+  around adr_hip_yaw_center (0 until measured), push .25 -> .4 m/s. Friction / mass / CoM / delay / play unchanged.
+- Gate every 4800 env steps: L += .05 if falls per env-episode <= .05 and mean track_lin >= .70, track_ang >= .52;
+  L -= .05 if falls >= .15. Logged as Curriculum/dr_level, dr_fall_frac, and [ADR] lines in the train log.
+- eval_vel forces adr_enable False (fixed EVAL_CFG conditions as before).
+- From v30 60k, seed 7, offset 1626000; run 2026-11-14_10-00-52_ppo_torch, log logs/train/train_vel_microduck_v31_adr.log.
+  First windows at L=0: falls .023-.030, lin .638 -> .665, ang .423 -> .442 (rising; below the widen gate).

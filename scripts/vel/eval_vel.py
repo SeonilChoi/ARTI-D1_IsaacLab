@@ -112,6 +112,8 @@ def make_env(seconds):
     cfg.command_resample_s = (1e9, 1e9)
     cfg.episode_length_s = seconds + 2.0
     cfg.reset_xy_range = 0.0
+    if hasattr(cfg, "adr_enable"):  # v31: evaluate on the fixed / wide cfg ranges, not the training curriculum
+        cfg.adr_enable = False
     # EVAL_CFG="actuator_delay_ms=40;actuator_delay_jitter_ms=(0.0,10.0)": override env cfg fields (sim2real what-ifs)
     for kv in filter(None, os.environ.get("EVAL_CFG", "").split(";")):
         k, v = kv.split("=", 1)
