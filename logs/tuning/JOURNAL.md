@@ -1997,3 +1997,14 @@ v25 stopped at 168k (PID 1478140 verified). v26 run 2026-11-13_12-29-10 from v25
 - eval_vel forces adr_enable False (fixed EVAL_CFG conditions as before).
 - From v30 60k, seed 7, offset 1626000; run 2026-11-14_10-00-52_ppo_torch, log logs/train/train_vel_microduck_v31_adr.log.
   First windows at L=0: falls .023-.030, lin .638 -> .665, ang .423 -> .442 (rising; below the widen gate).
+
+## 2026-11-14 10:30 — v31 30k eval → stopped; v31b (hip_yaw wide from the start, calibrated gate)
+- v31 [ADR] after 28.8k: level still 0; falls .021-.030, track_lin .638 -> .694, track_ang .423 -> .464 (gate .70 / .52).
+  track_ang also pays roll / pitch rate = the forced 6-8 Nm shake, so .52 was probably unreachable.
+- v31 30k eval: nominal 0/64, fwd .058, back -.020, turn .133; real (kd .7, shake 8, hip_yaw +.08) 1/64, fwd .054 **wz -.071**,
+  back -.033 **wz -.095**, turn .064; standpush / buzz 0/32. The narrow hip_yaw start (+-.03) dropped the v30 drift fix
+  (v30 60k: wz -.011 / -.009, turn .207) -> not a candidate; run stopped (dir renamed ..._v31a_stopped).
+- v31b changes: adr_hip_yaw (0.10, 0.10) (real zero error unknown -> stays wide); gate on yaw-only tracking
+  exp(-(cmd_wz - wz)^2 / std^2) instead of r_ang; thresholds calibrated: best lin / yaw over the first 8 windows (38k steps)
+  at level 0, widen when the window keeps >= 95 % of both and falls <= .05 / env-episode.
+- From v30 60k, seed 7, offset 1626000; run 2026-11-14_10-28-05_ppo_torch, log logs/train/train_vel_microduck_v31b_adr.log.

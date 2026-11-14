@@ -323,15 +323,21 @@ class ArtiD1VelEnvCfg(DirectRLEnvCfg):
     adr_kd = ((0.65, 0.75), (0.5, 0.95))  # leg kd multiplier (real replay fit x0.7)
     adr_shake = ((6.0, 8.0), (0.0, 10.0))  # trunk shake Nm (real closed-loop fit ~8)
     adr_gyro_hf = ((1.5, 2.5), (0.5, 3.0))  # gyro high-pass gain (real fit 1.5-2.5)
-    adr_hip_yaw = (0.03, 0.10)  # hip_yaw encoder bias half-range (rad) around adr_hip_yaw_center
+    # v31b: hip_yaw stays wide from the start - the real zero error is unknown (v31 30k at +-.03 lost the v30 drift fix:
+    # real-repro wz -.07 / -.095, turn .064)
+    adr_hip_yaw = (0.10, 0.10)  # hip_yaw encoder bias half-range (rad) around adr_hip_yaw_center
     adr_hip_yaw_center = (0.0, 0.0)  # measured left / right hip_yaw zero error once known (leg order 0 / 1)
     adr_push = (0.25, 0.4)  # push velocity m/s
     adr_window_steps = 4800
     adr_step = 0.05
     adr_fall_up = 0.05
     adr_fall_down = 0.15
-    adr_lin_min = 0.70
+    adr_lin_min = 0.70  # absolute gate (used when adr_calib_windows = 0)
     adr_ang_min = 0.52
+    # v31b: gate = keep adr_keep_frac of the best track_lin and yaw-only tracking (unweighted exp, roll / pitch rate excluded:
+    # the forced shake caps r_ang) reached during the first adr_calib_windows windows at the start level
+    adr_calib_windows = 8
+    adr_keep_frac = 0.95
 
     def __post_init__(self):
         if _V25:  # flat-sole stance: legs vertical
