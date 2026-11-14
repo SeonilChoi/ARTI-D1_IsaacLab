@@ -2008,3 +2008,15 @@ v25 stopped at 168k (PID 1478140 verified). v26 run 2026-11-13_12-29-10 from v25
   exp(-(cmd_wz - wz)^2 / std^2) instead of r_ang; thresholds calibrated: best lin / yaw over the first 8 windows (38k steps)
   at level 0, widen when the window keeps >= 95 % of both and falls <= .05 / env-episode.
 - From v30 60k, seed 7, offset 1626000; run 2026-11-14_10-28-05_ppo_torch, log logs/train/train_vel_microduck_v31b_adr.log.
+
+## 2026-11-14 11:55 — v31b 60k / 90k eval (not deployed; v30 60k stays)
+- [ADR] calibration (8 windows) gave min lin .653 / yaw .453; widening from 43k: level .05/window to .40 at 81.6k, then the
+  fall gate (.05) starts to bind (falls .046-.056). Latest: [ADR] t 100800 fall 0.048 (794/16719) lin 0.700 yaw 0.504 (min 0.653 / 0.453) -> level 0.50
+- 60k: nominal 0/64 fwd .059 back **-.015** turn **.104**; real 0/64 fwd .057 wz -.035, back -.033 wz -.026, turn .087;
+  standpush / buzz 0/32.
+- 90k: nominal 0/64 fwd .056 back **-.014** turn .157; real 0/64 fwd .053 wz -.020, back -.030 wz -.013, turn .121;
+  standpush 0/32, buzz 1/32; ONNX 4.3e-6; hip_roll q_des clamped L .33 / R .42.
+- Drift fix kept (|wz| <= .035) and falls 0/64 under the real condition, but backward / turn are below the gate and v30 60k
+  (real back -.044, turn .207). Same pattern as v26/v28/v29: constant 6-8 Nm shake costs back / turn. Turn recovers as
+  the level widens (shake low end 6 -> 3.6 Nm at L .4): 60k .087 -> 90k .121. The ADR gate looks at mean lin tracking,
+  which is dominated by forward / standing -> it does not see the backward loss. Watching to 120k-150k before changing it.
