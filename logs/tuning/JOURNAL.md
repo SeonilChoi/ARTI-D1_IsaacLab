@@ -2185,3 +2185,14 @@ v25 stopped at 168k (PID 1478140 verified). v26 run 2026-11-13_12-29-10 from v25
 - Best balance yet: real 0/64, backward -.065..-.069 (v31c -.056) held to 60k (unlike v33), pushkd/buzz clean.
   Only miss: real turn .171-.174 < .18 (and forward .060-.065 < v31c .072). Not deployed.
 - Eval 90k / 120k when training ends (~02:10).
+
+## 2026-11-15 02:10 — v34 90k / 120k eval; v34 done (none passed) → v35 (turn x2.0, 60k)
+| ckpt | nominal fall/fwd/back/turn | real fall/fwd/back/turn (fwd wz / back wz) | push/pushkd/buzz |
+|---|---|---|---|
+| v34 90k | 2/64 .072 -.040 .166 | 4/64 .069 -.058 .144 (-.022 / -.060) | 0/32 0/64 0/32 |
+| v34 120k | 0/64 .060 -.041 .190 | 3/64 .068 -.054 .174 (-.043 / -.060) | 0/32 0/64 0/32 |
+- v34 degraded after 60k (falls 3-4/64, back yaw drift -.06). Best v34 = 30k/60k, failing only real turn .171-.174.
+- Pattern v32-v34: from v31c 90k, the first 30-60k is the useful window; later the policy drifts. So v35 runs 60k only.
+- v35 = v34 + turn-command track_ang x2.0 (back x1.5 kept). From v31c 90k, offset 1716000, seed 7, 60k timesteps.
+  PID 1862128, run 2026-11-15_02-08-35_ppo_torch, log logs/train/train_vel_microduck_v35_turn2.log, eval evalall35.sh.
+  H1 training is gone; v35 runs at ~40 it/s.
