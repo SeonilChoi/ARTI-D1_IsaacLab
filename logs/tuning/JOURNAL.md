@@ -2094,3 +2094,9 @@ v25 stopped at 168k (PID 1478140 verified). v26 run 2026-11-13_12-29-10 from v25
 - Every v26-v31 run tracks backward worst. v32 = fixed randomization at the v31c level-.2 values (kd x U(.62, .79), shake
   U(0, 5.2) Nm, gyro hf k U(1.3, 2.6), hip_yaw +-.10, push .35) + backward_fraction .2 (pure backward commands vx in
   [-.12, -.05]). From v31c 90k, seed 7, offset 1716000; run 2026-11-14_19-37-36_ppo_torch, log logs/train/train_vel_microduck_v32_back.log.
+
+## 2026-11-14 20:47 — v32 hourly check (87k/240k)
+- PID 1752844 alive (PROFILE=v32), 1h08m, ~22 it/s, ETA ~1h45m.
+- TB: track_lin 1.013 (resume) → .923 (17k) → .933 (87k); track_ang .831 → .742 → .784; total reward ~126. Dip at start = new 20% backward bucket + fixed DR, recovering.
+- Launched evalall32.sh 30000 then 60000 in background.
+- Stale waiter loop (pid 1734857, self-matching pgrep from v31 chain) still sleeping; harmless, kill was not permitted.
