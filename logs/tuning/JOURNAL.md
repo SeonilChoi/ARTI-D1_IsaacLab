@@ -2140,3 +2140,9 @@ v25 stopped at 168k (PID 1478140 verified). v26 run 2026-11-13_12-29-10 from v25
 - v33 = v32 + track_lin reward x2 on envs with cmd vx < -0.05 (w_lin; ADR r_lin untouched). From v31c 90k, offset 1716000, seed 7.
   PID 1814101, run 2026-11-14_22-55-56_ppo_torch, log logs/train/train_vel_microduck_v33_backw.log. Eval script evalall33.sh.
 - Running alongside an H1 training (pid 1782302, other project); GPU 9.7 GB, fits.
+
+## 2026-11-14 23:22 — v33 hourly check (34k/240k)
+- PID 1814101 alive (PROFILE=v33), 26 min, ~22 it/s (shares GPU with H1 pid 1782302).
+- TB track_lin 1.176 → 1.09..1.14 (includes the x2 backward weight, not comparable to v32); track_ang .830 → .718 (8k) → .698 (33k),
+  lower than v32 at the same point (.736-.759) — turn may be paying for backward. Watch.
+- Launched evalall33.sh 30000.
