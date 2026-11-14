@@ -328,7 +328,8 @@ class ArtiD1VelEnvCfg(DirectRLEnvCfg):
     # real-repro wz -.07 / -.095, turn .064)
     adr_hip_yaw = (0.10, 0.10)  # hip_yaw encoder bias half-range (rad) around adr_hip_yaw_center
     adr_hip_yaw_center = (0.0, 0.0)  # measured left / right hip_yaw zero error once known (leg order 0 / 1)
-    adr_push = (0.25, 0.4)  # push velocity m/s
+    # v31d: pushes are not a real2sim parameter - kept at the full .4 (v31c at .25-.28 lost standpush: 1/32 at 0.5 m/s)
+    adr_push = (0.4, 0.4)  # push velocity m/s
     adr_window_steps = 4800
     adr_step = 0.05
     adr_fall_up = 0.05
@@ -338,7 +339,7 @@ class ArtiD1VelEnvCfg(DirectRLEnvCfg):
     # v31b: gate = keep adr_keep_frac of the best track_lin and yaw-only tracking (unweighted exp, roll / pitch rate excluded:
     # the forced shake caps r_ang) reached during the first adr_calib_windows windows at the start level
     adr_calib_windows = 8
-    adr_keep_frac = 0.95
+    adr_keep_frac = 0.93  # v31d: .95 stalled v31c at level .2 for 90k steps (metrics at 92-95 % of the level-0 best)
     adr_drop_frac = 0.85  # v31c: narrow when backward / turn tracking falls below this fraction of its reference
 
     def __post_init__(self):

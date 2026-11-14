@@ -2041,3 +2041,15 @@ v25 stopped at 168k (PID 1478140 verified). v26 run 2026-11-13_12-29-10 from v25
   standpush 1/32 (the fall at 0.5 m/s; 0.2-0.4 0/8), buzz 0/32; ONNX 4.8e-6; hip_roll clamped L .17 / R .48.
 - Best backward of the v26-v31 series under the real condition (v30 60k -.044), drift kept. Gate misses only on standpush
   1/32 -> candidate; 60k next.
+
+## 2026-11-14 14:40 — v31c 60k / 90k eval (not deployed) → v31d (from v31c 90k, push .4, keep .93)
+- v31c [ADR]: level .20 from ~57k to 149k (all metrics 92-95 % of the level-0 refs: below keep .95, above drop .85).
+- 60k: nominal 0/64 fwd .077 back -.038 turn .187; real 3/64 fwd .062, back -.056 wz +.029, turn .205; standpush 2/32 (0.4: 1/8,
+  0.5: 1/8), buzz 0/32.
+- 90k: nominal 0/64 fwd .073 back -.039 turn .196; real **0/64** fwd **.072** wz -.022, back **-.056** wz -.018, turn .185;
+  standpush 1/32 (0.5 m/s only), buzz 0/32; ONNX 9.1e-6; hip_roll clamped L .10 / R .51.
+  Better than v30 60k on the real condition except turn (.185 vs .207) and standpush (1/32 vs 0/32) -> gate missed on
+  standpush only. Cause: the push curriculum (.25 -> .28 m/s at level .2) - pushes are not a real2sim parameter.
+- v31d: adr_push (.4, .4), adr_keep_frac .93; from v31c 90k with adr_level_init .2, adr_calib_windows 4 (refs re-taken at .2),
+  seed 7, offset 1716000; run 2026-11-14_14-38-04_ppo_torch, log logs/train/train_vel_microduck_v31d_adr.log.
+  First window: falls .100 (push .4), lin .311, yaw .691, back .162, turn .596.
