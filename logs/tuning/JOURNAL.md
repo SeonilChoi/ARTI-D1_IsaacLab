@@ -2100,3 +2100,12 @@ v25 stopped at 168k (PID 1478140 verified). v26 run 2026-11-13_12-29-10 from v25
 - TB: track_lin 1.013 (resume) → .923 (17k) → .933 (87k); track_ang .831 → .742 → .784; total reward ~126. Dip at start = new 20% backward bucket + fixed DR, recovering.
 - Launched evalall32.sh 30000 then 60000 in background.
 - Stale waiter loop (pid 1734857, self-matching pgrep from v31 chain) still sleeping; harmless, kill was not permitted.
+
+## 2026-11-14 ~21:30 — v32 30k / 60k eval (gate: FAIL, keep v31c 90k)
+| ckpt | nominal fall/fwd/back/turn | real fall/fwd/back/turn (fwd wz) | push/pushkd/buzz |
+|---|---|---|---|
+| v32 30k | 0/64 .060 -.038 .148 | 4/64 .059 -.058 .146 (-.041) | 0/32 0/64 1/32 |
+| v32 60k | 0/64 .068 -.040 .172 | 3/64 .078 -.050 .166 (-.037) | 1/32 0/64 1/32 |
+| v31c 90k (deployed) | 0/64 .073 -.039 .196 | 0/64 .072 -.056 .185 (-.022) | 0/32 0/64 0/32 |
+- Backward bucket keeps real backward at v31c level, 60k forward better (.078), but real falls 3-4/64, turn <.18, buzz 1/32, fwd yaw drift worse (-.037..-.041). Fails gate.
+- Launched evalall32.sh 90000.
