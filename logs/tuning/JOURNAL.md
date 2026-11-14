@@ -2109,3 +2109,8 @@ v25 stopped at 168k (PID 1478140 verified). v26 run 2026-11-13_12-29-10 from v25
 | v31c 90k (deployed) | 0/64 .073 -.039 .196 | 0/64 .072 -.056 .185 (-.022) | 0/32 0/64 0/32 |
 - Backward bucket keeps real backward at v31c level, 60k forward better (.078), but real falls 3-4/64, turn <.18, buzz 1/32, fwd yaw drift worse (-.037..-.041). Fails gate.
 - Launched evalall32.sh 90000.
+
+## 2026-11-14 ~22:00 — v32 90k eval (gate: FAIL, keep v31c 90k)
+- nominal 0/64, fwd .071, back -.033, turn .179. real 0/64, fwd .079 (wz -.024), back -.041, turn .163. push 0/32, pushkd 0/64, buzz 1/32.
+- Falls fixed vs 30k/60k, forward best yet, but real backward slides again (-.058 → -.050 → -.041) and turn stays <.18; buzz 1/32 on all three v32 ckpts.
+- Backward bucket alone does not stop the backward-for-stability trade. Next: eval 120k; if back keeps sliding, consider stopping v32.
