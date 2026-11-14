@@ -2053,3 +2053,15 @@ v25 stopped at 168k (PID 1478140 verified). v26 run 2026-11-13_12-29-10 from v25
 - v31d: adr_push (.4, .4), adr_keep_frac .93; from v31c 90k with adr_level_init .2, adr_calib_windows 4 (refs re-taken at .2),
   seed 7, offset 1716000; run 2026-11-14_14-38-04_ppo_torch, log logs/train/train_vel_microduck_v31d_adr.log.
   First window: falls .100 (push .4), lin .311, yaw .691, back .162, turn .596.
+
+## 2026-11-14 15:45 — v31d stalled; standpush gate was an eval artifact → v31c 90k deployed (controller 8105718)
+- v31d [ADR] (push .4 fixed, from v31c 90k): level .20 for all 100k steps, falls .051-.068 (just above the .05 widen gate),
+  metrics at 90-95 % of refs. v31d 90k: nominal 1/64 back -.031 turn .201; real 1/64 fwd .073 back -.041 turn .181;
+  standpush 2/32 (0.5 m/s) -> no better than v31c 90k. Training stopped (no run active).
+- Standpush cross-check: the v31 profile's eval kd range is U(.5, .95) (v30: U(.65, 1.0)), so the 1/32-2/32 standpush of
+  v31 checkpoints was a harsher test, not a weaker policy:
+  - v31c 90k at kd U(.65, 1.0) 0/32; v30 60k at kd U(.5, .95) 0/32
+  - at the real kd x0.7, 64 envs: v31c 90k 0/64, v30 60k 0/64.
+- Like-for-like v31c 90k meets every gate and beats v30 60k on the real condition (falls 0 vs 1/64, fwd .072 vs .052,
+  back -.056 vs -.044; turn .185 vs .207, drift <= .022) -> deployed agent_vel.onnx (md5 31eb3521...), humanoid_controller
+  arti-d1-2830k 8105718. Next: real log with v31c 90k (forward / back progress, heading drift).
