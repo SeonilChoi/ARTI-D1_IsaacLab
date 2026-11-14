@@ -2200,3 +2200,13 @@ v25 stopped at 168k (PID 1478140 verified). v26 run 2026-11-13_12-29-10 from v25
 ## 2026-11-15 02:32 — v35 hourly check (51k/60k)
 - PID 1862128 alive (PROFILE=v35), 23 min, ~40 it/s, ends ~02:36. Auto-eval 30k/60k/48k queued after exit.
 - TB (weighted): track_lin 1.092 → 1.018 → .976; track_ang 1.036 → ~1.00 (flat, unlike v33's slide). Total reward 130.
+
+## 2026-11-15 02:46 — v35 30k / 48k / 60k eval (gate: FAIL, keep v31c 90k)
+| ckpt | nominal fall/fwd/back/turn | real fall/fwd/back/turn (fwd wz) | push/pushkd/buzz |
+|---|---|---|---|
+| v35 30k | 0/64 .064 -.041 .203 | 1/64 .061 -.061 .189 (-.008) | 0/32 **2/64** 0/32 |
+| v35 48k | 1/64 .061 -.045 .191 | 4/64 .071 -.061 .190 (-.037) | 0/32 0/64 1/32 |
+| v35 60k | 2/64 .067 -.037 .202 | 3/64 .066 -.064 .191 (-.017) | 0/32 0/64 1/32 |
+- Turn x2 fixed turn (real .189-.191, nominal .19-.20) while keeping backward -.061..-.064 (v31c -.056).
+- 30k misses only pushkd (2/64) and forward (.061 vs .072); 48k/60k fall 3-4/64 in real, mostly at 16-21 s (backward / following stand segment).
+- Filling in 24k / 36k / 42k to find a checkpoint between.
