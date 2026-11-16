@@ -2265,3 +2265,27 @@ Sim replay of the same command schedule (v31c 90k ONNX, kd .7, shake 8, gyro HF 
 - v37 = v35 (back x1.5, turn x2) + per-env hip_roll encoder bias U(+-0.05). From v31c 90k, 60k, seed 7. PID 2018642,
   run 2026-11-16_09-06-20_ppo_torch, log logs/train/train_vel_microduck_v37_hiproll.log, eval evalall37.sh (real 256 envs).
 - Asked the user: hip_roll / hip_yaw zero measurement (example_sysid --passive, legs vertical, feet straight) and full-stick run.
+
+## 2026-11-16 — v37 (hip_roll encoder bias U(±0.05)) results — no deploy
+
+Auto-eval (evalall37, real condition under v37 profile = includes random hip_roll bias):
+30k 17/256 back −.060 turn .179 pushkd 1/64; 42k 14/256 back −.060 turn .172 (fwd wz −.041); 60k 17/256 turn .171 pushkd 2/64. None pass.
+
+Same-condition comparison (real256, v35 profile, kd .7 / shake 8 / hip_yaw +.08):
+| ckpt | falls | fwd vx / wz | back vx / wz | turn |
+|---|---|---|---|---|
+| v31c 90k (ref) | 5/256 | .073 / −.020 | −.058 / −.027 | .189 |
+| v37 30k | 16/256 | .058 / −.024 | −.065 / −.027 | .173 |
+| v37 42k | 9/256 | .062 / −.037 | −.059 / −.011 | .176 |
+
+Real-like hip_roll offset (realhr: kd .7 / shake 8 / hip_roll fixed +.037,−.032):
+| ckpt | falls | fwd wz | back wz | turn |
+|---|---|---|---|---|
+| v31c 90k | 9/256 | −.048 | −.040 | .155 |
+| v37 30k | 12/256 | −.023 | −.030 | .169 |
+| v37 42k | 14/256 | −.037 | −.006 | .171 |
+
+Verdict: v37 reduces the hip_roll-offset-induced CW drift and turn suppression somewhat (drift ~half, turn +.015),
+but costs robustness (falls 9–16 vs 5 in the standard real condition). Not clearly better than v31c 90k → not deployed.
+Sim hip_roll offset only explains ~1/4 of the real CW drift, so waiting on the real zero measurement (IDs 6/8, 2/4) and
+a full-stick run before the next real2sim change. Scripts: scratchpad realhr.sh, cmp37.sh.
