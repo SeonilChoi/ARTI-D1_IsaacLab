@@ -70,6 +70,7 @@ ARTI_D1_VEL_PROFILE = os.environ.get("ARTI_D1_VEL_PROFILE", "v10")
 #   v30 (2026-11-13): v27 + hip_yaw encoder bias U(+-0.10) rad. Real v27 60k (161844) turned CW at .41 / .52 rad/s on
 #        forward / back and -.32 on a +.29 turn command (= no forward / back progress, user); leg odometry of the real stride
 #        .039 / -.035 m/s = sim. Sim v27 60k with both hip_yaw encoders +0.06 rad: wz -.25 / -.29, turn +.3 -> -.03 (same)
+#   v37 (2026-11-16): v35 (back x1.5, turn x2) + hip_roll encoder bias U(+-0.05) rad per env. 60k. From v31c 90k.
 #   v36 (2026-11-15): v35 with backward-command track_lin x1.25 (v35 real falls cluster in the backward / following stand
 #        segment; 256-env real: v35 42k 5/256 = v31c 90k 5/256, back -.058 both). 60k timesteps. From v31c 90k.
 #   v35 (2026-11-15): v34 with turn-command track_ang x2.0 (v34 30k / 60k: real 0/64, back -.069 / -.065, only turn .174 / .171 < .18;
@@ -82,34 +83,35 @@ ARTI_D1_VEL_PROFILE = os.environ.get("ARTI_D1_VEL_PROFILE", "v10")
 #   v31 (2026-11-14): v30 + randomization curriculum (adr_*): start narrow at the identified real values (kd x.65-.75,
 #        shake 6-8 Nm, gyro hf k 1.5-2.5, hip_yaw +-.03, push .25) and widen to kd .5-.95, shake 0-10, k .5-3,
 #        hip_yaw +-.10, push .4 only while falls / tracking stay good. From v30 60k.
-_PROFILES = ("v10", "v11", "v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29", "v30", "v31", "v32", "v33", "v34", "v35", "v36")
+_PROFILES = ("v10", "v11", "v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29", "v30", "v31", "v32", "v33", "v34", "v35", "v36", "v37")
 if ARTI_D1_VEL_PROFILE not in _PROFILES:
     raise ValueError(f"ARTI_D1_VEL_PROFILE must be one of {_PROFILES}, got {ARTI_D1_VEL_PROFILE}")
 _V21 = ARTI_D1_VEL_PROFILE == "v21"
-_V26 = ARTI_D1_VEL_PROFILE in ("v26", "v27", "v28", "v29", "v30", "v31", "v32", "v33", "v34", "v35", "v36")  # v27 = v26 with milder kd / shake randomisation, v28 builds on v27
-_V27 = ARTI_D1_VEL_PROFILE in ("v27", "v28", "v29", "v30", "v31", "v32", "v33", "v34", "v35", "v36")
-_V30 = ARTI_D1_VEL_PROFILE in ("v30", "v31", "v32", "v33", "v34", "v35", "v36")
+_V26 = ARTI_D1_VEL_PROFILE in ("v26", "v27", "v28", "v29", "v30", "v31", "v32", "v33", "v34", "v35", "v36", "v37")  # v27 = v26 with milder kd / shake randomisation, v28 builds on v27
+_V27 = ARTI_D1_VEL_PROFILE in ("v27", "v28", "v29", "v30", "v31", "v32", "v33", "v34", "v35", "v36", "v37")
+_V30 = ARTI_D1_VEL_PROFILE in ("v30", "v31", "v32", "v33", "v34", "v35", "v36", "v37")
 _V31 = ARTI_D1_VEL_PROFILE == "v31"
-_V32 = ARTI_D1_VEL_PROFILE in ("v32", "v33", "v34", "v35", "v36")
+_V32 = ARTI_D1_VEL_PROFILE in ("v32", "v33", "v34", "v35", "v36", "v37")
 _V33 = ARTI_D1_VEL_PROFILE == "v33"
-_V34 = ARTI_D1_VEL_PROFILE in ("v34", "v35", "v36")
-_V35 = ARTI_D1_VEL_PROFILE in ("v35", "v36")
+_V34 = ARTI_D1_VEL_PROFILE in ("v34", "v35", "v36", "v37")
+_V35 = ARTI_D1_VEL_PROFILE in ("v35", "v36", "v37")
 _V36 = ARTI_D1_VEL_PROFILE == "v36"
+_V37 = ARTI_D1_VEL_PROFILE == "v37"
 _V28 = ARTI_D1_VEL_PROFILE in ("v28", "v29")
 _V29 = ARTI_D1_VEL_PROFILE == "v29"
-_V25 = ARTI_D1_VEL_PROFILE in ("v25", "v26", "v27", "v28", "v29", "v30", "v31", "v32", "v33", "v34", "v35", "v36")  # v26 builds on v25
+_V25 = ARTI_D1_VEL_PROFILE in ("v25", "v26", "v27", "v28", "v29", "v30", "v31", "v32", "v33", "v34", "v35", "v36", "v37")  # v26 builds on v25
 _V24 = ARTI_D1_VEL_PROFILE == "v24"
-_V23 = ARTI_D1_VEL_PROFILE in ("v23", "v24", "v25", "v26", "v27", "v28", "v29", "v30", "v31", "v32", "v33", "v34", "v35", "v36")  # v24 / v25 build on v23
-_V22 = ARTI_D1_VEL_PROFILE in ("v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29", "v30", "v31", "v32", "v33", "v34", "v35", "v36")  # v23 builds on v22
-_V20 = ARTI_D1_VEL_PROFILE in ("v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29", "v30", "v31", "v32", "v33", "v34", "v35", "v36")  # v21 / v22 build on v20
+_V23 = ARTI_D1_VEL_PROFILE in ("v23", "v24", "v25", "v26", "v27", "v28", "v29", "v30", "v31", "v32", "v33", "v34", "v35", "v36", "v37")  # v24 / v25 build on v23
+_V22 = ARTI_D1_VEL_PROFILE in ("v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29", "v30", "v31", "v32", "v33", "v34", "v35", "v36", "v37")  # v23 builds on v22
+_V20 = ARTI_D1_VEL_PROFILE in ("v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29", "v30", "v31", "v32", "v33", "v34", "v35", "v36", "v37")  # v21 / v22 build on v20
 _V19 = ARTI_D1_VEL_PROFILE == "v19"
-_V18 = ARTI_D1_VEL_PROFILE in ("v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29", "v30", "v31", "v32", "v33", "v34", "v35", "v36")  # v19 builds on v18
-_V13 = ARTI_D1_VEL_PROFILE in ("v13", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29", "v30", "v31", "v32", "v33", "v34", "v35", "v36")  # v17 adds the v13 realism
-_V16 = ARTI_D1_VEL_PROFILE in ("v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29", "v30", "v31", "v32", "v33", "v34", "v35", "v36")  # v17 builds on v16
-_V15 = ARTI_D1_VEL_PROFILE in ("v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29", "v30", "v31", "v32", "v33", "v34", "v35", "v36")  # v16 builds on v15
-_V14 = ARTI_D1_VEL_PROFILE in ("v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29", "v30", "v31", "v32", "v33", "v34", "v35", "v36")  # v15 builds on v14
-_V12 = ARTI_D1_VEL_PROFILE in ("v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29", "v30", "v31", "v32", "v33", "v34", "v35", "v36")  # v13 / v14 build on v12
-_V11 = ARTI_D1_VEL_PROFILE in ("v11", "v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29", "v30", "v31", "v32", "v33", "v34", "v35", "v36")  # v12 builds on v11
+_V18 = ARTI_D1_VEL_PROFILE in ("v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29", "v30", "v31", "v32", "v33", "v34", "v35", "v36", "v37")  # v19 builds on v18
+_V13 = ARTI_D1_VEL_PROFILE in ("v13", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29", "v30", "v31", "v32", "v33", "v34", "v35", "v36", "v37")  # v17 adds the v13 realism
+_V16 = ARTI_D1_VEL_PROFILE in ("v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29", "v30", "v31", "v32", "v33", "v34", "v35", "v36", "v37")  # v17 builds on v16
+_V15 = ARTI_D1_VEL_PROFILE in ("v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29", "v30", "v31", "v32", "v33", "v34", "v35", "v36", "v37")  # v16 builds on v15
+_V14 = ARTI_D1_VEL_PROFILE in ("v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29", "v30", "v31", "v32", "v33", "v34", "v35", "v36", "v37")  # v15 builds on v14
+_V12 = ARTI_D1_VEL_PROFILE in ("v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29", "v30", "v31", "v32", "v33", "v34", "v35", "v36", "v37")  # v13 / v14 build on v12
+_V11 = ARTI_D1_VEL_PROFILE in ("v11", "v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29", "v30", "v31", "v32", "v33", "v34", "v35", "v36", "v37")  # v12 builds on v11
 ARTI_D1_VEL_ACTION_HISTORY = 1 if _V11 else 3
 # actor: base ang vel (3) + projected gravity (3) + leg joint pos rel (10) + leg joint vel (10) + last N actions (10 N)
 # + command (3, always last)
@@ -295,6 +297,9 @@ class ArtiD1VelEnvCfg(DirectRLEnvCfg):
     encoder_bias_range = 0.015  # rad, per env, actor joint pos only
     encoder_offset_fixed = ()  # eval what-if: fixed leg encoder offsets (rad, leg action order), e.g. hip_yaw calibration error
     encoder_bias_hip_yaw = 0.10 if _V30 else 0.0  # v30: per-env hip_yaw encoder bias U(+-0.10) rad (real: steady CW yaw .4-.5 rad/s = both hip_yaw zeros off ~0.06-0.1)
+    # v37: per-env hip_roll encoder bias U(+-0.05) rad (real 2026-11-16 log: obs hip_roll L/R +0.2 / -1.5 deg vs sim -1.9 / +0.3;
+    # sim with hip_roll offsets (+.037, -.032) reproduces the real hip_yaw / roll obs and a CW drift with a suppressed turn)
+    encoder_bias_hip_roll = 0.05 if _V37 else 0.0
     # v22 real2sim (2026-11-12): replaying the real robot's actions open loop gives the same joint motion in sim (7-13 Hz
     # rms .0106 vs .0108 rad) but 2.4x less trunk gyro (.25 vs .60 rad/s): flex / play outside the encoders and the IMU
     # mount. The policy fed that back (gyro ~50 % of its 10 Hz action) -> ~10 Hz standing buzz on the robot (v12, v20).

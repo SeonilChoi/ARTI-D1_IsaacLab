@@ -2242,3 +2242,26 @@ v25 stopped at 168k (PID 1478140 verified). v26 run 2026-11-13_12-29-10 from v25
   (differences at 256 envs are within noise / trade-offs). Further sim-only reward reweighting has low expected value.
   The open real2sim issues (real CW yaw drift -0.4..-0.5 rad/s vs sim ~-0.02 with hip_yaw +.08; trunk rate 4-6x) need real logs.
 - Decision: keep v31c 90k deployed, pause new runs, remove hourly cron, until a real log with v31c 90k / hip_yaw zero measurement arrives.
+
+## 2026-11-16 09:05 — real log 20261116_085558 (v31c 90k) analysis → v37 (hip_roll encoder bias)
+Real run (38.8 s, no fall, no servo error). Commands were small: vx max ±.032 (full stick = .10), yaw max .19 (of .30).
+| segment | cmd | real wz | real obs gyro x / y std | obs hip_yaw L/R | obs hip_roll L/R |
+|---|---|---|---|---|---|
+| stand | 0 | -.001 | .00 / .00 (no buzz) | | |
+| fwd | vx +.026 | **-.170** | 1.03 / .39 | -2.4 / +1.4 deg | +0.2 / -1.5 deg |
+| back | vx -.029 | **-.357** | 1.02 / .49 | -2.6 / +1.8 | -0.1 / -1.7 |
+| turn | wz +.16 | **-.388** (opposite) | 1.01 / .46 | -2.4 / +1.8 | -0.1 / -1.4 |
+Sim replay of the same command schedule (v31c 90k ONNX, kd .7, shake 8, gyro HF 2, 32 envs):
+| sim encoder offset | fwd wz | back wz | turn wz | obs hip_yaw L/R | obs hip_roll L/R |
+|---|---|---|---|---|---|
+| none | -.014 | +.010 | +.110 | -2.6 / +2.6 | -1.9 / +0.3 |
+| hip_yaw +.08 both | -.023 | -.020 | +.089 | +2.1 / +7.0 | -1.9 / +0.4 |
+| hip_roll (+.037, -.032) | -.061 | -.043 | +.027 | -2.0 / +0.4..1.0 | +0.4 / -1.1..-1.3 |
+| hip_roll (-.037, +.032) | +.036 | +.029 | +.138 | -4.0 / +3.3 | -4.6 / +2.4 |
+- The hip_yaw zero error hypothesis does not fit: real obs hip_yaw matches sim without offset, not with +.08.
+- A hip_roll zero error of about +2.1 / -1.8 deg (obs reads more abducted than the joint) reproduces the real obs hip_yaw AND
+  hip_roll pattern, gives a CW drift and suppresses the turn — right direction, ~1/4 of the real magnitude (-.06 vs -.17..-.39).
+  Trunk roll rate real 1.0 rad/s std sits between sim nominal (~.2) and sim shake-8 (1.4).
+- v37 = v35 (back x1.5, turn x2) + per-env hip_roll encoder bias U(+-0.05). From v31c 90k, 60k, seed 7. PID 2018642,
+  run 2026-11-16_09-06-20_ppo_torch, log logs/train/train_vel_microduck_v37_hiproll.log, eval evalall37.sh (real 256 envs).
+- Asked the user: hip_roll / hip_yaw zero measurement (example_sysid --passive, legs vertical, feet straight) and full-stick run.

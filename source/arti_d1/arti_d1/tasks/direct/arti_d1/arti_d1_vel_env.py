@@ -122,6 +122,8 @@ class ArtiD1VelEnv(DirectRLEnv):
         self.encoder_bias = torch.empty(n, nl, device=dev).uniform_(-self.cfg.encoder_bias_range, self.cfg.encoder_bias_range)
         if self.cfg.encoder_bias_hip_yaw > 0.0:  # v30: hip_yaw servo zero error (leg order 0 / 1 = left / right hip_yaw)
             self.encoder_bias[:, :2] = torch.empty(n, 2, device=dev).uniform_(-self.cfg.encoder_bias_hip_yaw, self.cfg.encoder_bias_hip_yaw)
+        if getattr(self.cfg, "encoder_bias_hip_roll", 0.0) > 0.0:  # v37: hip_roll servo zero error (leg order 2 / 3)
+            self.encoder_bias[:, 2:4] = torch.empty(n, 2, device=dev).uniform_(-self.cfg.encoder_bias_hip_roll, self.cfg.encoder_bias_hip_roll)
         # eval what-if: fixed per-joint encoder offset (rad, leg action order) = servo calibration error; the joint sits at -offset
         self.enc_fixed = torch.tensor(self.cfg.encoder_offset_fixed or [0.0] * nl, device=dev, dtype=torch.float).expand(n, nl)
         axis = torch.nn.functional.normalize(torch.randn(n, 3, device=dev), dim=-1)
